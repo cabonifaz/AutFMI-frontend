@@ -10,7 +10,7 @@ function App() {
   const [colaboradorSeleccionado, setColaboradorSeleccionado] = useState<any>(null);
 
   const manejarAutenticacion = () => {
-    setAutenticado(true);
+    setAutenticado(autenticado);
     setPantalla('listaUsuarios');
   };
 

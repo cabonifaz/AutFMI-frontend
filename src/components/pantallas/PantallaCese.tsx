@@ -6,11 +6,12 @@ import { useGoBack } from '../../hooks/useGoBack';
 const PantallaCese: FC = () => {
     const location = useLocation();
     const goBack = useGoBack();
-    const { colab, modalidad } = location.state || {};
+    const { colab } = location.state || {};
+    const modalidad = 'Planilla';
 
     return (
         <div className="container mt-4 mb-5">
-            <h3 className="text-start">Modalidad: {modalidad}</h3>
+            <h3 className="text-start">Modalidad: temp</h3>
 
             {/* Sección Datos del Colaborador */}
             <div className="p-3 border rounded mb-3">

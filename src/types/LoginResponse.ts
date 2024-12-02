@@ -1,5 +1,5 @@
 export type LoginResponse = {
-    idMensaje: number;
+    idTipoMensaje: number;
     mensaje: string;
     token: string;
 };

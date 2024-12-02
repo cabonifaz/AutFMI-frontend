@@ -31,18 +31,18 @@ const useLogin = () => {
                 password,
             });
 
-            if (response.status === 200 && response.data.idMensaje === 2) {
+            if (response.status === 200 && response.data.idTipoMensaje === 2) {
                 login(response.data.token);
                 enqueueSnackbar("Bienvenido", { variant: 'info' });
                 return true;
             }
             enqueueSnackbar(response.data.mensaje, { variant: 'error' });
             return false;
-        } catch (err: unknown) {
+        } catch (err: any) {
+            enqueueSnackbar(err.message, { variant: 'error' });
             return false;
         } finally {
             setLoading(false);
-            return true;
         }
     };
 

@@ -8,6 +8,7 @@ import { SnackbarProvider } from 'notistack';
 import { AuthProvider } from './components/AuthContext';
 import PantallaMovimiento from './components/pantallas/PantallaMovimiento';
 import PantallaCese from './components/pantallas/PantallaCese';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
 
@@ -21,11 +22,11 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Login />} />
-            <Route path="/listaUsuarios" element={<ListaUsuarios />} />
-            <Route path="/pantallaIngreso" element={<PantallaIngreso />} />
-            <Route path="/pantallaDatos" element={<PantallaDatos />} />
-            <Route path="/pantallaMovimiento" element={<PantallaMovimiento />} />
-            <Route path="/pantallaCese" element={<PantallaCese />} />
+            <Route path="/listaUsuarios" element={<ProtectedRoute><ListaUsuarios /></ProtectedRoute>} />
+            <Route path="/pantallaIngreso" element={<ProtectedRoute><PantallaIngreso /></ProtectedRoute>} />
+            <Route path="/pantallaDatos" element={<ProtectedRoute><PantallaDatos /></ProtectedRoute>} />
+            <Route path="/pantallaMovimiento" element={<ProtectedRoute><PantallaMovimiento /></ProtectedRoute>} />
+            <Route path="/pantallaCese" element={<ProtectedRoute><PantallaCese /></ProtectedRoute>} />
           </Routes>
         </Router>
       </SnackbarProvider>

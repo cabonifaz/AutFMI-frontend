@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 
 const ListaUsuarios: FC = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [action, setAction] = useState('');
   const [selectedColab, selectColab] = useState<ColaboradorType | null>(null);
   const navigate = useNavigate();
 
@@ -27,9 +26,9 @@ const ListaUsuarios: FC = () => {
     setMostrarModal(false);
   };
 
-  const handleEditar = (colab: ColaboradorType) => {
-    navigate('/pantallaDatos', { state: { colab } });
-  }
+  const navigateTo = (pantalla: string, colab: ColaboradorType) => {
+    navigate(pantalla, { state: { colab } });
+  };
 
   return (
     <div className="container mt-5">
@@ -67,26 +66,26 @@ const ListaUsuarios: FC = () => {
                     className="btn btn-link p-0 d-flex justify-content-center align-items-center"
                     style={{ minHeight: '52px' }}
                     aria-label="Editar usuario"
-                    onClick={() => { handleEditar(colab); }}>
+                    onClick={() => { navigateTo('/pantallaDatos', colab); }}>
                     <i className="bi bi-pencil-fill fs-4 text-muted"></i>
                   </button>
                 </td>
                 <td>
                   <button
                     className="btn btn-outline-primary me-2"
-                    onClick={() => { manejarMostrarModal(colab); setAction('ingreso'); }}
+                    onClick={() => { manejarMostrarModal(colab); }}
                     aria-label="Ingreso de colaborador">
                     Ingreso
                   </button>
                   <button
                     className="btn btn-outline-secondary me-2"
-                    onClick={() => { manejarMostrarModal(colab); setAction('movimiento'); }}
+                    onClick={() => { navigateTo('/pantallaMovimiento', colab); }}
                     aria-label="Movimiento">
                     Movimiento
                   </button>
                   <button
                     className="btn btn-outline-danger"
-                    onClick={() => { manejarMostrarModal(colab); setAction('cese'); }}
+                    onClick={() => { navigateTo('/pantallaCese', colab); }}
                     aria-label="Dar de baja">
                     Dar de baja
                   </button>
@@ -101,7 +100,6 @@ const ListaUsuarios: FC = () => {
         mostrar={mostrarModal}
         manejarCerrar={manejarCerrarModal}
         colab={selectedColab!}
-        action={action}
       />
     </div>
   );

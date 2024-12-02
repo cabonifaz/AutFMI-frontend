@@ -7,31 +7,16 @@ interface ModalIngresoProps {
   mostrar: boolean;
   manejarCerrar: () => void;
   colab: ColaboradorType;
-  action: string;
 }
 
-const ModalModalidad: FC<ModalIngresoProps> = ({ mostrar, manejarCerrar, colab, action }) => {
+const ModalModalidad: FC<ModalIngresoProps> = ({ mostrar, manejarCerrar, colab }) => {
   const navigate = useNavigate();
   const selectRef = useRef<HTMLSelectElement>(null);
 
   const onContinue = () => {
     const modalidad = selectRef.current?.value;
     if (modalidad) {
-      switch (action) {
-        case 'ingreso': {
-          navigate('/pantallaIngreso', { state: { colab, modalidad } });
-          break;
-        }
-        case 'movimiento': {
-          navigate('/pantallaMovimiento', { state: { colab, modalidad } });
-          break;
-        }
-        case 'cese': {
-          navigate('/pantallaCese', { state: { colab, modalidad } });
-          break;
-        }
-      }
-
+      navigate('/pantallaIngreso', { state: { colab, modalidad } });
     }
   };
 

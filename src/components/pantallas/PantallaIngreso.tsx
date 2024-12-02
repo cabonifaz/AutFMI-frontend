@@ -1,15 +1,16 @@
-import React from 'react';
+import { FC } from 'react';
 import { Form, Button, Row, Col, Table } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
+import { useGoBack } from '../../hooks/useGoBack';
 
-interface PantallaIngresoProps {
-  colaborador: any;
-  onCancelar: () => void;
-}
+const PantallaIngreso: FC = () => {
+  const location = useLocation();
+  const goBack = useGoBack();
+  const { colab, modalidad } = location.state || {};
 
-const PantallaIngreso: React.FC<PantallaIngresoProps> = ({ colaborador, onCancelar }) => {
   return (
     <div className="container mt-4 mb-5">
-      <h3 className="text-start">Modalidad: Planilla</h3>
+      <h3 className="text-start">Modalidad: {modalidad}</h3>
 
       {/* Sección Datos del Colaborador */}
       <div className="p-3 border rounded mb-3">
@@ -19,7 +20,7 @@ const PantallaIngreso: React.FC<PantallaIngresoProps> = ({ colaborador, onCancel
             <Form.Label>Nombre y apellido</Form.Label>
           </Col>
           <Col sm="8">
-            <Form.Control type="text" defaultValue={colaborador.nombre} />
+            <Form.Control type="text" defaultValue={colab.nombre} />
           </Col>
         </Form.Group>
         <Form.Group as={Row} className="align-items-center mt-3">
@@ -27,12 +28,25 @@ const PantallaIngreso: React.FC<PantallaIngresoProps> = ({ colaborador, onCancel
             <Form.Label>Unidad</Form.Label>
           </Col>
           <Col sm="8">
-            <Form.Control as="select" defaultValue={colaborador.unidad}>
+            <Form.Control as="select" defaultValue={colab.unidad}>
               <option>Unidad 1</option>
               <option>Unidad 2</option>
             </Form.Control>
           </Col>
         </Form.Group>
+        {modalidad !== 'Planilla' && (
+          <Form.Group as={Row} className="align-items-center mt-3">
+            <Col sm="4" className="text-start">
+              <Form.Label>Empresa</Form.Label>
+            </Col>
+            <Col sm="8">
+              <Form.Control as="select" defaultValue={colab.unidad}>
+                <option>Empresa 1</option>
+                <option>Empresa 2</option>
+              </Form.Control>
+            </Col>
+          </Form.Group>
+        )}
       </div>
 
       {/* Sección Ingreso */}
@@ -165,7 +179,7 @@ const PantallaIngreso: React.FC<PantallaIngresoProps> = ({ colaborador, onCancel
 
       {/* Botones de Cancelar y Generar PDF */}
       <div className="d-flex justify-content-center mt-4 mb-4">
-        <Button variant="secondary" onClick={onCancelar} className="me-3">
+        <Button variant="secondary" className="me-3" onClick={goBack}>
           Cancelar
         </Button>
         <Button variant="primary">

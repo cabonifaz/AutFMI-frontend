@@ -78,20 +78,23 @@ const ListaUsuarios: FC = () => {
                 <td>
                   <button
                     className="btn btn-outline-primary me-2"
-                    onClick={() => { navigateTo('/pantallaIngreso', talento); }}
-                    aria-label="Ingreso de talento">
+                    onClick={() => navigateTo('/pantallaIngreso', talento)}
+                    aria-label="Ingreso de talento"
+                    disabled={talento.perteneceEmpresa}>
                     Ingreso
                   </button>
                   <button
                     className="btn btn-outline-secondary me-2"
-                    onClick={() => { navigateTo('/pantallaMovimiento', talento); }}
-                    aria-label="Movimiento">
+                    onClick={() => navigateTo('/pantallaMovimiento', talento)}
+                    aria-label="Movimiento"
+                    disabled={!talento.perteneceEmpresa}>
                     Movimiento
                   </button>
                   <button
                     className="btn btn-outline-danger"
-                    onClick={() => { navigateTo('/pantallaCese', talento); }}
-                    aria-label="Dar de baja">
+                    onClick={() => navigateTo('/pantallaCese', talento)}
+                    aria-label="Dar de baja"
+                    disabled={!talento.perteneceEmpresa}>
                     Dar de baja
                   </button>
                 </td>

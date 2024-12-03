@@ -2,23 +2,19 @@ import { useState, FC } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import ModalIngreso from '../ModalModalidad';
-import { ColaboradorType } from '../../types/ColaboradorType';
+import { TalentoType } from '../../types/TalentoType';
 import { useNavigate } from 'react-router-dom';
+import useTalentos from '../../hooks/useTalentos';
+import Loading from '../loading/Loading';
 
 const ListaUsuarios: FC = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [selectedColab, selectColab] = useState<ColaboradorType | null>(null);
+  const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
   const navigate = useNavigate();
+  const { talentos, loading } = useTalentos();
 
-  const colaboradores = [
-    { nombre: 'Katerin Valeria', estado: 'Rxh', unidad: 'Unidad 1' },
-    { nombre: 'Marco Botton', estado: 'Planilla', unidad: 'Unidad 2' },
-    { nombre: 'Mariah Maclachlan', estado: 'Planilla', unidad: 'Unidad 3' },
-    { nombre: 'Valerie Liberty', estado: 'Planilla', unidad: 'Unidad 4' }
-  ];
-
-  const manejarMostrarModal = (colab: ColaboradorType) => {
-    selectColab(colab);
+  const manejarMostrarModal = (talento: TalentoType) => {
+    selectTalento(talento);
     setMostrarModal(true);
   };
 
@@ -26,9 +22,18 @@ const ListaUsuarios: FC = () => {
     setMostrarModal(false);
   };
 
-  const navigateTo = (pantalla: string, colab: ColaboradorType) => {
-    navigate(pantalla, { state: { colab } });
+  const navigateTo = (pantalla: string, talento: TalentoType) => {
+    if (pantalla.includes('Ingreso') && !talento.perteneceEmpresa) {
+      manejarMostrarModal(talento);
+      return;
+    }
+
+    navigate(pantalla, { state: { talento } });
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="container mt-5">
@@ -52,40 +57,40 @@ const ListaUsuarios: FC = () => {
             </tr>
           </thead>
           <tbody>
-            {colaboradores.map((colab, index) => (
+            {talentos.map((talento, index) => (
               <tr key={index}>
                 <td>
-                  {colab.nombre}
+                  {talento.nombres + ' ' + talento.apellidos}
                   <br />
-                  <small>{colab.estado}</small>
+                  <small>{talento.modalidad}</small>
                 </td>
                 <td
                   className="d-flex justify-content-center align-items-center"
-                  style={{ width: '120px', minHeight: '52px' }}>
+                  style={{ width: '120px', minHeight: '52px' }} >
                   <button
                     className="btn btn-link p-0 d-flex justify-content-center align-items-center"
                     style={{ minHeight: '52px' }}
-                    aria-label="Editar usuario"
-                    onClick={() => { navigateTo('/pantallaDatos', colab); }}>
+                    aria-label="Editar talento"
+                    onClick={() => { navigateTo('/pantallaDatos', talento); }}>
                     <i className="bi bi-pencil-fill fs-4 text-muted"></i>
                   </button>
                 </td>
                 <td>
                   <button
                     className="btn btn-outline-primary me-2"
-                    onClick={() => { manejarMostrarModal(colab); }}
-                    aria-label="Ingreso de colaborador">
+                    onClick={() => { navigateTo('/pantallaIngreso', talento); }}
+                    aria-label="Ingreso de talento">
                     Ingreso
                   </button>
                   <button
                     className="btn btn-outline-secondary me-2"
-                    onClick={() => { navigateTo('/pantallaMovimiento', colab); }}
+                    onClick={() => { navigateTo('/pantallaMovimiento', talento); }}
                     aria-label="Movimiento">
                     Movimiento
                   </button>
                   <button
                     className="btn btn-outline-danger"
-                    onClick={() => { navigateTo('/pantallaCese', colab); }}
+                    onClick={() => { navigateTo('/pantallaCese', talento); }}
                     aria-label="Dar de baja">
                     Dar de baja
                   </button>
@@ -99,7 +104,7 @@ const ListaUsuarios: FC = () => {
       <ModalIngreso
         mostrar={mostrarModal}
         manejarCerrar={manejarCerrarModal}
-        colab={selectedColab!}
+        talento={selectedTalento!}
       />
     </div>
   );

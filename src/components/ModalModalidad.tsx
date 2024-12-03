@@ -1,22 +1,22 @@
 import { FC, useRef } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { ColaboradorType } from '../types/ColaboradorType';
 import { useNavigate } from 'react-router-dom';
+import { TalentoType } from '../types/TalentoType';
 
-interface ModalIngresoProps {
+interface ModalModalidadProps {
   mostrar: boolean;
   manejarCerrar: () => void;
-  colab: ColaboradorType;
+  talento: TalentoType;
 }
 
-const ModalModalidad: FC<ModalIngresoProps> = ({ mostrar, manejarCerrar, colab }) => {
+const ModalModalidad: FC<ModalModalidadProps> = ({ mostrar, manejarCerrar, talento }) => {
   const navigate = useNavigate();
   const selectRef = useRef<HTMLSelectElement>(null);
 
   const onContinue = () => {
     const modalidad = selectRef.current?.value;
     if (modalidad) {
-      navigate('/pantallaIngreso', { state: { colab, modalidad } });
+      navigate('/pantallaIngreso', { state: { talento, modalidad } });
     }
   };
 

@@ -6,22 +6,22 @@ import { useGoBack } from '../../hooks/useGoBack';
 const PantallaMovimiento: FC = () => {
     const location = useLocation();
     const goBack = useGoBack();
-    const { colab } = location.state || {};
+    const { talento } = location.state || {};
     const modalidad = 'Planilla';
 
     return (
         <div className="container mt-4 mb-5">
             <h3 className="text-start">Modalidad: temp</h3>
 
-            {/* Sección Datos del Colaborador */}
+            {/* Sección Datos del talentoorador */}
             <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Datos del colaborador</h5>
+                <h5 className="text-start ms-2">Datos del talento</h5>
                 <Form.Group as={Row} className="align-items-center">
                     <Col sm="4" className="text-start">
                         <Form.Label>Nombre y apellido</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Form.Control type="text" defaultValue={colab.nombre} />
+                        <Form.Control type="text" defaultValue={talento?.nombres + ' ' + talento?.apellidos} />
                     </Col>
                 </Form.Group>
                 <Form.Group as={Row} className="align-items-center mt-3">
@@ -29,7 +29,7 @@ const PantallaMovimiento: FC = () => {
                         <Form.Label>Unidad</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Form.Control as="select" defaultValue={colab.unidad}>
+                        <Form.Control as="select" defaultValue={talento.unidad}>
                             <option>Unidad 1</option>
                             <option>Unidad 2</option>
                         </Form.Control>
@@ -41,7 +41,7 @@ const PantallaMovimiento: FC = () => {
                             <Form.Label>Empresa</Form.Label>
                         </Col>
                         <Col sm="8">
-                            <Form.Control as="select" defaultValue={colab.unidad}>
+                            <Form.Control as="select" defaultValue={talento.unidad}>
                                 <option>Empresa 1</option>
                                 <option>Empresa 2</option>
                             </Form.Control>

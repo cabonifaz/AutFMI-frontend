@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import { Form, Button, Row, Col, Table } from 'react-bootstrap';
+import { Form, Button, Row, Col } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
-import { useGoBack } from '../../hooks/useGoBack';
+import { useGoBack } from '../hooks/useGoBack';
 
-const PantallaMovimiento: FC = () => {
+const PantallaCese: FC = () => {
     const location = useLocation();
     const goBack = useGoBack();
     const { talento } = location.state || {};
@@ -51,68 +51,18 @@ const PantallaMovimiento: FC = () => {
             </div>
 
             <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Movimiento</h5>
+                <h5 className="text-start ms-2">Cese</h5>
 
-                <Form.Group as={Row} className="align-items-center mt-3">
+                <Form.Group as={Row} className="align-items-center">
                     <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de estructura salarial</Form.Label>
+                        <Form.Label>Motivo de cese</Form.Label>
                     </Col>
                     <Col sm="8">
-                        <Table bordered className="estructura-salarial mt-2">
-                            <thead>
-                                <tr>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Base" />
-                                    </th>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Movilidad" />
-                                    </th>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Bono trimestral" />
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </Table>
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de puesto</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de área</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de jornada</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
+                        <Form.Control as="select">
+                            <option>Despido</option>
+                            <option>Renuncia</option>
+                            <option>Culminación de la obra o servicio</option>
+                        </Form.Control>
                     </Col>
                 </Form.Group>
 
@@ -138,4 +88,4 @@ const PantallaMovimiento: FC = () => {
     );
 };
 
-export default PantallaMovimiento;
+export default PantallaCese;

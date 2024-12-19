@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { TalentoType } from '../types/TalentoType';
-import { TalentosResponse } from '../types/TalentosResponse';
+import { TalentoType } from '../models/type/TalentoType';
 import { useSnackbar } from 'notistack';
 import { apiClientWithToken } from '../utils/apiClient';
+import { TalentosResponse } from '../models/response/TalentosResponse';
 
 const useTalentos = () => {
     const [talentos, setTalentos] = useState<TalentoType[]>([]);

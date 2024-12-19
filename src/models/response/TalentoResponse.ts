@@ -1,4 +1,4 @@
-import { TalentoDetailType } from "./TalentoDetailType";
+import { TalentoDetailType } from "../type/TalentoDetailType";
 
 export type TalentoResponse = {
     idTipoMensaje: number;

@@ -1,13 +1,13 @@
-import { useState, FC } from 'react';
+import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import ModalIngreso from '../ModalModalidad';
-import { TalentoType } from '../../types/TalentoType';
+import ModalIngreso from '../components/ui/ModalModalidad';
+import { TalentoType } from '../models/type/TalentoType';
 import { useNavigate } from 'react-router-dom';
-import useTalentos from '../../hooks/useTalentos';
-import Loading from '../loading/Loading';
+import useTalentos from '../hooks/useTalentos';
+import Loading from '../components/loading/Loading';
 
-const ListaUsuarios: FC = () => {
+const PantallaListaTalentos = () => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const ListaUsuarios: FC = () => {
   };
 
   const navigateTo = (pantalla: string, talento: TalentoType) => {
-    if (pantalla.includes('Ingreso') && !talento.perteneceEmpresa) {
+    if (pantalla.includes('Ingreso') && !talento.esTrabajador) {
       manejarMostrarModal(talento);
       return;
     }
@@ -71,30 +71,30 @@ const ListaUsuarios: FC = () => {
                     className="btn btn-link p-0 d-flex justify-content-center align-items-center"
                     style={{ minHeight: '52px' }}
                     aria-label="Editar talento"
-                    onClick={() => { navigateTo('/pantallaDatos', talento); }}>
+                    onClick={() => { navigateTo('/formDatos', talento); }}>
                     <i className="bi bi-pencil-fill fs-4 text-muted"></i>
                   </button>
                 </td>
                 <td>
                   <button
                     className="btn btn-outline-primary me-2"
-                    onClick={() => navigateTo('/pantallaIngreso', talento)}
+                    onClick={() => navigateTo('/formIngreso', talento)}
                     aria-label="Ingreso de talento"
-                    disabled={talento.perteneceEmpresa}>
+                    disabled={talento.esTrabajador}>
                     Ingreso
                   </button>
                   <button
                     className="btn btn-outline-secondary me-2"
-                    onClick={() => navigateTo('/pantallaMovimiento', talento)}
+                    onClick={() => navigateTo('/formMovimiento', talento)}
                     aria-label="Movimiento"
-                    disabled={!talento.perteneceEmpresa}>
+                    disabled={!talento.esTrabajador}>
                     Movimiento
                   </button>
                   <button
                     className="btn btn-outline-danger"
-                    onClick={() => navigateTo('/pantallaCese', talento)}
+                    onClick={() => navigateTo('/formCese', talento)}
                     aria-label="Dar de baja"
-                    disabled={!talento.perteneceEmpresa}>
+                    disabled={!talento.esTrabajador}>
                     Dar de baja
                   </button>
                 </td>
@@ -113,4 +113,4 @@ const ListaUsuarios: FC = () => {
   );
 };
 
-export default ListaUsuarios;
+export default PantallaListaTalentos;

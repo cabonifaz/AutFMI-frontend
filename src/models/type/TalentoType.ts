@@ -1,6 +1,7 @@
 export type TalentoType = {
+    idUsurioTalento: number;
     idTalento: number;
-    perteneceEmpresa: boolean;
+    esTrabajador: boolean;
     nombres: string;
     apellidos: string;
     modalidad: string;

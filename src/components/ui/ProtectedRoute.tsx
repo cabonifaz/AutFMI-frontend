@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, FC } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';
 import { useSnackbar } from 'notistack';
+import { useAuth } from '../../context/AuthContext';
 
 type ProtectedRouteProps = {
     children: ReactNode;

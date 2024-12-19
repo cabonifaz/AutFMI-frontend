@@ -1,18 +1,16 @@
-import { FC } from 'react';
 import { Form, Button, Row, Col, Table } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
-import { useGoBack } from '../../hooks/useGoBack';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const PantallaIngreso: FC = () => {
+const PantallaIngreso = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const goBack = useGoBack();
-  const { talento, modalidad } = location.state || {};
+  const { talento, idModalidad } = location.state || {};
 
   return (
     <div className="container mt-4 mb-5">
-      <h3 className="text-start">Modalidad: {modalidad}</h3>
+      <h3 className="text-start">Modalidad: {idModalidad}</h3>
 
-      {/* Sección Datos del talentoorador */}
+      {/* Sección Datos del talento */}
       <div className="p-3 border rounded mb-3">
         <h5 className="text-start ms-2">Datos del talentoorador</h5>
         <Form.Group as={Row} className="align-items-center">
@@ -34,7 +32,7 @@ const PantallaIngreso: FC = () => {
             </Form.Control>
           </Col>
         </Form.Group>
-        {modalidad !== 'Planilla' && (
+        {idModalidad !== 1 && (
           <Form.Group as={Row} className="align-items-center mt-3">
             <Col sm="4" className="text-start">
               <Form.Label>Empresa</Form.Label>
@@ -156,11 +154,11 @@ const PantallaIngreso: FC = () => {
             <Form.Label>¿Declarado en SUNAT?</Form.Label>
           </Col>
           <Col sm="8">
-            <Form.Control as="select">
+            <Form.Select as="select">
               <option>Elija un elemento</option>
               <option>Sí</option>
               <option>No</option>
-            </Form.Control>
+            </Form.Select>
           </Col>
         </Form.Group>
         <Form.Group as={Row} className="align-items-center mt-3">
@@ -168,18 +166,18 @@ const PantallaIngreso: FC = () => {
             <Form.Label>Sede a declarar</Form.Label>
           </Col>
           <Col sm="8">
-            <Form.Control as="select">
+            <Form.Select as="select">
               <option>Elija una sede</option>
               <option>Sede 1</option>
               <option>Sede 2</option>
-            </Form.Control>
+            </Form.Select>
           </Col>
         </Form.Group>
       </div>
 
       {/* Botones de Cancelar y Generar PDF */}
       <div className="d-flex justify-content-center mt-4 mb-4">
-        <Button variant="secondary" className="me-3" onClick={goBack}>
+        <Button variant="secondary" className="me-3" onClick={() => navigate(-1)}>
           Cancelar
         </Button>
         <Button variant="primary">

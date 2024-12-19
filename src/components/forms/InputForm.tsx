@@ -1,0 +1,38 @@
+import { Control, Controller, FieldError } from "react-hook-form";
+
+interface Props {
+    name: string;
+    control: Control<any>
+    label: string;
+    type?: string;
+    isWide?: boolean;
+    orientation?: "horizontal" | "vertical";
+    error?: FieldError
+}
+
+const InputForm = ({ name, control, label, type, isWide, orientation, error }: Props) => {
+    return (
+        <>
+            <div className={`flex flex-[2.2] gap-2 ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
+                <label htmlFor={name} className={`flex items-center ${isWide ? "flex-[2]" : "flex-1"}`}>{label}</label>
+                <div className="flex-[2]">
+                    <Controller
+                        name={name}
+                        control={control}
+                        render={({ field }) =>
+                            <input
+                                id={name}
+                                type={type ? type : "text"}
+                                {...field}
+                                onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
+                                className={`w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
+                        }
+                    />
+                    {error && <p className="absolute text-red-400 bg-transparent text-sm">{error.message}</p>}
+                </div>
+            </div>
+        </>
+    );
+}
+
+export default InputForm;

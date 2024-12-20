@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { usePostHook } from "../hooks/usePostHook";
 import useFetchParams from "../hooks/useFetchParams";
 import { TIPO_MODALIDAD, TIPO_MONEDA, TIPO_TIEMPO } from "../utils/config";
+import { formatDateToDMY } from "../utils/util";
 
 const PantallaDatos = () => {
     const navigate = useNavigate();
@@ -55,7 +56,7 @@ const PantallaDatos = () => {
                 email: talentoDetails?.email || "",
                 tiempoContrato: talentoDetails?.tiempoContrato || 0,
                 idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
-                fechaInicioLabores: talentoDetails?.fechaInicioLabores.split("-").reverse().join("-") || "",
+                fechaInicioLabores: formatDateToDMY(talentoDetails?.fechaInicioLabores),
                 cargo: talentoDetails?.cargo || "",
                 remuneracion: talentoDetails?.remuneracion || 0,
                 idMoneda: talentoDetails?.idMoneda || 0,

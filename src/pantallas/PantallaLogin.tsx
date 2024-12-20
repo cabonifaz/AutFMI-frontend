@@ -1,4 +1,3 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
 import useLogin from '../hooks/useLogin';
 import Loading from '../components/loading/Loading';
 import { InputForm } from '../components/forms';

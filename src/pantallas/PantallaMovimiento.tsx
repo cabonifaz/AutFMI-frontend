@@ -45,17 +45,6 @@ const PantallaMovimiento = () => {
             objetoContrato: null,
             ...data
         });
-
-        console.log({
-            idUsuarioTalento: talento.idUsuarioTalento,
-            idMoneda: null,
-            idModalidad: null,
-            fchInicioContrato: null,
-            fchTerminoContrato: null,
-            proyectoServicio: null,
-            objetoContrato: null,
-            ...data
-        });
     };
 
     return (

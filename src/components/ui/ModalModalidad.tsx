@@ -37,8 +37,8 @@ const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
       {paramLoading && <Loading />}
       <div className="flex justify-center items-center bg-gray-500 bg-opacity-50 fixed top-0 left-0 w-full h-full z-50">
         <div className="bg-white w-96 p-4 rounded-lg">
-          <h3 className="">Modalidad</h3>
-          <hr />
+          <h3 className="text-center mb-4 text-2xl font-semibold">Modalidad</h3>
+          <hr className="my-1" />
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={options?.map((option) => ({ value: option.num1, label: option.string1 })) || []}
           />

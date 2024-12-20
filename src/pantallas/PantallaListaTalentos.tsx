@@ -47,7 +47,7 @@ const PantallaListaTalentos = () => {
             <table className="min-w-full bg-white border border-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="py-2 px-4 text-left">Nombre (Estado)</th>
+                  <th className="py-2 px-4 text-left">Nombres y Apellidos</th>
                   <th className="py-2 px-4 text-center w-32">Opciones</th>
                   <th className="py-2 px-4 text-center">Acciones</th>
                 </tr>

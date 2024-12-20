@@ -76,8 +76,8 @@ const PantallaDatos = () => {
             {loading && (<Loading />)}
             {postloading && (<Loading />)}
             <div className="w-2/4 h-screen m-auto p-4 border-2 rounded-lg">
-                <h3>Datos Personales</h3>
-                <hr />
+                <h3 className="text-2xl font-semibold">Datos Personales</h3>
+                <hr className="my-4" />
                 {/* Data form */}
                 <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-6">
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />

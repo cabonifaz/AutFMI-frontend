@@ -65,7 +65,8 @@ const PantallaMovimiento = () => {
             <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
                     {/* Talent Data */}
-                    <h3>Datos del talento</h3>
+                    <h3 className="text-2xl font-semibold">Datos del talento</h3>
+                    <hr className="my-1" />
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
 

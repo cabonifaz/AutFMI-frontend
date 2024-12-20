@@ -23,7 +23,7 @@ const PantallaLogin = () => {
       {loading && <Loading />}
       <div className="p-4 w-screen h-screen flex justify-center items-center">
         <form onSubmit={handleSubmit(login)} className="flex flex-col gap-6 w-96 border-2 rounded-lg p-4">
-          <h2 className="text-center mb-4">AutFMI</h2>
+          <h2 className="text-center mb-4 text-2xl font-semibold">AutFMI</h2>
           <InputForm name="username" control={control} orientation='vertical' label="Usuario" error={errors.username} />
           <InputForm name="password" control={control} orientation='vertical' label="Contraseña" type="password" error={errors.password} />
           <button type="submit" className="bg-blue-600 text-white rounded-lg py-2 my-2">{loading ? 'Cargando...' : 'Iniciar sesión'}</button>

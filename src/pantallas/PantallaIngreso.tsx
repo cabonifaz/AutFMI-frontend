@@ -57,15 +57,15 @@ const PantallaIngreso = () => {
       <div className="w-[65%] h-fit m-auto p-4 border-2 rounded-lg">
         {/* Modality */}
         <div className="flex">
-          <h3 className="flex-[0.5]">Modalidad</h3>
+          <h3 className="flex-[0.5] text-2xl font-semibold">Modalidad</h3>
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
           />
         </div>
-        <hr />
+        <hr className="my-4" />
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           {/* Talent Data */}
-          <h3>Datos del talento</h3>
+          <h3 className="text-2xl font-semibold">Datos del talento</h3>
           <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
           <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
 
@@ -76,7 +76,7 @@ const PantallaIngreso = () => {
           {Number(data.idModalidad) === 2 && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
 
           {/* Entry */}
-          <h3>Ingreso</h3>
+          <h3 className="text-2xl font-semibold">Ingreso</h3>
 
           <DropdownForm name="idMotivo" control={control} label="Motivo de ingreso" error={errors.idMotivo}
             options={reasonValues?.map((reason) => ({ value: reason.num1, label: reason.string1 })) || []}
@@ -98,7 +98,7 @@ const PantallaIngreso = () => {
           <InputForm name="proyectoServicio" control={control} label="Proyecto/Servicio" error={errors.proyectoServicio} />
           <InputForm name="objetoContrato" control={control} label="Objeto del contrato" error={errors.objetoContrato} />
           {/* SUNAT */}
-          <h3>Declaración en SUNAT (*)</h3>
+          <h3 className="text-2xl font-semibold">Declaración en SUNAT (*)</h3>
           <DropdownForm name="declararSunat" control={control} label="¿Declarado en SUNAT?" error={errors.declararSunat}
             options={[{ value: 1, label: "Sí" }, { value: 2, label: "No" }]}
           />

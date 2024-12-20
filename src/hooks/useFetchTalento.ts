@@ -20,7 +20,8 @@ const useFetchTalento = (talentoId: number) => {
                     return;
                 }
                 enqueueSnackbar(response.data.mensaje, { variant: 'error' });
-            } finally {
+            } catch (error) { }
+            finally {
                 setLoading(false);
             }
         };

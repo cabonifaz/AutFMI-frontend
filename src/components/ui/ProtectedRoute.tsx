@@ -21,12 +21,13 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({ children }) => {
                 enqueueSnackbar("Sesión cerrada", { variant: 'success' });
                 snackbarShownRef.current.sessionClosed = true;
                 setLogoutIntentional(false);
-            } else if (!isAuthenticated && !logoutIntentional && !snackbarShownRef.current.loginRequired) {
+            } else if (!isAuthenticated && !logoutIntentional && !snackbarShownRef.current.loginRequired && !snackbarShownRef.current.sessionClosed) {
                 enqueueSnackbar("Debe iniciar sesión", { variant: 'warning' });
                 snackbarShownRef.current.loginRequired = true;
             }
         }
     }, [isAuthenticated, logoutIntentional, loading, enqueueSnackbar, setLogoutIntentional]);
+
 
     if (loading) {
         return null;

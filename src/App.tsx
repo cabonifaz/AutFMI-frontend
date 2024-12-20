@@ -17,6 +17,8 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<PantallaLogin />} />
+
+            <Route path="/*" element={<ProtectedRoute><PantallaListaTalentos /></ProtectedRoute>} />
             <Route path="/listaTalentos" element={<ProtectedRoute><PantallaListaTalentos /></ProtectedRoute>} />
             <Route path="/formIngreso" element={<ProtectedRoute><PantallaIngreso /></ProtectedRoute>} />
             <Route path="/formDatos" element={<ProtectedRoute><PantallaDatos /></ProtectedRoute>} />

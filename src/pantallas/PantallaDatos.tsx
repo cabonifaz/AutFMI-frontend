@@ -25,7 +25,7 @@ const PantallaDatos = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
     const { talentoDetails, loading } = useFetchTalento(talento.idTalento);
 
-    const { control, handleSubmit, formState: { errors }, reset, formState: { isDirty } } = useForm<DataFormType>({
+    const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<DataFormType>({
         resolver: zodResolver(DataFormSchema),
         mode: "onTouched",
         defaultValues: {

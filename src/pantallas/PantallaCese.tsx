@@ -1,90 +1,86 @@
-import { FC } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
-import { useGoBack } from '../hooks/useGoBack';
+import { FC, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { TalentoType } from '../models/type/TalentoType';
+import { OutFormSchema, OutFormType } from '../models/schema/OutFormSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import useFetchParams from '../hooks/useFetchParams';
+import { usePostHook } from '../hooks/usePostHook';
+import { MODALIDAD_LOC_SERVICIOS, MOTIVO_CESE, UNIDAD } from '../utils/config';
+import Loading from '../components/loading/Loading';
+import { DropdownForm, InputForm } from '../components/forms';
 
 const PantallaCese: FC = () => {
+    const navigate = useNavigate();
     const location = useLocation();
-    const goBack = useGoBack();
-    const { talento } = location.state || {};
-    const modalidad = 'Planilla';
+    const { talento } = location.state as { talento: TalentoType } || {};
+
+    const { postData, postloading } = usePostHook();
+    const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${MOTIVO_CESE}`);
+
+    const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
+    const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_CESE));
+
+    const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<OutFormType>({
+        resolver: zodResolver(OutFormSchema),
+        mode: "onTouched",
+    });
+
+    useEffect(() => {
+        if (talento) {
+            reset({
+                nombres: talento?.nombres || "",
+                apellidos: talento?.apellidos || "",
+            });
+        }
+    }, [talento, reset]);
+
+    const onSubmit: SubmitHandler<OutFormType> = async (data) => {
+        await postData("/fmi/employee/contractTermination", {
+            idUsuarioTalento: talento.idUsuarioTalento,
+            ...data
+        });
+    };
 
     return (
-        <div className="container mt-4 mb-5">
-            <h3 className="text-start">Modalidad: temp</h3>
+        <>
+            {paramLoading && <Loading />}
+            {postloading && <Loading />}
+            <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                    {/* Talent Data */}
+                    <h3>Datos del talento</h3>
+                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
+                    <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
 
-            {/* Sección Datos del talentoorador */}
-            <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Datos del talento</h5>
-                <Form.Group as={Row} className="align-items-center">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Nombre y apellido</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" defaultValue={talento?.nombres + ' ' + talento?.apellidos} />
-                    </Col>
-                </Form.Group>
-                <Form.Group as={Row} className="align-items-center mt-3">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Unidad</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control as="select" defaultValue={talento.unidad}>
-                            <option>Unidad 1</option>
-                            <option>Unidad 2</option>
-                        </Form.Control>
-                    </Col>
-                </Form.Group>
-                {modalidad !== 'Planilla' && (
-                    <Form.Group as={Row} className="align-items-center mt-3">
-                        <Col sm="4" className="text-start">
-                            <Form.Label>Empresa</Form.Label>
-                        </Col>
-                        <Col sm="8">
-                            <Form.Control as="select" defaultValue={talento.unidad}>
-                                <option>Empresa 1</option>
-                                <option>Empresa 2</option>
-                            </Form.Control>
-                        </Col>
-                    </Form.Group>
-                )}
+                    <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
+                        options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                    />
+
+                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
+
+                    {/* CESE */}
+                    <DropdownForm name="idMotivo" control={control} label="Motivo de cese" error={errors.idMotivo}
+                        options={reasonValues?.map((reason) => ({ value: reason.num1, label: reason.string1 })) || []} />
+
+                    <InputForm name="fchCese" control={control} label="Fecha de cese" error={errors.fchCese} type="date" />
+
+                    {/* Form options */}
+                    <hr />
+                    <div className="flex justify-center gap-4">
+                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+                            disabled={!isDirty}>
+                            Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Cese</h5>
-
-                <Form.Group as={Row} className="align-items-center">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Motivo de cese</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control as="select">
-                            <option>Despido</option>
-                            <option>Renuncia</option>
-                            <option>Culminación de la obra o servicio</option>
-                        </Form.Control>
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-3">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>F. Movimiento</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="date" />
-                    </Col>
-                </Form.Group>
-            </div>
-
-            <div className="d-flex justify-content-center mt-4 mb-4">
-                <Button variant="secondary" className="me-3" onClick={goBack}>
-                    Cancelar
-                </Button>
-                <Button variant="primary">
-                    Guardar
-                </Button>
-            </div>
-        </div>
+        </>
     );
 };
 

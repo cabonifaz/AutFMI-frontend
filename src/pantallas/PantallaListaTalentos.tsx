@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import { TalentoType } from '../models/type/TalentoType';
 import { useNavigate } from 'react-router-dom';
 import useTalentos from '../hooks/useTalentos';
@@ -8,95 +6,114 @@ import Loading from '../components/loading/Loading';
 import ModalModalidad from '../components/ui/ModalModalidad';
 
 const PantallaListaTalentos = () => {
+  const navigate = useNavigate();
   const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const { talentos, loading } = useTalentos();
+  const { talentos, loading, currentPage, setCurrentPage, emptyList } = useTalentos();
 
+  const handleCloseModal = () => setIsModalOpen(false);
   const handleOpenModal = (talento: TalentoType) => {
     selectTalento(talento);
     setIsModalOpen(true);
-  }
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  const navigateTo = (pantalla: string, talento: TalentoType) => {
-    if (pantalla.includes('Ingreso') && !talento.esTrabajador) {
-      handleOpenModal(talento);
-      return;
-    }
-
-    navigate(pantalla, { state: { talento } });
   };
 
   return (
     <>
       {loading && (<Loading />)}
-      <div className="container mt-5">
-        <div className="mb-3">
-          <label htmlFor="searchInput" className="form-label visually-hidden">Buscar</label>
-          <input
-            id="searchInput"
-            type="text"
-            className="form-control"
-            placeholder="🔍 Buscar"
-          />
+      <div className="flex">
+        <div className="w-48 h-screen fixed border-r border-gray-300 bg-white">
+          <ul className="text-gray-700 flex flex-col justify-end h-screen py-2 list-none m-0 p-0">
+            <li className='w-48'>
+              <button type='button' className='flex gap-2 max-h-12 items-center rounded-lg w-48 px-8 py-2 hover:bg-slate-200'>
+                <img src="assets/ic_logout.svg" alt="logout icon" className="max-h-8" />
+                Logout
+              </button>
+            </li>
+          </ul>
         </div>
 
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
-              <tr>
-                <th>Nombre (Estado)</th>
-                <th className="text-center" style={{ width: '120px' }}>Opciones</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {talentos.map((talento, index) => (
-                <tr key={index}>
-                  <td>
-                    {talento.nombres + ' ' + talento.apellidos}
-                    <br />
-                    <small>{talento.modalidad}</small>
-                  </td>
-                  <td
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ width: '120px', minHeight: '52px' }} >
-                    <button
-                      className="btn btn-link p-0 d-flex justify-content-center align-items-center"
-                      style={{ minHeight: '52px' }}
-                      aria-label="Editar talento"
-                      onClick={() => { navigateTo('/formDatos', talento); }}>
-                      <i className="bi bi-pencil-fill fs-4 text-muted"></i>
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-outline-primary me-2"
-                      onClick={() => navigateTo('/formIngreso', talento)}
-                      aria-label="Ingreso de talento"
-                      disabled={talento.esTrabajador}>
-                      Ingreso
-                    </button>
-                    <button
-                      className="btn btn-outline-secondary me-2"
-                      onClick={() => navigateTo('/formMovimiento', talento)}
-                      aria-label="Movimiento"
-                      disabled={!talento.esTrabajador}>
-                      Movimiento
-                    </button>
-                    <button
-                      className="btn btn-outline-danger"
-                      onClick={() => navigateTo('/formCese', talento)}
-                      aria-label="Dar de baja"
-                      disabled={!talento.esTrabajador}>
-                      Dar de baja
-                    </button>
-                  </td>
+        <div className="flex-1 p-4 ms-48">
+          <div className="mb-3">
+            <label htmlFor="searchInput" className="sr-only">Buscar</label>
+            <input
+              id="searchInput"
+              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-gray-500 focus:outline-none"
+              placeholder="🔍 Buscar"
+            />
+          </div>
+
+          <div>
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-2 px-4 text-left">Nombre (Estado)</th>
+                  <th className="py-2 px-4 text-center w-32">Opciones</th>
+                  <th className="py-2 px-4 text-center">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {talentos.map((talento, index) => (
+                  <tr key={index} className="border-t border-gray-200">
+                    <td className="py-2 px-4">
+                      <div className="flex flex-col">
+                        <span>{talento.nombres + ' ' + talento.apellidos}</span>
+                        <small className="text-gray-600">{talento.modalidad}</small>
+                      </div>
+                    </td>
+                    <td className="py-2 px-4 text-center">
+                      <button
+                        className="w-12 rounded-lg hover:bg-slate-200"
+                        aria-label="Editar talento"
+                        onClick={() => navigate("/formDatos", { state: { talento } })}>
+                        <img src="assets/ic_edit.svg" alt="edit icon" />
+                      </button>
+                    </td>
+                    <td className="py-2 px-4 text-center *:me-6">
+                      <button
+                        className={`px-4 py-1 rounded-lg text-white ${talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-blue-400 hover:bg-blue-500'}`}
+                        onClick={() => handleOpenModal(talento)}
+                        aria-label="Ingreso de talento"
+                        disabled={talento.esTrabajador}>
+                        Ingreso
+                      </button>
+                      <button
+                        className={`px-4 py-1 rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-orange-500 hover:bg-orange-600'}`}
+                        onClick={() => navigate('/formMovimiento', { state: { talento } })}
+                        aria-label="Movimiento"
+                        disabled={!talento.esTrabajador}>
+                        Movimiento
+                      </button>
+                      <button
+                        className={`px-4 py-1 rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-red-500 hover:bg-red-600'}`}
+                        onClick={() => navigate('/formCese', { state: { talento } })}
+                        aria-label="Dar de baja"
+                        disabled={!talento.esTrabajador}>
+                        Dar de baja
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="flex justify-center items-center gap-4 my-2">
+              <button
+                className={`px-4 py-2 rounded-lg text-white ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
+                disabled={currentPage === 1 || emptyList}>
+                Anterior
+              </button>
+              <span>Página {currentPage}</span>
+              <button
+                className={`px-4 py-2 rounded-lg text-white ${talentos.length < 15 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                onClick={() => setCurrentPage(prevPage => prevPage + 1)}
+                disabled={emptyList || talentos.length < 15}>
+                Siguiente
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

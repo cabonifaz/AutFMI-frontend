@@ -8,17 +8,17 @@ export const EntryFormSchema = z.object({
     idUnidad: validDropdown,
     empresa: z.string().min(1, "Campo obligatorio"),
     idMotivo: validDropdown,
-    cargo: z.number().min(1, "Campo obligatorio"),
+    cargo: z.string().min(1, "Campo obligatorio"),
     montoBase: z.number().min(1, "Campo obligatorio"),
-    montoMovilidad: z.number().min(1, "Campo obligatorio"),
-    montoTrimestral: z.number().min(1, "Campo obligatorio"),
-    montoSemestral: z.number().min(1, "Campo obligatorio"),
+    montoMovilidad: z.number(),
+    montoTrimestral: z.number(),
+    montoSemestral: z.number(),
     fchInicioContrato: z.string().date("Campo obligatorio"),
     fchTerminoContrato: z.string().date("Campo obligatorio"),
-    proyectoServicio: z.number().min(1, "Campo obligatorio"),
+    proyectoServicio: z.string().min(1, "Campo obligatorio"),
     objetoContrato: z.string().min(1, "Campo obligatorio"),
     declararSunat: validDropdown,
-    sedeDeclarar: validDropdown,
+    idSedeDeclarar: validDropdown,
 });
 
 export type EntryFormType = z.infer<typeof EntryFormSchema>;

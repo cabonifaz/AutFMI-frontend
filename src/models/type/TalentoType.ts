@@ -1,5 +1,5 @@
 export type TalentoType = {
-    idUsurioTalento: number;
+    idUsuarioTalento: number;
     idTalento: number;
     esTrabajador: boolean;
     nombres: string;

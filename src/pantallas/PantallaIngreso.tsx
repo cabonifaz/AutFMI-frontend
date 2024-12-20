@@ -92,7 +92,7 @@ const PantallaIngreso = () => {
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
           />
 
-          <InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />
+          {Number(data.idModalidad) === 2 && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
 
           {/* Entry */}
           <h3>Ingreso</h3>

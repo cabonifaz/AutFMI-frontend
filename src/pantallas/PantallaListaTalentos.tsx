@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import useTalentos from '../hooks/useTalentos';
 import Loading from '../components/loading/Loading';
 import ModalModalidad from '../components/ui/ModalModalidad';
+import { useAuth } from '../context/AuthContext';
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
-  const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
+  const { logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
   const { talentos, loading, currentPage, setCurrentPage, emptyList } = useTalentos();
 
   const handleCloseModal = () => setIsModalOpen(false);
@@ -24,7 +26,7 @@ const PantallaListaTalentos = () => {
         <div className="w-48 h-screen fixed border-r border-gray-300 bg-white">
           <ul className="text-gray-700 flex flex-col justify-end h-screen py-2 list-none m-0 p-0">
             <li className='w-48'>
-              <button type='button' className='flex gap-2 max-h-12 items-center rounded-lg w-48 px-8 py-2 hover:bg-slate-200'>
+              <button onClick={logout} type='button' className='flex gap-2 max-h-12 items-center rounded-lg w-48 px-8 py-2 hover:bg-slate-200'>
                 <img src="assets/ic_logout.svg" alt="logout icon" className="max-h-8" />
                 Logout
               </button>

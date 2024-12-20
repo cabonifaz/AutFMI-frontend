@@ -22,7 +22,7 @@ const PantallaIngreso = () => {
   const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
   const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_INGRESO));
 
-  const { control, handleSubmit, formState: { errors, isDirty, isSubmitted }, reset } = useForm<EntryFormType>({
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
     mode: "onTouched",
     defaultValues: {
@@ -132,8 +132,8 @@ const PantallaIngreso = () => {
             </button>
             <button
               type="submit"
-              className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
-              disabled={!isDirty || isSubmitted}>
+              className={`w-40 rounded-lg text-white py-2 ${isDirty && !isSubmitSuccessful ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+              disabled={!isDirty || isSubmitSuccessful}>
               Guardar
             </button>
           </div>

@@ -1,140 +1,110 @@
-import { FC } from 'react';
-import { Form, Button, Row, Col, Table } from 'react-bootstrap';
-import { useLocation } from 'react-router-dom';
-import { useGoBack } from '../hooks/useGoBack';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { TalentoType } from '../models/type/TalentoType';
+import useFetchParams from '../hooks/useFetchParams';
+import { usePostHook } from '../hooks/usePostHook';
+import { MODALIDAD_LOC_SERVICIOS, UNIDAD } from '../utils/config';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { MovementFormSchema, MovementFormType } from '../models/schema/MovementFormSchema';
+import { useEffect } from 'react';
+import Loading from '../components/loading/Loading';
+import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 
-const PantallaMovimiento: FC = () => {
+const PantallaMovimiento = () => {
+    const navigate = useNavigate();
     const location = useLocation();
-    const goBack = useGoBack();
-    const { talento } = location.state || {};
-    const modalidad = 'Planilla';
+    const { talento } = location.state as { talento: TalentoType } || {};
+
+    const { postData, postloading } = usePostHook();
+    const { params, paramLoading } = useFetchParams(`${UNIDAD}`);
+
+    const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
+
+    const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MovementFormType>({
+        resolver: zodResolver(MovementFormSchema),
+        mode: "onTouched",
+    });
+
+    useEffect(() => {
+        if (talento) {
+            reset({
+                nombres: talento?.nombres || "",
+                apellidos: talento?.apellidos || "",
+            });
+        }
+    }, [talento, reset]);
+
+    const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
+        await postData("/fmi/employee/movement", {
+            idUsuarioTalento: talento.idUsuarioTalento,
+            idMoneda: null,
+            idModalidad: null,
+            fchInicioContrato: null,
+            fchTerminoContrato: null,
+            proyectoServicio: null,
+            objetoContrato: null,
+            ...data
+        });
+
+        console.log({
+            idUsuarioTalento: talento.idUsuarioTalento,
+            idMoneda: null,
+            idModalidad: null,
+            fchInicioContrato: null,
+            fchTerminoContrato: null,
+            proyectoServicio: null,
+            objetoContrato: null,
+            ...data
+        });
+    };
 
     return (
-        <div className="container mt-4 mb-5">
-            <h3 className="text-start">Modalidad: temp</h3>
+        <>
+            {paramLoading && <Loading />}
+            {postloading && <Loading />}
+            <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                    {/* Talent Data */}
+                    <h3>Datos del talento</h3>
+                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
+                    <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
 
-            {/* Sección Datos del talentoorador */}
-            <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Datos del talento</h5>
-                <Form.Group as={Row} className="align-items-center">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Nombre y apellido</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" defaultValue={talento?.nombres + ' ' + talento?.apellidos} />
-                    </Col>
-                </Form.Group>
-                <Form.Group as={Row} className="align-items-center mt-3">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Unidad</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control as="select" defaultValue={talento.unidad}>
-                            <option>Unidad 1</option>
-                            <option>Unidad 2</option>
-                        </Form.Control>
-                    </Col>
-                </Form.Group>
-                {modalidad !== 'Planilla' && (
-                    <Form.Group as={Row} className="align-items-center mt-3">
-                        <Col sm="4" className="text-start">
-                            <Form.Label>Empresa</Form.Label>
-                        </Col>
-                        <Col sm="8">
-                            <Form.Control as="select" defaultValue={talento.unidad}>
-                                <option>Empresa 1</option>
-                                <option>Empresa 2</option>
-                            </Form.Control>
-                        </Col>
-                    </Form.Group>
-                )}
+                    <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
+                        options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                    />
+
+                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
+
+                    {/* Movement */}
+                    <SalaryStructureForm control={control} mainLabel="Estructura Salarial"
+                        inputs={[
+                            { label: "Monto Base", name: "montoBase", type: "number", error: errors.montoBase },
+                            { label: "Monto Movilidad", name: "montoMovilidad", type: "number", error: errors.montoMovilidad },
+                            { label: "Monto Trimestral", name: "montoTrimestral", type: "number", error: errors.montoTrimestral },
+                            { label: "Monto Semestral", name: "montoSemestral", type: "number", error: errors.montoSemestral }
+                        ]}
+                    />
+
+                    <InputForm name="puesto" control={control} label="Puesto" error={errors.puesto} />
+                    <InputForm name="area" control={control} label="Área" error={errors.area} />
+                    <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} />
+                    <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} />
+                    {/* Form options */}
+                    <hr />
+                    <div className="flex justify-center gap-4">
+                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+                            disabled={!isDirty}>
+                            Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div className="p-3 border rounded mb-3">
-                <h5 className="text-start ms-2">Movimiento</h5>
-
-                <Form.Group as={Row} className="align-items-center mt-3">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de estructura salarial</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Table bordered className="estructura-salarial mt-2">
-                            <thead>
-                                <tr>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Base" />
-                                    </th>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Movilidad" />
-                                    </th>
-                                    <th className="text-center">
-                                        <Form.Check type="checkbox" label="Bono trimestral" />
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                    <td>
-                                        <Form.Control type="text" placeholder="Monto" />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </Table>
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de puesto</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de área</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-2">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>Cambio de jornada</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="text" />
-                    </Col>
-                </Form.Group>
-
-                <Form.Group as={Row} className="align-items-center mt-3">
-                    <Col sm="4" className="text-start">
-                        <Form.Label>F. Movimiento</Form.Label>
-                    </Col>
-                    <Col sm="8">
-                        <Form.Control type="date" />
-                    </Col>
-                </Form.Group>
-            </div>
-
-            <div className="d-flex justify-content-center mt-4 mb-4">
-                <Button variant="secondary" className="me-3" onClick={goBack}>
-                    Cancelar
-                </Button>
-                <Button variant="primary">
-                    Guardar
-                </Button>
-            </div>
-        </div>
+        </>
     );
 };
 

@@ -20,7 +20,8 @@ const useFetchParams = (paramsId: string) => {
                     return;
                 }
                 enqueueSnackbar(response.data.result.mensaje, { variant: 'error' });
-            } finally {
+            } catch (error) { }
+            finally {
                 setParamLoading(false);
             }
         };

@@ -23,7 +23,11 @@ export const usePostHook = (): UsePostHookReturn => {
             }
             enqueueSnackbar(res.data.mensaje, { variant: 'error' });
             return res.data;
-        } finally {
+        } catch (error) {
+            enqueueSnackbar('Ocurrió un error en la solicitud.', { variant: 'error' });
+            return { idTipoMensaje: 3, mensaje: 'Ocurrió un error en la solicitud.' };
+        }
+        finally {
             setPostLoading(false);
         }
     };

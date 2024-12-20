@@ -13,14 +13,15 @@ const useTalentos = () => {
         const fetchTalentos = async () => {
             setLoading(true);
             try {
-                const response = await apiClientWithToken.get<TalentosResponse>('/fmi/talent/list');
+                const response = await apiClientWithToken.get<TalentosResponse>('/fmi/talent/list?nPag=');
 
                 if (response.status === 200 && response.data.idTipoMensaje === 2) {
                     setTalentos(response.data.talentos);
                     return;
                 }
                 enqueueSnackbar(response.data.mensaje, { variant: 'error' });
-            } finally {
+            } catch (error) { }
+            finally {
                 setLoading(false);
             }
         };

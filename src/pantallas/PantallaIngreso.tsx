@@ -25,7 +25,7 @@ const PantallaIngreso = () => {
 
   const goBack = () => navigate(-1);
 
-  const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset } = useForm<EntryFormType>({
+  const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset, setValue } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
     mode: "onTouched",
     defaultValues: {
@@ -111,7 +111,7 @@ const PantallaIngreso = () => {
 
           <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
           {/* Salary */}
-          <SalaryStructureForm control={control} mainLabel="Estructura Salarial"
+          <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue}
             inputs={[
               { label: "Monto Base", name: "montoBase", type: "number", error: errors.montoBase },
               { label: "Monto Movilidad", name: "montoMovilidad", type: "number", error: errors.montoMovilidad },

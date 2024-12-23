@@ -26,6 +26,8 @@ const PantallaDatos = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
     const { talentoDetails, loading } = useFetchTalento(talento.idTalento);
 
+    const goBack = () => navigate(-1);
+
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<DataFormType>({
         resolver: zodResolver(DataFormSchema),
         mode: "onTouched",
@@ -111,7 +113,7 @@ const PantallaDatos = () => {
                     {/* Form options */}
                     <hr />
                     <div className="flex justify-center gap-4">
-                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
                             Cancelar
                         </button>
                         <button

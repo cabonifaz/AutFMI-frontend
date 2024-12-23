@@ -9,6 +9,7 @@ import { MovementFormSchema, MovementFormType } from '../models/schema/MovementF
 import { useEffect } from 'react';
 import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
+import BackButton from '../components/ui/BackButton';
 
 const PantallaMovimiento = () => {
     const navigate = useNavigate();
@@ -19,6 +20,8 @@ const PantallaMovimiento = () => {
     const { params, paramLoading } = useFetchParams(`${UNIDAD}`);
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
+
+    const goBack = () => navigate(-1);
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MovementFormType>({
         resolver: zodResolver(MovementFormSchema),
@@ -35,7 +38,7 @@ const PantallaMovimiento = () => {
     }, [talento, reset]);
 
     const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
-        await postData("/fmi/employee/movement", {
+        const response = await postData("/fmi/employee/movement", {
             idUsuarioTalento: talento.idUsuarioTalento,
             idMoneda: null,
             idModalidad: null,
@@ -45,16 +48,23 @@ const PantallaMovimiento = () => {
             objetoContrato: null,
             ...data
         });
+
+        if (response.idTipoMensaje === 2) {
+            goBack();
+        }
     };
 
     return (
         <>
             {paramLoading && <Loading />}
             {postloading && <Loading />}
-            <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
+            <div className="w-full lg:w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
                     {/* Talent Data */}
-                    <h3 className="text-2xl font-semibold">Datos del talento</h3>
+                    <h3 className="text-2xl font-semibold flex gap-2">
+                        <BackButton backClicked={goBack} />
+                        Datos del talento
+                    </h3>
                     <hr className="my-1" />
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
@@ -82,7 +92,7 @@ const PantallaMovimiento = () => {
                     {/* Form options */}
                     <hr />
                     <div className="flex justify-center gap-4">
-                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
                             Cancelar
                         </button>
                         <button

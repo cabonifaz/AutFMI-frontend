@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TalentoType } from '../models/type/TalentoType';
 import { OutFormSchema, OutFormType } from '../models/schema/OutFormSchema';
@@ -9,8 +9,9 @@ import { usePostHook } from '../hooks/usePostHook';
 import { MODALIDAD_LOC_SERVICIOS, MOTIVO_CESE, UNIDAD } from '../utils/config';
 import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm } from '../components/forms';
+import BackButton from '../components/ui/BackButton';
 
-const PantallaCese: FC = () => {
+const PantallaCese = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { talento } = location.state as { talento: TalentoType } || {};
@@ -20,6 +21,8 @@ const PantallaCese: FC = () => {
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
     const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_CESE));
+
+    const goBack = () => navigate(-1);
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<OutFormType>({
         resolver: zodResolver(OutFormSchema),
@@ -36,10 +39,14 @@ const PantallaCese: FC = () => {
     }, [talento, reset]);
 
     const onSubmit: SubmitHandler<OutFormType> = async (data) => {
-        await postData("/fmi/employee/contractTermination", {
+        const response = await postData("/fmi/employee/contractTermination", {
             idUsuarioTalento: talento.idUsuarioTalento,
             ...data
         });
+
+        if (response.idTipoMensaje === 2) {
+            goBack();
+        }
     };
 
     return (
@@ -49,7 +56,10 @@ const PantallaCese: FC = () => {
             <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
                     {/* Talent Data */}
-                    <h3 className="text-2xl font-semibold">Datos del talento</h3>
+                    <h3 className="text-2xl font-semibold flex gap-2">
+                        <BackButton backClicked={goBack} />
+                        Datos del talento
+                    </h3>
                     <hr className="my-2" />
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
@@ -69,7 +79,7 @@ const PantallaCese: FC = () => {
                     {/* Form options */}
                     <hr />
                     <div className="flex justify-center gap-4">
-                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
                             Cancelar
                         </button>
                         <button

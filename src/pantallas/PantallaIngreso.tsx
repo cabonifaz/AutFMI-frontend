@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 import { sedeSunatList } from '../models/type/SedeSunatType';
+import BackButton from '../components/ui/BackButton';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const PantallaIngreso = () => {
   const modalityValues = params?.filter((param) => param.num2 === Number(data.idModalidad));
   const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
   const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_INGRESO));
+
+  const goBack = () => navigate(-1);
 
   const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
@@ -39,7 +42,7 @@ const PantallaIngreso = () => {
   const onSubmit: SubmitHandler<EntryFormType> = async (data) => {
     const { idSedeDeclarar, declararSunat, ...filteredData } = data;
 
-    await postData("/fmi/employee/entry", {
+    const response = await postData("/fmi/employee/entry", {
       idTalento: talento.idTalento,
       idUsuarioTalento: talento.idUsuarioTalento,
       idMoneda: null,
@@ -48,16 +51,21 @@ const PantallaIngreso = () => {
       sedeDeclarar: sedeSunatList.find((sede) => sede.idSede === idSedeDeclarar)?.nombre,
       ...filteredData,
     });
+
+    if (response.idTipoMensaje === 2) {
+      goBack();
+    }
   };
 
   return (
     <>
       {paramLoading && <Loading />}
       {postloading && <Loading />}
-      <div className="w-[65%] h-fit m-auto p-4 border-2 rounded-lg">
+      <div className="w-full lg:w-[65%] h-fit m-auto p-4 border-2 rounded-lg">
         {/* Modality */}
-        <div className="flex">
-          <h3 className="flex-[0.5] text-2xl font-semibold">Modalidad</h3>
+        <div className="flex items-center">
+          <BackButton backClicked={goBack} />
+          <h3 className="flex-[0.47] text-2xl font-semibold">Modalidad</h3>
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
           />
@@ -95,7 +103,7 @@ const PantallaIngreso = () => {
           {/* Dates and aditional info */}
           <InputForm name="fchInicioContrato" control={control} label="F. Inicio contrato" type="date" error={errors.fchInicioContrato} />
           <InputForm name="fchTerminoContrato" control={control} label="F. Termino contrato" type="date" error={errors.fchTerminoContrato} />
-          <InputForm name="proyectoServicio" control={control} label="Proyecto/Servicio" error={errors.proyectoServicio} />
+          <InputForm name="proyectoServicio" control={control} label="Proyecto / Servicio" error={errors.proyectoServicio} />
           <InputForm name="objetoContrato" control={control} label="Objeto del contrato" error={errors.objetoContrato} />
           {/* SUNAT */}
           <h3 className="text-2xl font-semibold">Declaración en SUNAT (*)</h3>
@@ -108,7 +116,7 @@ const PantallaIngreso = () => {
           {/* Form options */}
           <hr />
           <div className="flex justify-center gap-4">
-            <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={() => navigate(-1)}>
+            <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
               Cancelar
             </button>
             <button

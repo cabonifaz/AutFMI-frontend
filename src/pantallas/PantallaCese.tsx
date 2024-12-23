@@ -54,7 +54,7 @@ const PantallaCese = () => {
             {paramLoading && <Loading />}
             {postloading && <Loading />}
             <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
-                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}
                     <h3 className="text-2xl font-semibold flex gap-2">
                         <BackButton backClicked={goBack} />

@@ -85,7 +85,7 @@ const PantallaDatos = () => {
                 </h3>
                 <hr className="my-4" />
                 {/* Data form */}
-                <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-6">
+                <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-8">
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
                     <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} />

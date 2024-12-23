@@ -65,13 +65,13 @@ const PantallaIngreso = () => {
         {/* Modality */}
         <div className="flex items-center">
           <BackButton backClicked={goBack} />
-          <h3 className="flex-[0.47] text-2xl font-semibold">Modalidad</h3>
+          <h3 className="text-2xl font-semibold me-60">Modalidad</h3>
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
           />
         </div>
-        <hr className="my-4" />
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <hr className="my-8" />
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold">Datos del talento</h3>
           <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />

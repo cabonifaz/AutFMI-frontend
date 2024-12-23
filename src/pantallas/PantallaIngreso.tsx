@@ -28,6 +28,25 @@ const PantallaIngreso = () => {
   const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
     mode: "onTouched",
+    defaultValues: {
+      idModalidad: 0,
+      nombres: "",
+      apellidos: "",
+      idUnidad: 0,
+      empresa: "",
+      idMotivo: 0,
+      cargo: "",
+      montoBase: 0,
+      montoMovilidad: 0,
+      montoTrimestral: 0,
+      montoSemestral: 0,
+      fchInicioContrato: "",
+      fchTerminoContrato: "",
+      proyectoServicio: "",
+      objetoContrato: "",
+      declararSunat: 0,
+      idSedeDeclarar: 0
+    }
   });
 
   useEffect(() => {

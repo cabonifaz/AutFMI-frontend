@@ -41,10 +41,7 @@ const SalaryStructureForm = ({ control, mainLabel, inputs }: Props) => {
                                                 inputElement.disabled = !e.target.checked;
                                             }}
                                         />
-                                        <label
-                                            htmlFor={`checkbox-${input.name}`}
-                                            className="text-xs font-semibold"
-                                        >
+                                        <label htmlFor={`checkbox-${input.name}`} className="text-xs font-semibold">
                                             {input.label}
                                         </label>
                                     </div>
@@ -77,6 +74,7 @@ const SalaryStructureForm = ({ control, mainLabel, inputs }: Props) => {
                                             />
                                         )}
                                     />
+                                    {input.error && (<span className="text-red-500 text-xs">{input.error.message}</span>)}
                                 </td>
                             ))}
                         </tr>

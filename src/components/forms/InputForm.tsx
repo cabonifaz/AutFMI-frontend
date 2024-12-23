@@ -5,12 +5,15 @@ interface Props {
     control: Control<any>
     label: string;
     type?: string;
+    isPasswordField?: boolean;
+    passwordVisible?: boolean;
+    togglePasswordVisibility?: () => void;
     isWide?: boolean;
     orientation?: "horizontal" | "vertical";
     error?: FieldError
 }
 
-const InputForm = ({ name, control, label, type, isWide, orientation, error }: Props) => {
+const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error }: Props) => {
     return (
         <>
             <div className={`flex flex-[2.2] gap-2 ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
@@ -20,14 +23,30 @@ const InputForm = ({ name, control, label, type, isWide, orientation, error }: P
                         name={name}
                         control={control}
                         render={({ field }) =>
-                            <input
-                                id={name}
-                                type={type ? type : "text"}
-                                {...field}
-                                onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
-                                className={`w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
+                            <div className="relative">
+                                <input
+                                    id={name}
+                                    type={type ? type : "text"}
+                                    {...field}
+                                    onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
+                                    className={`w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
+                                {isPasswordField &&
+                                    <button
+                                        type="button"
+                                        onClick={togglePasswordVisibility}
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                    >
+                                        {passwordVisible ? (
+                                            <img src="/assets/see_pass.svg" alt="show pass" />
+                                        ) : (
+                                            <img src="/assets/not_see_pass.svg" alt="hide pass" />
+                                        )}
+                                    </button>
+                                }
+                            </div>
                         }
                     />
+
                     {error && <p className="absolute text-red-400 bg-transparent text-sm">{error.message}</p>}
                 </div>
             </div>

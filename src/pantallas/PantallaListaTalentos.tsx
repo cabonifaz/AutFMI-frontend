@@ -109,21 +109,23 @@ const PantallaListaTalentos = () => {
             </table>
 
             {/* Pagination */}
-            <div className="flex justify-center items-center gap-4 my-2">
-              <button
-                className={`px-4 py-2 rounded-lg text-white ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
-                onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
-                disabled={currentPage === 1 || emptyList}>
-                Anterior
-              </button>
-              <span>Página {currentPage}</span>
-              <button
-                className={`px-4 py-2 rounded-lg text-white ${talentos.length < 15 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
-                onClick={() => setCurrentPage(prevPage => prevPage + 1)}
-                disabled={emptyList || talentos.length < 15}>
-                Siguiente
-              </button>
-            </div>
+            {emptyList && (
+              <div className="flex justify-center items-center gap-4 my-2">
+                <button
+                  className={`px-4 py-2 rounded-lg text-white ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                  onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
+                  disabled={currentPage === 1 || emptyList}>
+                  Anterior
+                </button>
+                <span>Página {currentPage}</span>
+                <button
+                  className={`px-4 py-2 rounded-lg text-white ${talentos.length < 15 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                  onClick={() => setCurrentPage(prevPage => prevPage + 1)}
+                  disabled={emptyList || talentos.length < 15}>
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

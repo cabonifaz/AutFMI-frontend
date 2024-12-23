@@ -1,4 +1,5 @@
-import { Control, Controller, FieldError } from "react-hook-form";
+import { Control, Controller, FieldError, UseFormSetValue } from "react-hook-form";
+import { EntryFormType } from "../../models/schema/EntryFormSchema";
 
 interface InputItem {
     label: string;
@@ -9,11 +10,12 @@ interface InputItem {
 
 interface Props {
     control: Control<any>;
+    setValue: UseFormSetValue<any>;
     mainLabel: string;
     inputs: InputItem[];
 }
 
-const SalaryStructureForm = ({ control, mainLabel, inputs }: Props) => {
+const SalaryStructureForm = ({ control, setValue, mainLabel, inputs }: Props) => {
     return (
         <div className="flex items-start justify-between gap-1 mt-4">
             <div className="flex items-center flex-1 basis-4/12">
@@ -27,18 +29,17 @@ const SalaryStructureForm = ({ control, mainLabel, inputs }: Props) => {
                             {inputs.map((input) => (
                                 <th
                                     key={`thead-${input.name}`}
-                                    className="p-2 border border-gray-300 text-left"
-                                >
+                                    className="p-2 border border-gray-300 text-left">
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
                                             id={`checkbox-${input.name}`}
                                             className="w-5 h-5 accent-blue-500"
                                             onChange={(e) => {
-                                                const inputElement = document.getElementById(
-                                                    input.name
-                                                ) as HTMLInputElement;
-                                                inputElement.disabled = !e.target.checked;
+                                                const isChecked = e.target.checked;
+                                                const inputElement = document.getElementById(input.name) as HTMLInputElement;
+                                                inputElement.disabled = !isChecked;
+                                                setValue(input.name as keyof EntryFormType, 0);
                                             }}
                                         />
                                         <label htmlFor={`checkbox-${input.name}`} className="text-xs font-semibold">

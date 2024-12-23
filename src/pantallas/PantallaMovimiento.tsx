@@ -23,7 +23,7 @@ const PantallaMovimiento = () => {
 
     const goBack = () => navigate(-1);
 
-    const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MovementFormType>({
+    const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue } = useForm<MovementFormType>({
         resolver: zodResolver(MovementFormSchema),
         mode: "onTouched",
         defaultValues: {
@@ -90,7 +90,7 @@ const PantallaMovimiento = () => {
                     {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
 
                     {/* Movement */}
-                    <SalaryStructureForm control={control} mainLabel="Estructura Salarial"
+                    <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue}
                         inputs={[
                             { label: "Monto Base", name: "montoBase", type: "number", error: errors.montoBase },
                             { label: "Monto Movilidad", name: "montoMovilidad", type: "number", error: errors.montoMovilidad },

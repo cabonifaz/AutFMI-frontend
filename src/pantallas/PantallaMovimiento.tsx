@@ -26,6 +26,20 @@ const PantallaMovimiento = () => {
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<MovementFormType>({
         resolver: zodResolver(MovementFormSchema),
         mode: "onTouched",
+        defaultValues: {
+            nombres: "",
+            apellidos: "",
+            idUnidad: 0,
+            empresa: "",
+            montoBase: 0,
+            montoMovilidad: 0,
+            montoTrimestral: 0,
+            montoSemestral: 0,
+            puesto: "",
+            area: "",
+            jornada: "",
+            fchMovimiento: ""
+        }
     });
 
     useEffect(() => {

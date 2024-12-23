@@ -27,6 +27,14 @@ const PantallaCese = () => {
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<OutFormType>({
         resolver: zodResolver(OutFormSchema),
         mode: "onTouched",
+        defaultValues: {
+            nombres: "",
+            apellidos: "",
+            idUnidad: 0,
+            empresa: "",
+            idMotivo: 0,
+            fchCese: ""
+        }
     });
 
     useEffect(() => {

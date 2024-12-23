@@ -15,51 +15,73 @@ interface Props {
 
 const SalaryStructureForm = ({ control, mainLabel, inputs }: Props) => {
     return (
-        <div className="flex items-start justify-between gap-4 mt-4">
-            <div className="flex items-center flex-shrink-0 flex-grow">
+        <div className="flex items-start justify-between gap-1 mt-4">
+            <div className="flex items-center flex-1 basis-4/12">
                 <label className="text-lg font-semibold">{mainLabel}</label>
             </div>
 
-            <div className="flex w-fit flex-wrap gap-7">
-                {inputs.map((input) => (
-                    <div key={input.name} className="flex flex-col items-end gap-2">
-                        <div className="flex self-start gap-2 mb-2 w-fit">
-                            <input
-                                type="checkbox"
-                                id={`checkbox-${input.name}`}
-                                className="w-5 h-5 accent-blue-500"
-                                onChange={(e) => {
-                                    const inputElement = document.getElementById(input.name) as HTMLInputElement;
-                                    inputElement.disabled = !e.target.checked;
-                                }}
-                            />
-                            <label htmlFor={input.name} className="text-sm font-medium">
-                                {input.label}
-                            </label>
-                        </div>
+            <div className="flex flex-wrap gap-7 flex-1 basis-8/12">
+                <table className="table-cell border-collapse border border-gray-300 rounded-lg w-full">
+                    <thead>
+                        <tr>
+                            {inputs.map((input) => (
+                                <th
+                                    key={`thead-${input.name}`}
+                                    className="p-2 border border-gray-300 text-left"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id={`checkbox-${input.name}`}
+                                            className="w-5 h-5 accent-blue-500"
+                                            onChange={(e) => {
+                                                const inputElement = document.getElementById(
+                                                    input.name
+                                                ) as HTMLInputElement;
+                                                inputElement.disabled = !e.target.checked;
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor={`checkbox-${input.name}`}
+                                            className="text-xs font-semibold"
+                                        >
+                                            {input.label}
+                                        </label>
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
 
-                        <Controller
-                            name={input.name}
-                            control={control}
-                            render={({ field }) => (
-                                <input
-                                    disabled
-                                    id={input.name}
-                                    {...field}
-                                    type={input.type !== undefined ? input.type : "text"}
-                                    onChange={(e) =>
-                                        input.type === "number"
-                                            ? field.onChange(Number(e.target.value))
-                                            : field.onChange(e.target.value)
-                                    }
-                                    className={`w-fit sm:w-[11rem] outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${input.error ? "ring-red-400" : ""
-                                        }`}
-                                />
-                            )}
-                        />
-                        {input.error && (<p className="text-red-400 bg-transparent text-sm w-fit">{input.error.message}</p>)}
-                    </div>
-                ))}
+                    <tbody>
+                        <tr>
+                            {inputs.map((input) => (
+                                <td
+                                    key={`tbody-${input.name}`}
+                                    className="p-2 border border-gray-300">
+                                    <Controller
+                                        name={input.name}
+                                        control={control}
+                                        render={({ field }) => (
+                                            <input
+                                                disabled
+                                                id={input.name}
+                                                {...field}
+                                                type={input.type ?? "text"}
+                                                onChange={(e) =>
+                                                    input.type === "number"
+                                                        ? field.onChange(Number(e.target.value))
+                                                        : field.onChange(e.target.value)
+                                                }
+                                                className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10"
+                                            />
+                                        )}
+                                    />
+                                </td>
+                            ))}
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

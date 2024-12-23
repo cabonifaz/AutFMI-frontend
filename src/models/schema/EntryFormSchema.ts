@@ -19,6 +19,32 @@ export const EntryFormSchema = z.object({
     objetoContrato: z.string().min(1, "Campo obligatorio").default(""),
     declararSunat: validDropdown,
     idSedeDeclarar: validDropdown,
-});
+}).refine(
+    (data) => {
+        if (!data.fchInicioContrato || !data.fchTerminoContrato) {
+            return true;
+        }
+        const inicio = new Date(data.fchInicioContrato);
+        const fin = new Date(data.fchTerminoContrato);
+        return inicio <= fin;
+    },
+    {
+        message: "La fecha de inicio no puede ser mayor que la fecha de fin",
+        path: ["fchInicioContrato"],
+    }
+).refine(
+    (data) => {
+        if (!data.fchInicioContrato || !data.fchTerminoContrato) {
+            return true;
+        }
+        const inicio = new Date(data.fchInicioContrato);
+        const fin = new Date(data.fchTerminoContrato);
+        return fin >= inicio;
+    },
+    {
+        message: "La fecha de fin no puede ser menor que la fecha de inicio",
+        path: ["fchTerminoContrato"],
+    }
+);
 
 export type EntryFormType = z.infer<typeof EntryFormSchema>;

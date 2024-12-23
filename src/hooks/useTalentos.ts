@@ -8,13 +8,18 @@ const useTalentos = () => {
     const [talentos, setTalentos] = useState<TalentoType[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [emptyList, setEmptyList] = useState<boolean>(false);
     const { enqueueSnackbar } = useSnackbar();
 
-    const fetchTalentos = useCallback(async (page: number) => {
+    const fetchTalentos = useCallback(async (page: number, search: string) => {
         setLoading(true);
         try {
-            const response = await apiClientWithToken.get<TalentosResponse>(`/fmi/talent/list?nPag=${page}`);
+            const endpoint = search
+                ? `/fmi/talent/list?busqueda=${encodeURIComponent(search)}`
+                : `/fmi/talent/list?nPag=${page}`;
+
+            const response = await apiClientWithToken.get<TalentosResponse>(endpoint);
 
             if (response.status === 200 && response.data.idTipoMensaje === 2) {
                 setTalentos(response.data.talentos);
@@ -30,10 +35,10 @@ const useTalentos = () => {
     }, [enqueueSnackbar]);
 
     useEffect(() => {
-        fetchTalentos(currentPage);
-    }, [currentPage, enqueueSnackbar, fetchTalentos]);
+        fetchTalentos(currentPage, searchTerm);
+    }, [currentPage, enqueueSnackbar, fetchTalentos, searchTerm]);
 
-    return { talentos, loading, currentPage, setCurrentPage, emptyList };
+    return { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm };
 };
 
 export default useTalentos;

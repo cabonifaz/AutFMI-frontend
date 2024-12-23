@@ -10,8 +10,9 @@ const PantallaListaTalentos = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState<string>('');
   const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
-  const { talentos, loading, currentPage, setCurrentPage, emptyList } = useTalentos();
+  const { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm } = useTalentos();
 
   const handleCloseModal = () => setIsModalOpen(false);
   const handleOpenModal = (talento: TalentoType) => {
@@ -19,6 +20,10 @@ const PantallaListaTalentos = () => {
     setIsModalOpen(true);
   };
 
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+  };
   return (
     <>
       {loading && (<Loading />)}
@@ -37,14 +42,16 @@ const PantallaListaTalentos = () => {
         </div>
 
         <div className="flex-1 p-4 ms-20">
-          <div className="mb-3">
+          <div className="mb-3 flex gap-4">
             <label htmlFor="searchInput" className="sr-only">Buscar</label>
             <input
               id="searchInput"
               type="text"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-gray-500 focus:outline-none"
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-gray-300 focus:outline-none"
               placeholder="🔍 Buscar"
             />
+            <button type="button" className="border bg-slate-700 rounded-lg px-8 text-white hover:bg-slate-600" onClick={handleSearch}>Buscar</button>
           </div>
 
           <div>

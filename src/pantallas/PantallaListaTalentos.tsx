@@ -23,18 +23,20 @@ const PantallaListaTalentos = () => {
     <>
       {loading && (<Loading />)}
       <div className="flex">
-        <div className="w-48 h-screen fixed border-r border-gray-300 bg-white">
+        <div className="w-20 h-screen fixed border-r border-gray-300 bg-white">
           <ul className="text-gray-700 flex flex-col justify-end h-screen py-2 list-none m-0 p-0">
-            <li className='w-48'>
-              <button onClick={logout} type='button' className='flex gap-2 max-h-12 items-center rounded-lg w-48 px-8 py-2 hover:bg-slate-200'>
+            <li className='w-20 group relative'>
+              <button onClick={logout} type='button' className='flex gap-2 max-h-12 items-center rounded-lg px-6 py-2 hover:bg-slate-100'>
                 <img src="assets/ic_logout.svg" alt="logout icon" className="max-h-8" />
-                Logout
               </button>
+              <div className="absolute left-20 top-1/2 -translate-y-1/2 bg-gray-700 text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-nowrap">
+                Cerrar sesión
+              </div>
             </li>
           </ul>
         </div>
 
-        <div className="flex-1 p-4 ms-48">
+        <div className="flex-1 p-4 ms-20">
           <div className="mb-3">
             <label htmlFor="searchInput" className="sr-only">Buscar</label>
             <input

@@ -45,6 +45,6 @@ export const EntryFormSchema = z.object({
         message: "La fecha de fin no puede ser menor que la fecha de inicio",
         path: ["fchTerminoContrato"],
     }
-).refine((data) => data.montoBase > 0, { message: "El monto debe ser mayor a 0.", path: ["montoBase"] });
+).refine((data) => data.montoBase > 0, { message: "El monto base debe ser mayor a 0.", path: ["montoBase"] });
 
 export type EntryFormType = z.infer<typeof EntryFormSchema>;

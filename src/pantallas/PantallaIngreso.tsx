@@ -111,12 +111,12 @@ const PantallaIngreso = () => {
 
           <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
           {/* Salary */}
-          <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue}
+          <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
             inputs={[
-              { label: "Monto Base", name: "montoBase", type: "number", error: errors.montoBase },
-              { label: "Monto Movilidad", name: "montoMovilidad", type: "number", error: errors.montoMovilidad },
-              { label: "Monto Trimestral", name: "montoTrimestral", type: "number", error: errors.montoTrimestral },
-              { label: "Monto Semestral", name: "montoSemestral", type: "number", error: errors.montoSemestral }
+              { label: "Monto Base", name: "montoBase", type: "number" },
+              { label: "Monto Movilidad", name: "montoMovilidad", type: "number" },
+              { label: "Monto Trimestral", name: "montoTrimestral", type: "number" },
+              { label: "Monto Semestral", name: "montoSemestral", type: "number" }
             ]}
           />
           {/* Dates and aditional info */}

@@ -14,6 +14,6 @@ export const MovementFormSchema = z.object({
     area: z.string().min(1, "Campo obligatorio"),
     jornada: z.string().min(1, "Campo obligatorio"),
     fchMovimiento: z.string().date("Campo obligatorio"),
-}).refine((value) => value.montoBase > 0, { message: "El monto debe ser mayor a 0.", path: ["montoBase"] });
+}).refine((value) => value.montoBase > 0, { message: "El monto base debe ser mayor a 0.", path: ["montoBase"] });
 
 export type MovementFormType = z.infer<typeof MovementFormSchema>;

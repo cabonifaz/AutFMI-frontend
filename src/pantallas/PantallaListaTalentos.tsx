@@ -109,7 +109,7 @@ const PantallaListaTalentos = () => {
             </table>
 
             {/* Pagination */}
-            {emptyList && (
+            {talentos.length > 0 && (
               <div className="flex justify-center items-center gap-4 my-2">
                 <button
                   className={`px-4 py-2 rounded-lg text-white ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}

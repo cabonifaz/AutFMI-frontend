@@ -33,7 +33,7 @@ const DropdownForm = ({ name, control, label, options, error }: Props) => {
                             </select>
                         )}
                     />
-                    {error && <p className="absolute text-red-400 bg-transparent text-sm">{error.message}</p>}
+                    {error && <p className="absolute text-red-400 bg-transparent text-xs">{error.message}</p>}
                 </div>
             </div>
         </>

@@ -1,11 +1,10 @@
-import { Control, Controller, FieldError, UseFormSetValue } from "react-hook-form";
+import { Control, Controller, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { EntryFormType } from "../../models/schema/EntryFormSchema";
 
 interface InputItem {
     label: string;
     name: string;
     type?: string;
-    error?: FieldError;
 }
 
 interface Props {
@@ -13,16 +12,17 @@ interface Props {
     setValue: UseFormSetValue<any>;
     mainLabel: string;
     inputs: InputItem[];
+    errors: FieldErrors;
 }
 
-const SalaryStructureForm = ({ control, setValue, mainLabel, inputs }: Props) => {
+const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: Props) => {
     return (
         <div className="flex items-start justify-between gap-1 mt-4">
             <div className="flex items-center flex-1 basis-4/12">
                 <label className="text-lg font-semibold">{mainLabel}</label>
             </div>
 
-            <div className="flex flex-wrap gap-7 flex-1 basis-8/12">
+            <div className="flex flex-wrap flex-1 basis-8/12 relative">
                 <table className="table-cell border-collapse border border-gray-300 rounded-lg w-full">
                     <thead>
                         <tr>
@@ -75,12 +75,14 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs }: Props) =>
                                             />
                                         )}
                                     />
-                                    {input.error && (<span className="text-red-500 text-xs">{input.error.message}</span>)}
                                 </td>
                             ))}
                         </tr>
                     </tbody>
                 </table>
+                {errors.montoBase && typeof errors.montoBase.message === 'string' && (
+                    <span className="text-red-500 text-xs absolute -bottom-4">{errors.montoBase.message}</span>
+                )}
             </div>
         </div>
     );

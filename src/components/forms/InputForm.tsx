@@ -47,7 +47,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                         }
                     />
 
-                    {error && <p className="absolute text-red-400 bg-transparent text-sm">{error.message}</p>}
+                    {error && <p className="absolute text-red-400 bg-transparent text-xs">{error.message}</p>}
                 </div>
             </div>
         </>

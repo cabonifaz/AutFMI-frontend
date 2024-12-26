@@ -110,6 +110,7 @@ const PantallaIngreso = () => {
           />
 
           <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
+          <InputForm name="horarioTrabajo" control={control} label="Horario de trabajo" error={errors.horarioTrabajo} />
           {/* Salary */}
           <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
             inputs={[

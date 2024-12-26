@@ -9,6 +9,7 @@ export const EntryFormSchema = z.object({
     empresa: z.string().optional(),
     idMotivo: validDropdown,
     cargo: z.string().min(1, "Campo obligatorio"),
+    horarioTrabajo: z.string().min(1, "Campo obligatorio"),
     montoBase: z.number(),
     montoMovilidad: z.number().optional(),
     montoTrimestral: z.number().optional(),

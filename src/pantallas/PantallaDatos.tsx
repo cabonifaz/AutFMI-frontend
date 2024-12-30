@@ -115,7 +115,6 @@ const PantallaDatos = () => {
                     <InputForm name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
 
                     {/* Form options */}
-                    <hr />
                     <div className="flex justify-center gap-4">
                         <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
                             Cancelar

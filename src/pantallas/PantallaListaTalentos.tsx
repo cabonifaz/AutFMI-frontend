@@ -96,7 +96,7 @@ const PantallaListaTalentos = () => {
                         <img src="assets/ic_edit.svg" alt="edit icon" />
                       </button>
                     </td>
-                    <td className="py-2  lg:px-4 text-center flex flex-col md:flex-row *:w-full md:w-fit gap-2 lg:gap-6 items-center justify-center">
+                    <td className="py-5 lg:px-4 flex flex-col md:flex-row *:w-full *:md:w-fit gap-2 lg:gap-6 justify-center">
                       <button
                         className={`px-4 py-1 rounded-lg text-white ${talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-blue-400 hover:bg-blue-500'}`}
                         onClick={() => handleOpenModal(talento)}

@@ -10,6 +10,7 @@ import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 import { sedeSunatList } from '../models/type/SedeSunatType';
 import BackButton from '../components/ui/BackButton';
+import useFetchTalento from '../hooks/useFetchTalento';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const PantallaIngreso = () => {
   const { talento, data } = location.state || {};
 
   const { postData, postloading } = usePostHook();
+  const { talentoDetails, loading: TalentoLoading } = useFetchTalento(talento.idTalento);
   const { params, paramLoading } = useFetchParams(`${TIPO_MODALIDAD}, ${UNIDAD}, ${MOTIVO_INGRESO}`);
 
   const modalityValues = params?.filter((param) => param.num2 === Number(data.idModalidad));
@@ -50,13 +52,16 @@ const PantallaIngreso = () => {
   });
 
   useEffect(() => {
-    if (talento) {
+    if (talentoDetails) {
       reset({
-        nombres: talento?.nombres || "",
-        apellidos: talento?.apellidos || "",
+        nombres: talentoDetails?.nombres || "",
+        apellidos: talentoDetails?.apellidos || "",
+        cargo: talentoDetails?.cargo || "",
+        montoBase: talentoDetails?.remuneracion || 0,
+        idModalidad: talentoDetails?.idModalidad || 0,
       });
     }
-  }, [talento, reset]);
+  }, [reset, talentoDetails]);
 
   const onSubmit: SubmitHandler<EntryFormType> = async (data) => {
     const { idSedeDeclarar, declararSunat, ...filteredData } = data;
@@ -80,6 +85,7 @@ const PantallaIngreso = () => {
     <>
       {paramLoading && <Loading />}
       {postloading && <Loading />}
+      {TalentoLoading && <Loading />}
       <div className="w-full lg:w-[65%] h-fit m-auto p-4 border-2 rounded-lg">
         {/* Modality */}
         <div className="flex items-center">

@@ -36,13 +36,13 @@ const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
     <>
       {paramLoading && <Loading />}
       <div className="flex justify-center items-center bg-gray-500 bg-opacity-50 fixed top-0 left-0 w-full h-full z-50">
-        <div className="bg-white w-96 p-4 rounded-lg">
+        <div className="p-4 rounded-lg w-80 bg-white">
           <h3 className="text-center mb-4 text-2xl font-semibold">Modalidad</h3>
           <hr className="my-1" />
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={options?.map((option) => ({ value: option.num1, label: option.string1 })) || []}
           />
-          <div className="flex justify-end gap-4 mt-4 me-3">
+          <div className="flex justify-center gap-4 mt-4">
             <button type="button" className="bg-slate-600 rounded-lg py-2 px-4 text-white" onClick={onClose}>
               Cancelar
             </button>

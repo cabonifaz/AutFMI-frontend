@@ -5,6 +5,7 @@ import useTalentos from '../hooks/useTalentos';
 import Loading from '../components/loading/Loading';
 import ModalModalidad from '../components/ui/ModalModalidad';
 import { useAuth } from '../context/AuthContext';
+import { enqueueSnackbar } from 'notistack';
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ const PantallaListaTalentos = () => {
 
   const handleCloseModal = () => setIsModalOpen(false);
   const handleOpenModal = (talento: TalentoType) => {
+    if (talento.idUsuarioTalento === 0) {
+      enqueueSnackbar('Debe actualizar los datos del talento', { variant: 'warning' });
+      return;
+    };
     selectTalento(talento);
     setIsModalOpen(true);
   };

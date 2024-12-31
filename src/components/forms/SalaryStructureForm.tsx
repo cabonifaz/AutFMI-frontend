@@ -35,6 +35,7 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
                                             type="checkbox"
                                             id={`checkbox-${input.name}`}
                                             className="w-5 h-5 accent-blue-500"
+                                            defaultChecked={input.name === "montoBase"}
                                             onChange={(e) => {
                                                 const isChecked = e.target.checked;
                                                 const inputElement = document.getElementById(input.name) as HTMLInputElement;
@@ -62,7 +63,7 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
                                         control={control}
                                         render={({ field }) => (
                                             <input
-                                                disabled
+                                                disabled={input.name !== "montoBase"}
                                                 id={input.name}
                                                 {...field}
                                                 type={input.type ?? "text"}

@@ -10,6 +10,7 @@ import { MODALIDAD_LOC_SERVICIOS, MOTIVO_CESE, UNIDAD } from '../utils/config';
 import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
+import useFetchEmpleado from '../hooks/useFetchEmpleado';
 
 const PantallaCese = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const PantallaCese = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
 
     const { postData, postloading } = usePostHook();
+    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
     const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${MOTIVO_CESE}`);
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
@@ -38,13 +40,14 @@ const PantallaCese = () => {
     });
 
     useEffect(() => {
-        if (talento) {
+        if (employee) {
             reset({
-                nombres: talento?.nombres || "",
-                apellidos: talento?.apellidos || "",
+                nombres: employee.nombres || "",
+                apellidos: employee.apellidos || "",
+                idUnidad: employee.idUnidad || 0,
             });
         }
-    }, [talento, reset]);
+    }, [employee, reset]);
 
     const onSubmit: SubmitHandler<OutFormType> = async (data) => {
         const response = await postData("/fmi/employee/contractTermination", {
@@ -61,6 +64,7 @@ const PantallaCese = () => {
         <>
             {paramLoading && <Loading />}
             {postloading && <Loading />}
+            {employeeLoading && <Loading />}
             <div className="w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}

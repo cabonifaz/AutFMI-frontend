@@ -70,7 +70,10 @@ const PantallaDatos = () => {
     }, [talentoDetails, reset]);
 
     const saveData: SubmitHandler<DataFormType> = async (data) => {
-        await postData("/fmi/talent/save", { idTalento: talento.idTalento, ...data });
+        const response = await postData("/fmi/talent/save", { idTalento: talento.idTalento, ...data });
+        if (response.idTipoMensaje === 2) {
+            goBack();
+        }
     }
 
     return (

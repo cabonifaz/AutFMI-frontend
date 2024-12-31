@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
+import useFetchEmpleado from '../hooks/useFetchEmpleado';
 
 const PantallaMovimiento = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const PantallaMovimiento = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
 
     const { postData, postloading } = usePostHook();
+    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
     const { params, paramLoading } = useFetchParams(`${UNIDAD}`);
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
@@ -43,13 +45,15 @@ const PantallaMovimiento = () => {
     });
 
     useEffect(() => {
-        if (talento) {
+        if (employee && !employeeLoading) {
             reset({
-                nombres: talento?.nombres || "",
-                apellidos: talento?.apellidos || "",
+                nombres: employee.nombres || "",
+                apellidos: employee.apellidos || "",
+                idUnidad: employee.idUnidad || 0,
+                montoBase: employee.remuneracion || 0,
             });
         }
-    }, [talento, reset]);
+    }, [employee, employeeLoading, reset]);
 
     const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
         const response = await postData("/fmi/employee/movement", {
@@ -72,6 +76,7 @@ const PantallaMovimiento = () => {
         <>
             {paramLoading && <Loading />}
             {postloading && <Loading />}
+            {employeeLoading && <Loading />}
             <div className="w-full lg:w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}

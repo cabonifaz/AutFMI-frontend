@@ -93,13 +93,20 @@ const PantallaListaTalentos = () => {
                         <small className="text-gray-600">{talento.modalidad}</small>
                       </div>
                     </td>
-                    <td className="py-2 px-2 lg:px-4 text-center">
-                      <button
-                        className="w-12 rounded-lg hover:bg-slate-200"
-                        aria-label="Editar talento"
-                        onClick={() => navigate("/formDatos", { state: { talento } })}>
-                        <img src="assets/ic_edit.svg" alt="edit icon" />
-                      </button>
+                    <td className="text-center">
+                      <div className='flex items-center justify-center gap-2'>
+                        <button
+                          className="w-12 rounded-lg hover:bg-slate-200"
+                          aria-label="Editar talento"
+                          onClick={() => navigate("/formDatos", { state: { talento } })}>
+                          <img src="assets/ic_edit.svg" alt="edit icon" />
+                        </button>
+                        <button
+                          className="w-12 rounded-lg hover:bg-slate-200 p-2"
+                          aria-label="Descargar PDF">
+                          <img src="assets/ic_pdf.svg" alt="download pdf icon" />
+                        </button>
+                      </div>
                     </td>
                     <td className="py-5 lg:px-4 flex flex-col md:flex-row *:w-full *:md:w-fit gap-2 lg:gap-6 justify-center">
                       <button

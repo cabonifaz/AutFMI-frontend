@@ -38,8 +38,6 @@ const useDownloadPdf = () => {
                     newTab.onbeforeunload = () => {
                         URL.revokeObjectURL(url);
                     };
-                } else {
-                    enqueueSnackbar(`Error al abrir PDF: ${file.nombreArchivo}.`, { variant: 'error' });
                 }
             }, index * 500);
         });
@@ -54,20 +52,20 @@ const useDownloadPdf = () => {
             );
 
             const { result, lstArchivos } = response.data;
+
             if (result.idTipoMensaje !== 2) {
                 enqueueSnackbar(result.mensaje, { variant: 'error' });
                 return;
             }
 
-            if (!lstArchivos || lstArchivos.length === 0) {
-                enqueueSnackbar('Archivos PDF no encontrados.', { variant: 'warning' });
+            if (lstArchivos.length === 0) {
+                enqueueSnackbar(result.mensaje, { variant: 'warning' });
                 return;
             }
 
             openPdfFilesInNewTab(lstArchivos);
-        } catch (error) {
-            enqueueSnackbar('Error al consultar archivo PDF.', { variant: 'error' });
-        } finally {
+        } catch (error) { }
+        finally {
             setLoading(false);
         }
     };

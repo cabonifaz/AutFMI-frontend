@@ -6,11 +6,13 @@ import Loading from '../components/loading/Loading';
 import ModalModalidad from '../components/ui/ModalModalidad';
 import { useAuth } from '../context/AuthContext';
 import { enqueueSnackbar } from 'notistack';
+import useDownloadPdf from '../hooks/useDownloadPdf';
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { fetchAndOpenPdf, loading: downloadPdfLoading } = useDownloadPdf();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState<string>('');
   const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
@@ -30,9 +32,11 @@ const PantallaListaTalentos = () => {
     setSearchTerm(searchInput);
     setCurrentPage(1);
   };
+
   return (
     <>
       {loading && (<Loading />)}
+      {downloadPdfLoading && (<Loading />)}
       <div className="flex">
         <div className={`bg-black absolute top-0 left-20 bottom-0 right-0 z-10 opacity-50 md:hidden ${isMenuOpen ? 'translate-x-0' : '-translate-x-[125%]'} transition-transform duration-300`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -103,7 +107,9 @@ const PantallaListaTalentos = () => {
                         </button>
                         <button
                           className="w-12 rounded-lg hover:bg-slate-200 p-2"
-                          aria-label="Descargar PDF">
+                          aria-label="Descargar PDF"
+                          onClick={() => fetchAndOpenPdf(talento.idTipoHistorial, talento.idUsuarioTalento)}
+                        >
                           <img src="assets/ic_pdf.svg" alt="download pdf icon" />
                         </button>
                       </div>

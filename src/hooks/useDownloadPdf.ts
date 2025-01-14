@@ -23,26 +23,23 @@ const useDownloadPdf = () => {
                 const pdfBlob = decodeBase64ToBlob(file.archivoB64);
                 const url = URL.createObjectURL(pdfBlob);
 
-                const newTab = window.open('', `_blank_${index}`);
+                const newTab = window.open(url, `_blank_${index}`);
                 if (newTab) {
-                    newTab.document.title = file.nombreArchivo;
+                    const setTitle = () => {
+                        newTab.document.title = file.nombreArchivo;
+                    };
 
-                    const objectTag = newTab.document.createElement('object');
-                    objectTag.type = 'application/pdf';
-                    objectTag.data = url;
-                    objectTag.style.width = '100%';
-                    objectTag.style.height = '100vh';
-
-                    newTab.document.body.appendChild(objectTag);
+                    newTab.onload = setTitle;
 
                     newTab.onbeforeunload = () => {
                         URL.revokeObjectURL(url);
                     };
+                } else {
+                    console.error(`Failed to open tab for file: ${file.nombreArchivo}`);
                 }
             }, index * 500);
         });
     };
-
 
     const fetchAndOpenPdf = async (idTipoHistorial: number, idUsuarioTalento: number) => {
         setLoading(true);

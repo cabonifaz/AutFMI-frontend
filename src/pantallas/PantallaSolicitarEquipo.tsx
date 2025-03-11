@@ -27,7 +27,7 @@ const PantallaSolicitarEquipo = () => {
 
     const goBack = () => navigate(-1);
 
-    const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue, watch, trigger } = useForm<EquipoFormType>({
+    const { control, handleSubmit, formState: { errors, isDirty }, reset, watch, trigger } = useForm<EquipoFormType>({
         resolver: zodResolver(EquipoFormSchema),
         mode: "onTouched",
         defaultValues: {
@@ -53,7 +53,7 @@ const PantallaSolicitarEquipo = () => {
         }
     });
 
-    const { fields, append, remove, replace, update } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control,
         name: "software"
     });
@@ -111,6 +111,7 @@ const PantallaSolicitarEquipo = () => {
             replace(manualSoftware);
             setDefaultSoftwareIds([]);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tipoHardware, tipoSoftwareParams, replace, trigger]);
 
     useEffect(() => {

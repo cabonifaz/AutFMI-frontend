@@ -24,16 +24,16 @@ const PantallaSolicitarEquipo = () => {
     const { params, paramLoading } = useFetchParams(`${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
 
     const tipoHardwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === 21) || [], 
+        params?.filter(param => param.idMaestro === Number(TIPO_HARDWARE)) || [], 
         [params]
     );
     const anexoHardwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === 22) || [], 
+        params?.filter(param => param.idMaestro === Number(ANEXO_HARDWARE)) || [], 
         [params]
     );
 
     const tipoSoftwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === 23) || [], 
+        params?.filter(param => param.idMaestro === Number(TIPO_SOFTWARE)) || [], 
         [params]
     );
 

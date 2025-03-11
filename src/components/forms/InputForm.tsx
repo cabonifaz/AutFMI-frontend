@@ -10,10 +10,11 @@ interface Props {
     togglePasswordVisibility?: () => void;
     isWide?: boolean;
     orientation?: "horizontal" | "vertical";
-    error?: FieldError
+    error?: FieldError;
+    disabled?: boolean;
 }
 
-const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error }: Props) => {
+const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled }: Props) => {
     return (
         <>
             <div className={`flex flex-[2.2] gap-2 ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
@@ -29,6 +30,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                                     type={type ? type : "text"}
                                     {...field}
                                     onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
+                                    disabled={disabled}
                                     className={`w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
                                 {isPasswordField &&
                                     <button

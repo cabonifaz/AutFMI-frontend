@@ -4,7 +4,7 @@ import { usePostHook } from '../hooks/usePostHook';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
 import { EquipoFormSchema, EquipoFormType } from '../models/schema/EquipoFormSchema';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Loading from '../components/loading/Loading';
 import { InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
@@ -21,9 +21,21 @@ const PantallaSolicitarEquipo = () => {
 
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
-    const { params: tipoHardwareParams, paramLoading: tipoHardwareLoading } = useFetchParams(`${TIPO_HARDWARE}`);
-    const { params: anexoHardwareParams, paramLoading: anexoHardwareLoading } = useFetchParams(`${ANEXO_HARDWARE}`);
-    const { params: tipoSoftwareParams, paramLoading: tipoSoftwareLoading } = useFetchParams(`${TIPO_SOFTWARE}`);
+    const { params, paramLoading } = useFetchParams(`${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
+
+    const tipoHardwareParams = useMemo(() => 
+        params?.filter(param => param.idMaestro === 21) || [], 
+        [params]
+    );
+    const anexoHardwareParams = useMemo(() => 
+        params?.filter(param => param.idMaestro === 22) || [], 
+        [params]
+    );
+
+    const tipoSoftwareParams = useMemo(() => 
+        params?.filter(param => param.idMaestro === 23) || [], 
+        [params]
+    );
 
     const goBack = () => navigate(-1);
 
@@ -167,7 +179,7 @@ const PantallaSolicitarEquipo = () => {
         append({ producto: "", version: "" });
     };
 
-    const isLoading = postloading || employeeLoading || tipoHardwareLoading || anexoHardwareLoading || tipoSoftwareLoading;
+    const isLoading = postloading || employeeLoading || paramLoading;
 
     return (
         <>

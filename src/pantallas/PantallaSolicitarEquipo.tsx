@@ -6,12 +6,12 @@ import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
 import { EquipoFormSchema, EquipoFormType } from '../models/schema/EquipoFormSchema';
 import { useEffect, useMemo, useState } from 'react';
 import Loading from '../components/loading/Loading';
-import { InputForm } from '../components/forms';
+import { DropdownForm, InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import CheckboxForm from '../components/forms/CheckboxForm';
 import useFetchParams from '../hooks/useFetchParams';
-import { ANEXO_HARDWARE, TIPO_HARDWARE, TIPO_SOFTWARE } from '../utils/config';
+import { ANEXO_HARDWARE, TIPO_HARDWARE, TIPO_SOFTWARE, UNIDAD } from '../utils/config';
 
 const PantallaSolicitarEquipo = () => {
     const navigate = useNavigate();
@@ -21,12 +21,13 @@ const PantallaSolicitarEquipo = () => {
 
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
-    const { params, paramLoading } = useFetchParams(`${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
+    const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
 
     const tipoHardwareParams = useMemo(() => 
         params?.filter(param => param.idMaestro === Number(TIPO_HARDWARE)) || [], 
         [params]
     );
+    
     const anexoHardwareParams = useMemo(() => 
         params?.filter(param => param.idMaestro === Number(ANEXO_HARDWARE)) || [], 
         [params]
@@ -34,6 +35,11 @@ const PantallaSolicitarEquipo = () => {
 
     const tipoSoftwareParams = useMemo(() => 
         params?.filter(param => param.idMaestro === Number(TIPO_SOFTWARE)) || [], 
+        [params]
+    );
+
+    const unitValues = useMemo(() => 
+        params?.filter((param) => param.idMaestro === Number(UNIDAD)) || [],
         [params]
     );
 
@@ -46,12 +52,12 @@ const PantallaSolicitarEquipo = () => {
             nombres: "",
             apellidos: "",
             cliente: "",
-            area: "",
+            area: 0,
             cargo: "",
             fechaSolicitud: new Date().toISOString().split('T')[0],
             fechaEntrega: new Date().toISOString().split('T')[0],
-            tipoHardware: tipoHardwareParams?.length ? tipoHardwareParams[tipoHardwareParams.length - 1].string1 : "Otros", // Default a la última opción
-            anexoHardware: anexoHardwareParams?.length ? anexoHardwareParams[anexoHardwareParams.length - 1].string1 : "Ninguno", // Default a la última opción
+            tipoHardware: tipoHardwareParams?.length ? tipoHardwareParams[tipoHardwareParams.length - 1].num1 : 99,
+            anexoHardware: anexoHardwareParams?.length ? anexoHardwareParams[anexoHardwareParams.length - 1].num1 : 99,
             isPc: false,
             isLaptop: false,
             procesador: "",
@@ -72,7 +78,8 @@ const PantallaSolicitarEquipo = () => {
 
     const tipoHardware = watch("tipoHardware");
 
-    const isPcOrLaptop = tipoHardware === "PC" || tipoHardware === "Laptop";
+    // const isPcOrLaptop = tipoHardware === "PC" || tipoHardware === "Laptop";
+    const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;
 
     const isDefaultSoftware = (id: any) => {
         return defaultSoftwareIds.includes(id);
@@ -132,12 +139,12 @@ const PantallaSolicitarEquipo = () => {
                 nombres: employee.nombres || "",
                 apellidos: employee.apellidos || "",
                 cliente: "",
-                area: "",
+                area: 0,
                 cargo: "",
                 fechaSolicitud: new Date().toISOString().split('T')[0],
                 fechaEntrega: new Date().toISOString().split('T')[0],
-                tipoHardware: tipoHardwareParams?.length ? tipoHardwareParams[tipoHardwareParams.length - 1].string1 : "Otros",
-                anexoHardware: anexoHardwareParams?.length ? anexoHardwareParams[anexoHardwareParams.length - 1].string1 : "Ninguno",
+                tipoHardware: tipoHardwareParams?.length ? tipoHardwareParams[tipoHardwareParams.length - 1].num1 : 99,
+                anexoHardware: anexoHardwareParams?.length ? anexoHardwareParams[anexoHardwareParams.length - 1].num1 : 99,
                 isPc: false,
                 isLaptop: false,
                 procesador: "",
@@ -155,10 +162,10 @@ const PantallaSolicitarEquipo = () => {
     const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
         const formattedData = {
             ...data,
-            isPc: data.tipoHardware === "PC",
-            isLaptop: data.tipoHardware === "Laptop",
-            anexoFijo: data.anexoHardware === "Fijo",
-            anexoSoftphone: data.anexoHardware === "Softphone",
+            isPc: data.tipoHardware === 1,
+            isLaptop: data.tipoHardware === 2,
+            anexoFijo: data.anexoHardware === 1,
+            anexoSoftphone: data.anexoHardware === 2,
             celularsi: data.celular === "si",
             celularno: data.celular === "no",
             internetMovilsi: data.internetMovil === "si",
@@ -184,7 +191,7 @@ const PantallaSolicitarEquipo = () => {
     return (
         <>
             {isLoading && <Loading />}
-            <div className="w-full lg:w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
+            <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Datos del Colaborador */}
                     <h3 className="text-2xl font-semibold flex gap-2">
@@ -196,7 +203,9 @@ const PantallaSolicitarEquipo = () => {
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                         <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
                         <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} />
-                        <InputForm name="area" control={control} label="Área" error={errors.area} />
+                        <DropdownForm name="area" control={control} label="Área" error={errors.area}
+                            options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                        />
                         <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
                     </div>
 
@@ -220,25 +229,21 @@ const PantallaSolicitarEquipo = () => {
 
                     {/* Datos de Requerimiento de Hardware */}
                     <h3 className="text-2xl font-semibold">Datos de Requerimiento de Hardware</h3>
-                    <hr className="my-1" />
                     
-                    {/* Tipo de Equipo como Radio Buttons */}
+                    {/* Tipo de Equipo */}
                     <div className="flex flex-col">
-                        <label className="mb-2 font-medium">Tipo de Equipo</label>
                         <div className="flex gap-4">
-                            {tipoHardwareParams?.map((param) => (
-                                <CheckboxForm
-                                    key={param.num1}
-                                    name="tipoHardware"
-                                    control={control}
-                                    label={param.string1}
-                                    value={param.string1}
-                                    defaultChecked={param.num1 === tipoHardwareParams[tipoHardwareParams.length - 1].num1}
-                                    group="tipoHardware"
-                                />
-                            ))}
+                            <DropdownForm
+                                name="tipoHardware"
+                                control={control}
+                                label="Tipo de Equipo"
+                                options={tipoHardwareParams?.map(param => ({ 
+                                    value: param.num1, 
+                                    label: param.string1 
+                                })) || []}
+                                error={errors.tipoHardware}
+                            />
                         </div>
-                        {errors.tipoHardware && <p className="text-red-500 text-sm mt-1">{errors.tipoHardware.message}</p>}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,19 +280,17 @@ const PantallaSolicitarEquipo = () => {
                     {/* Anexos */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="flex flex-col">
-                            <label className="mb-2 font-medium">Anexo</label>
                             <div className="flex gap-4">
-                                {anexoHardwareParams?.map((param) => (
-                                    <CheckboxForm
-                                        key={param.num1}
-                                        name="anexoHardware"
-                                        control={control}
-                                        label={param.string1}
-                                        value={param.string1}
-                                        defaultChecked={param.num1 === anexoHardwareParams[anexoHardwareParams.length - 1].num1}
-                                        group="anexoHardware"
-                                    />
-                                ))}
+                                <DropdownForm
+                                    name="anexoHardware"
+                                    control={control}
+                                    label="Anexo"
+                                    options={anexoHardwareParams?.map(param => ({ 
+                                        value: param.num1, 
+                                        label: param.string1 
+                                    })) || []}
+                                    error={errors.anexoHardware}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -341,7 +344,6 @@ const PantallaSolicitarEquipo = () => {
 
                    {/* Datos de Instalación de Software */}
                     <h3 className="text-2xl font-semibold">Datos de Instalación de Software</h3>
-                    <hr className="my-1" />
 
                     <div className="border p-4 rounded-lg">
                         {/* Encabezado de la tabla */}
@@ -404,7 +406,6 @@ const PantallaSolicitarEquipo = () => {
                     </div>
 
                     {/* Form options */}
-                    <hr />
                     <div className="flex justify-center gap-4">
                         <button 
                             type="button" 

@@ -1,17 +1,18 @@
 import { z } from 'zod';
+import { validDropdown } from './Validations';
 
 export const EquipoFormSchema = z.object({
     nombres: z.string().min(1, { message: "El nombre es requerido" }),
     apellidos: z.string().min(1, { message: "Los apellidos son requeridos" }),
     cliente: z.string().min(1, { message: "El cliente es requerido" }),
-    area: z.string().min(1, { message: "El área es requerida" }),
+    area: validDropdown,
     cargo: z.string().min(1, { message: "El cargo es requerido" }),
     fechaSolicitud: z.string().min(1, { message: "La fecha de solicitud es requerida" }),
     fechaEntrega: z.string().min(1, { message: "La fecha de entrega es requerida" }),
     
     // Nuevos campos para selección única
-    tipoHardware: z.string().min(1, { message: "Tipo de hardware es requerido" }),
-    anexoHardware: z.string().min(1, { message: "Anexo de hardware es requerido" }),
+    tipoHardware: validDropdown,
+    anexoHardware: validDropdown,
     celular: z.string().min(1, { message: "Celular es requerido" }),
     internetMovil: z.string().min(1, { message: "Internet Móvil es requerido" }),
     
@@ -41,7 +42,7 @@ export const EquipoFormSchema = z.object({
     )
 }).superRefine((data, ctx) => {
     // Validación condicional para procesador, RAM y disco basada en PC o Laptop
-    if (data.tipoHardware === "PC" || data.tipoHardware === "Laptop") {
+    if (data.tipoHardware === 1 || data.tipoHardware === 2) {
         if (!data.procesador || data.procesador.trim() === "") {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,

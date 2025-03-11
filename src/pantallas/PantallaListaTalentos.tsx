@@ -136,6 +136,13 @@ const PantallaListaTalentos = () => {
                         disabled={!talento.esTrabajador}>
                         Cese
                       </button>
+                      <button
+                        className={`px-4 py-1 rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-green-500 hover:bg-green-600'}`}
+                        onClick={() => navigate('/formSolicitarEquipo', { state: { talento } })}
+                        aria-label="Cese"
+                        disabled={!talento.esTrabajador}>
+                        Solicitar equipo
+                      </button>
                     </td>
                   </tr>
                 ))}

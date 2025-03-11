@@ -4,6 +4,7 @@ import { SnackbarProvider } from 'notistack';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { PantallaCese, PantallaDatos, PantallaIngreso, PantallaListaTalentos, PantallaLogin, PantallaMovimiento } from './pantallas';
+import PantallaSolicitarEquipo from './pantallas/PantallaSolicitarEquipo';
 
 function App() {
 
@@ -24,6 +25,7 @@ function App() {
             <Route path="/formDatos" element={<ProtectedRoute><PantallaDatos /></ProtectedRoute>} />
             <Route path="/formMovimiento" element={<ProtectedRoute><PantallaMovimiento /></ProtectedRoute>} />
             <Route path="/formCese" element={<ProtectedRoute><PantallaCese /></ProtectedRoute>} />
+            <Route path="/formSolicitarEquipo" element={<ProtectedRoute><PantallaSolicitarEquipo /></ProtectedRoute>} />
           </Routes>
         </Router>
       </SnackbarProvider>

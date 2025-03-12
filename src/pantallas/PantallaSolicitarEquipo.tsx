@@ -161,21 +161,33 @@ const PantallaSolicitarEquipo = () => {
 
     const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
         const formattedData = {
-            ...data,
-            isPc: data.tipoHardware === 1,
-            isLaptop: data.tipoHardware === 2,
-            anexoFijo: data.anexoHardware === 1,
-            anexoSoftphone: data.anexoHardware === 2,
-            celularsi: data.celular === "si",
-            celularno: data.celular === "no",
-            internetMovilsi: data.internetMovil === "si",
-            internetMovilno: data.internetMovil === "no",
+            idUsuarioEmpleado: talento?.idUsuarioTalento,
+            nombreEmpleado: data.nombres,
+            apellidosEmpleado: data.apellidos,
+            empresaCliente: data.cliente,
+            area: unitValues.find(unit => unit.num1 === data.area)?.string1 || "",
+            puesto: data.cargo,
+            fechaSolicitud: data.fechaSolicitud,
+            fechaEntrega: data.fechaEntrega,
+            idTipoEquipo: data.tipoHardware,
+            tipoEquipo: tipoHardwareParams.find(param => param.num1 === data.tipoHardware)?.string1 || "",
+            procesador: data.procesador,
+            ram: data.ram,
+            hd: data.disco,
+            marca: data.marca,
+            anexo: anexoHardwareParams.find(param => param.num1 === data.anexoHardware)?.string1 || "",
+            idAnexo: data.anexoHardware,
+            celular: data.celular === "si",
+            internetMovil: data.internetMovil === "si",
+            accesorios: data.accesorios,
+            lstSoftware: data.software.map((sw, index) => ({
+                idItem: index + 1,
+                producto: sw.producto,
+                prodVersion: sw.version
+            }))
         };
 
-        const response = await postData("/fmi/equipment/request", {
-            idUsuarioTalento: talento?.idUsuarioTalento,
-            ...formattedData
-        });
+        const response = await postData("/fmi/employee/solicitud/equipo", formattedData);
 
         if (response.idTipoMensaje === 2) {
             goBack();

@@ -106,7 +106,7 @@ const PantallaMovimiento = () => {
                     <InputForm name="puesto" control={control} label="Puesto" error={errors.puesto} />
                     <InputForm name="area" control={control} label="Área" error={errors.area} />
                     <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} />
-                    <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} />
+                    <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} word_wrap={true} />
                     {/* Form options */}
                     <div className="flex justify-center gap-4">
                         <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>

@@ -6,14 +6,15 @@ interface Props {
     label?: string;
     options: { label: string; value: number }[];
     error?: FieldError;
+    word_wrap?: boolean;
 }
 
-const DropdownForm = ({ name, control, label, options, error }: Props) => {
+const DropdownForm = ({ name, control, label, options, error, word_wrap = false }: Props) => {
     return (
         <>
             <div className="flex flex-1">
-                {label && <label htmlFor={name} className="min-w-[9rem]">{label}</label>}
-                <div className={`${label ? "flex-[1.95]" : "basis-80"}`}>
+                {label && <label htmlFor={name} className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}>{label}</label>}
+                <div className={`${label ? "flex-[1.95]" : "basis-80"} `}>
                     <Controller
                         name={name}
                         control={control}

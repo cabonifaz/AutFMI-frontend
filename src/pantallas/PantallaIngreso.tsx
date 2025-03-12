@@ -86,7 +86,7 @@ const PantallaIngreso = () => {
       {paramLoading && <Loading />}
       {postloading && <Loading />}
       {TalentoLoading && <Loading />}
-      <div className="w-full lg:w-[65%] h-fit m-auto p-4 border-2 rounded-lg">
+      <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Modality */}
         <div className="flex items-center">
           <BackButton backClicked={goBack} />
@@ -95,7 +95,6 @@ const PantallaIngreso = () => {
             options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
           />
         </div>
-        <hr className="my-8" />
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold">Datos del talento</h3>
@@ -135,12 +134,12 @@ const PantallaIngreso = () => {
           <h3 className="text-2xl font-semibold">Declaración en SUNAT (*)</h3>
           <DropdownForm name="declararSunat" control={control} label="¿Declarado en SUNAT?" error={errors.declararSunat}
             options={[{ value: 1, label: "Sí" }, { value: 2, label: "No" }]}
+            word_wrap={true}
           />
           <DropdownForm name="idSedeDeclarar" control={control} label="Sede a declarar" error={errors.idSedeDeclarar}
             options={sedeSunatList.map((sede) => ({ value: sede.idSede, label: sede.nombre }))}
           />
           {/* Form options */}
-          <hr />
           <div className="flex justify-center gap-4">
             <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
               Cancelar

@@ -12,15 +12,16 @@ interface Props {
     orientation?: "horizontal" | "vertical";
     error?: FieldError;
     disabled?: boolean;
+    word_wrap?: boolean;
 }
 
-const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled }: Props) => {
+const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled, word_wrap = false }: Props) => {
     return (
         <>
             <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
             <label 
                 htmlFor={name} 
-                className={label === "Fecha de movimiento" ? "w-[9rem]" : "min-w-[9rem]"}
+                className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}
                 >
                 {label}
             </label>

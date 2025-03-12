@@ -81,14 +81,13 @@ const PantallaDatos = () => {
             {paramLoading && (<Loading />)}
             {loading && (<Loading />)}
             {postloading && (<Loading />)}
-            <div className="w-2/4 h-screen m-auto p-4 border-2 rounded-lg">
-                <h3 className="text-2xl font-semibold flex gap-2">
-                    <BackButton backClicked={goBack} />
-                    Datos Personales
-                </h3>
-                <hr className="my-4" />
+            <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 {/* Data form */}
                 <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-8">
+                    <h3 className="text-2xl font-semibold flex gap-2">
+                        <BackButton backClicked={goBack} />
+                        Datos Personales
+                    </h3>
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
                     <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} />
@@ -96,9 +95,10 @@ const PantallaDatos = () => {
                     <InputForm name="email" control={control} label="Correo personal" error={errors.email} />
 
                     <FormRow>
-                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" isWide={true} error={errors.tiempoContrato} />
+                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
                         <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
+                            flex = {true}
                         />
                     </FormRow>
 
@@ -106,9 +106,10 @@ const PantallaDatos = () => {
                     <InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
 
                     <FormRow>
-                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" isWide={true} error={errors.remuneracion} />
+                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
                         <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
+                            flex = {true}
                         />
                     </FormRow>
 

@@ -77,14 +77,13 @@ const PantallaMovimiento = () => {
             {paramLoading && <Loading />}
             {postloading && <Loading />}
             {employeeLoading && <Loading />}
-            <div className="w-full lg:w-[65%] h-screen m-auto p-4 border-2 rounded-lg">
+            <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}
                     <h3 className="text-2xl font-semibold flex gap-2">
                         <BackButton backClicked={goBack} />
                         Datos del talento
                     </h3>
-                    <hr className="my-1" />
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
 
@@ -109,7 +108,6 @@ const PantallaMovimiento = () => {
                     <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} />
                     <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} />
                     {/* Form options */}
-                    <hr />
                     <div className="flex justify-center gap-4">
                         <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
                             Cancelar

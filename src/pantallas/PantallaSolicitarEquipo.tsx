@@ -198,7 +198,6 @@ const PantallaSolicitarEquipo = () => {
                         <BackButton backClicked={goBack} />
                         Datos del Colaborador
                     </h3>
-                    <hr className="my-1" />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                         <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
@@ -228,22 +227,20 @@ const PantallaSolicitarEquipo = () => {
                     </div>
 
                     {/* Datos de Requerimiento de Hardware */}
-                    <h3 className="text-2xl font-semibold">Datos de Requerimiento de Hardware</h3>
+                    <h3 className="text-2xl font-semibold mt-4">Datos de Requerimiento de Hardware</h3>
                     
                     {/* Tipo de Equipo */}
-                    <div className="flex flex-col">
-                        <div className="flex gap-4">
-                            <DropdownForm
-                                name="tipoHardware"
-                                control={control}
-                                label="Tipo de Equipo"
-                                options={tipoHardwareParams?.map(param => ({ 
-                                    value: param.num1, 
-                                    label: param.string1 
-                                })) || []}
-                                error={errors.tipoHardware}
-                            />
-                        </div>
+                    <div className="min-w-[9rem]">
+                        <DropdownForm
+                            name="tipoHardware"
+                            control={control}
+                            label="Tipo de Equipo"
+                            options={tipoHardwareParams?.map(param => ({ 
+                                value: param.num1, 
+                                label: param.string1 
+                            })) || []}
+                            error={errors.tipoHardware}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -277,63 +274,71 @@ const PantallaSolicitarEquipo = () => {
                         />
                     </div>
 
-                    {/* Anexos */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex flex-col">
-                            <div className="flex gap-4">
-                                <DropdownForm
-                                    name="anexoHardware"
-                                    control={control}
-                                    label="Anexo"
-                                    options={anexoHardwareParams?.map(param => ({ 
-                                        value: param.num1, 
-                                        label: param.string1 
-                                    })) || []}
-                                    error={errors.anexoHardware}
-                                />
-                            </div>
+
+                    {/* Anexo, Celular e Internet Móvil */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        {/* Anexo Hardware */}
+                        <div className="col-span-1 lg:col-span-6">
+                            <DropdownForm
+                                name="anexoHardware"
+                                control={control}
+                                label="Anexo"
+                                options={anexoHardwareParams?.map(param => ({ 
+                                    value: param.num1, 
+                                    label: param.string1 
+                                })) || []}
+                                error={errors.anexoHardware}
+                            />
                         </div>
-                        <div className="flex flex-col">
-                            <label className="mb-2 font-medium">Celular</label>
-                            <div className="flex gap-4">
-                                <CheckboxForm 
-                                    name="celular" 
-                                    control={control} 
-                                    label="Sí" 
-                                    value="si" 
-                                    group="celular"
-                                />
-                                <CheckboxForm 
-                                    name="celular" 
-                                    control={control} 
-                                    label="No" 
-                                    value="no"
-                                    defaultChecked={true}
-                                    group="celular"
-                                />
+                        
+                        {/* Contenedor para Celular e Internet Móvil */}
+                        <div className="col-span-1 lg:col-span-6 grid grid-cols-2 gap-6">
+                            {/* Celular */}
+                            <div className="col-span-1">
+                                <label className="block mb-2 font-medium">Celular</label>
+                                <div className="flex gap-4">
+                                    <CheckboxForm 
+                                        name="celular" 
+                                        control={control} 
+                                        label="Sí" 
+                                        value="si" 
+                                        group="celular"
+                                    />
+                                    <CheckboxForm 
+                                        name="celular" 
+                                        control={control} 
+                                        label="No" 
+                                        value="no"
+                                        defaultChecked={true}
+                                        group="celular"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <label className="mb-2 font-medium">Internet Móvil</label>
-                            <div className="flex gap-4">
-                                <CheckboxForm 
-                                    name="internetMovil" 
-                                    control={control} 
-                                    label="Sí" 
-                                    value="si"
-                                    group="internetMovil"
-                                />
-                                <CheckboxForm 
-                                    name="internetMovil" 
-                                    control={control} 
-                                    label="No" 
-                                    value="no"
-                                    defaultChecked={true}
-                                    group="internetMovil"
-                                />
+                            
+                            {/* Internet Móvil */}
+                            <div className="col-span-1">
+                                <label className="block mb-2 font-medium">Internet Móvil</label>
+                                <div className="flex gap-4">
+                                    <CheckboxForm 
+                                        name="internetMovil" 
+                                        control={control} 
+                                        label="Sí" 
+                                        value="si"
+                                        group="internetMovil"
+                                    />
+                                    <CheckboxForm 
+                                        name="internetMovil" 
+                                        control={control} 
+                                        label="No" 
+                                        value="no"
+                                        defaultChecked={true}
+                                        group="internetMovil"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     
                     <InputForm 
                         name="accesorios" 
@@ -343,7 +348,7 @@ const PantallaSolicitarEquipo = () => {
                     />
 
                    {/* Datos de Instalación de Software */}
-                    <h3 className="text-2xl font-semibold">Datos de Instalación de Software</h3>
+                    <h3 className="text-2xl font-semibold mt-4">Datos de Instalación de Software</h3>
 
                     <div className="border p-4 rounded-lg">
                         {/* Encabezado de la tabla */}

@@ -18,7 +18,12 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
     return (
         <>
             <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
-                <label htmlFor={name} className={`min-w-[9rem]`}>{label}</label>
+            <label 
+                htmlFor={name} 
+                className={label === "Fecha de movimiento" ? "w-[9rem]" : "min-w-[9rem]"}
+                >
+                {label}
+            </label>
                 <div className="flex-[2]">
                     <Controller
                         name={name}

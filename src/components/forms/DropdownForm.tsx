@@ -12,7 +12,7 @@ const DropdownForm = ({ name, control, label, options, error }: Props) => {
     return (
         <>
             <div className="flex flex-1">
-                {label && <label htmlFor={name} className="flex-1">{label}</label>}
+                {label && <label htmlFor={name} className="min-w-[9rem]">{label}</label>}
                 <div className={`${label ? "flex-[1.95]" : "basis-80"}`}>
                     <Controller
                         name={name}
@@ -33,7 +33,7 @@ const DropdownForm = ({ name, control, label, options, error }: Props) => {
                             </select>
                         )}
                     />
-                    {error && <p className="absolute text-red-400 bg-transparent text-xs">{error.message}</p>}
+                    {error && <p className="text-red-400 bg-transparent text-xs">{error.message}</p>}
                 </div>
             </div>
         </>

@@ -17,8 +17,8 @@ interface Props {
 const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled }: Props) => {
     return (
         <>
-            <div className={`flex flex-[2.2] gap-2 ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
-                <label htmlFor={name} className={`flex items-center ${isWide ? "flex-[2]" : "flex-1"}`}>{label}</label>
+            <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
+                <label htmlFor={name} className={`min-w-[9rem]`}>{label}</label>
                 <div className="flex-[2]">
                     <Controller
                         name={name}
@@ -49,7 +49,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                         }
                     />
 
-                    {error && <p className="absolute text-red-400 bg-transparent text-xs">{error.message}</p>}
+                    {error && <p className="text-red-400 bg-transparent text-xs">{error.message}</p>}
                 </div>
             </div>
         </>

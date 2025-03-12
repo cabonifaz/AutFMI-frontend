@@ -37,7 +37,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                                     {...field}
                                     onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
                                     disabled={disabled}
-                                    className={`w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
+                                    className={`${type === 'number' ? "max-md:w-[50px]": "w-full"} outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
                                 {isPasswordField &&
                                     <button
                                         type="button"

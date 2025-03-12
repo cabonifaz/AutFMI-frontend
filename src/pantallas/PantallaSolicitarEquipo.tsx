@@ -198,7 +198,7 @@ const PantallaSolicitarEquipo = () => {
                         <BackButton backClicked={goBack} />
                         Datos del Colaborador
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
                         <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
                         <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} />
@@ -209,7 +209,7 @@ const PantallaSolicitarEquipo = () => {
                     </div>
 
                     {/* Fechas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputForm 
                             name="fechaSolicitud" 
                             control={control} 
@@ -243,7 +243,7 @@ const PantallaSolicitarEquipo = () => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputForm 
                             name="procesador" 
                             control={control} 
@@ -276,7 +276,7 @@ const PantallaSolicitarEquipo = () => {
 
 
                     {/* Anexo, Celular e Internet Móvil */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         {/* Anexo Hardware */}
                         <div className="col-span-1 lg:col-span-6">
                             <DropdownForm
@@ -296,7 +296,7 @@ const PantallaSolicitarEquipo = () => {
                             {/* Celular */}
                             <div className="col-span-1">
                                 <label className="block mb-2 font-medium">Celular</label>
-                                <div className="flex gap-4">
+                                <div className="flex gap-8">
                                     <CheckboxForm 
                                         name="celular" 
                                         control={control} 
@@ -318,7 +318,7 @@ const PantallaSolicitarEquipo = () => {
                             {/* Internet Móvil */}
                             <div className="col-span-1">
                                 <label className="block mb-2 font-medium">Internet Móvil</label>
-                                <div className="flex gap-4">
+                                <div className="flex gap-8">
                                     <CheckboxForm 
                                         name="internetMovil" 
                                         control={control} 
@@ -352,7 +352,7 @@ const PantallaSolicitarEquipo = () => {
 
                     <div className="border p-4 rounded-lg">
                         {/* Encabezado de la tabla */}
-                        <div className="grid grid-cols-12 gap-4 mb-2">
+                        <div className="grid grid-cols-12 gap-8 mb-2">
                             <div className="col-span-1 text-sm font-medium flex items-center justify-center">Item</div>
                             <div className="col-span-6 text-sm font-medium flex items-center justify-center">Producto</div>
                             <div className="col-span-5 text-sm font-medium flex items-center justify-center">Versión</div>
@@ -360,7 +360,7 @@ const PantallaSolicitarEquipo = () => {
 
                         {/* Filas de la tabla */}
                         {fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-12 gap-4 mb-4">
+                            <div key={field.id} className="grid grid-cols-12 gap-8 mb-4">
                                 {/* Columna Item */}
                                 <div className="col-span-1 flex items-center h-10 justify-center">{index + 1}</div>
 
@@ -411,7 +411,7 @@ const PantallaSolicitarEquipo = () => {
                     </div>
 
                     {/* Form options */}
-                    <div className="flex justify-center gap-4">
+                    <div className="flex justify-center gap-8">
                         <button 
                             type="button" 
                             className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" 

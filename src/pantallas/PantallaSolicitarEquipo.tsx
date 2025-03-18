@@ -130,7 +130,6 @@ const PantallaSolicitarEquipo = () => {
             replace(manualSoftware);
             setDefaultSoftwareIds([]);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tipoHardware, tipoSoftwareParams, replace, trigger]);
 
     useEffect(() => {

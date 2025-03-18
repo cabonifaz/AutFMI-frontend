@@ -9,7 +9,7 @@ type FetchRequerimientosParams = {
     cliente?: string | null;
     codigoRQ?: string | null;
     fechaSolicitud?: string | null;
-    estado?: string | null;
+    estado?: number | null;
 };
 
 export const useRequerimientos = () => {
@@ -56,5 +56,5 @@ export const useRequerimientos = () => {
         fetchRequerimientos(params);
     }, [currentPage, fetchRequerimientos]);
 
-    return { requerimientos, loading, currentPage, setCurrentPage, emptyList };
+    return { requerimientos, loading, fetchRequerimientos, setCurrentPage, currentPage, emptyList };
 };

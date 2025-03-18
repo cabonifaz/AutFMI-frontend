@@ -3,6 +3,6 @@ export type RequirementItem = {
     cliente: string;
     codigoRQ: string;
     fechaSolicitud: string;
-    Estado: string;
-    Vacantes: number;
+    estado: string;
+    vacantes: number;
 };

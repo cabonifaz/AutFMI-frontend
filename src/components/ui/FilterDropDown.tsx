@@ -1,15 +1,11 @@
+import { ParamType } from "../../models/type/ParamType";
 import { OutsideClickHandler } from "./OutsideClickHandler";
-
-interface Option {
-    label: string;
-    value: string;
-}
 
 interface Props {
     name: string;
     label: string;
     isOpen: boolean;
-    options: Option[];
+    options: ParamType[];
     optionsPanelSize: string;
     optionsType: "radio" | "checkbox";
     inputPosition: "left" | "right";
@@ -129,7 +125,7 @@ export const FilterDropDown = ({
                                 {selectedValues.map((value, index) => (
                                     <li className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full" key={index}>
                                         <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">
-                                            {options.find((opt) => opt.value === value)?.label || value}
+                                            {options.find((opt) => opt.num1.toString() === value)?.string1 || value}
                                         </span>
                                         <button type="button" onClick={() => handleRemoveOption(value)}>
                                             <img src="/assets/ic_close_fmi.svg" alt="icon close" className="h-5 w-5" />
@@ -148,14 +144,14 @@ export const FilterDropDown = ({
                                     name={name}
                                     type={optionsType}
                                     id={`${name}-${index}`}
-                                    option-value={option.value}
-                                    checked={selectedValues.includes(option.value)}
-                                    onClick={(e) => handleInputClick(e, option.value)}
+                                    option-value={option.num1}
+                                    checked={selectedValues.includes(option.num1.toString())}
+                                    onClick={(e) => handleInputClick(e, option.num1.toString())}
                                     readOnly
                                     className="cursor-pointer h-4 w-4 accent-[#4f46e5]"
                                 />
                                 <p className="flex items-center cursor-pointer text-sm my-2">
-                                    {option.label}
+                                    {option.string1}
                                 </p>
                             </div>
                         ))}

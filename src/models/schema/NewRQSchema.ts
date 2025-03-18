@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const newRQSchema = z.object({
-    cliente: z.string().min(1, "El cliente es obligatorio"),
+    idCliente: z.string().min(1, "El cliente es obligatorio"),
     codigoRQ: z.string().min(1, "El RQ es obligatorio"),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
@@ -15,7 +15,7 @@ export const newRQSchema = z.object({
                 file: z.instanceof(File),
             })
         )
-        .min(1, "Debe seleccionar al menos un archivo"),
+        .optional(),
 });
 
 export type newRQSchemaType = z.infer<typeof newRQSchema>;

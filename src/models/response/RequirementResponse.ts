@@ -5,6 +5,7 @@ export type RequirementResponse = {
     idTipoMensaje: number;
     mensaje: string;
     requerimiento: {
+        idCliente: number;
         cliente: string;
         codigoRQ: string;
         fechaSolicitud: string;

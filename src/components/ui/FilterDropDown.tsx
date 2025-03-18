@@ -1,11 +1,15 @@
-import { ParamType } from "../../models/type/ParamType";
 import { OutsideClickHandler } from "./OutsideClickHandler";
 
-interface Props {
+export interface BaseOption {
+    value: string | number;
+    label: string;
+}
+
+interface Props<T extends BaseOption> {
     name: string;
     label: string;
     isOpen: boolean;
-    options: ParamType[];
+    options: T[];
     optionsPanelSize: string;
     optionsType: "radio" | "checkbox";
     inputPosition: "left" | "right";
@@ -14,7 +18,7 @@ interface Props {
     onChange: (selectedValues: string[]) => void;
 }
 
-export const FilterDropDown = ({
+export const FilterDropDown = <T extends BaseOption>({
     label,
     options,
     name,
@@ -25,7 +29,8 @@ export const FilterDropDown = ({
     onToggle,
     selectedValues,
     onChange,
-}: Props) => {
+}: Props<T>) => {
+
     const handleInputClick = (event: React.MouseEvent, value: string) => {
         event.stopPropagation();
 
@@ -125,7 +130,7 @@ export const FilterDropDown = ({
                                 {selectedValues.map((value, index) => (
                                     <li className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full" key={index}>
                                         <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">
-                                            {options.find((opt) => opt.num1.toString() === value)?.string1 || value}
+                                            {options.find((opt) => opt.value.toString() === value)?.label || value}
                                         </span>
                                         <button type="button" onClick={() => handleRemoveOption(value)}>
                                             <img src="/assets/ic_close_fmi.svg" alt="icon close" className="h-5 w-5" />
@@ -144,14 +149,14 @@ export const FilterDropDown = ({
                                     name={name}
                                     type={optionsType}
                                     id={`${name}-${index}`}
-                                    option-value={option.num1}
-                                    checked={selectedValues.includes(option.num1.toString())}
-                                    onClick={(e) => handleInputClick(e, option.num1.toString())}
+                                    option-value={option.value}
+                                    checked={selectedValues.includes(option.value.toString())}
+                                    onClick={(e) => handleInputClick(e, option.value.toString())}
                                     readOnly
                                     className="cursor-pointer h-4 w-4 accent-[#4f46e5]"
                                 />
                                 <p className="flex items-center cursor-pointer text-sm my-2">
-                                    {option.string1}
+                                    {option.label}
                                 </p>
                             </div>
                         ))}

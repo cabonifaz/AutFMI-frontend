@@ -6,7 +6,7 @@ import { RequirementItem } from "../models/type/RequirementItemType";
 type FetchRequerimientosParams = {
     nPag: number;
     cPag?: string | null;
-    cliente?: string | null;
+    idCliente?: number | null;
     codigoRQ?: string | null;
     fechaSolicitud?: string | null;
     estado?: number | null;
@@ -48,7 +48,7 @@ export const useRequerimientos = () => {
         const params: FetchRequerimientosParams = {
             nPag: currentPage,
             cPag: null,
-            cliente: null,
+            idCliente: null,
             codigoRQ: null,
             fechaSolicitud: null,
             estado: null,

@@ -37,10 +37,6 @@ const setupInterceptors = (apiClient: AxiosInstance) => {
           default:
             enqueueSnackbar('Ocurrió un error en la solicitud.', { variant: 'error' });
         }
-
-        if (status >= 500 && status < 600) {
-          enqueueSnackbar('Error en el servidor. Intenta más tarde.', { variant: 'error' });
-        }
       }
 
       return Promise.reject(error);

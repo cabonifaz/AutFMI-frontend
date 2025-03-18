@@ -1,14 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { PantallaWrapper } from "./PantallaWrapper";
 import { FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
 import Loading from "../components/loading/Loading";
+import useFetchParams from "../hooks/useFetchParams";
+import { ESTADO_RQ } from "../utils/config";
+import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
+import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
+import { RequirementItem } from "../models/type/RequirementItemType";
+import { format } from 'date-fns';
 
 interface SearchProps {
     cliente: string | null;
-    requerimiento: string | null;
+    codigoRQ: string | null;
     estado: number | null;
     fechaSolicitud: string | null;
 }
@@ -16,51 +22,74 @@ interface SearchProps {
 export const PantallaRequerimientos = () => {
     const clienteRef = useRef<HTMLInputElement>(null);
     const RequerimientoRef = useRef<HTMLInputElement>(null);
+
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const { requerimientos, loading, emptyList } = useRequerimientos();
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
+    const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
+    const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
+
+    const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
+    const { params, paramLoading } = useFetchParams(`${ESTADO_RQ}`);
+
+    const options = params?.filter((param) => param.idMaestro === Number(ESTADO_RQ)) || [];
 
     const { toggleMenu } = useMenu();
 
-    const search = ({ cliente, requerimiento, estado, fechaSolicitud }: SearchProps) => {
-        console.log({
+    const search = ({ cliente, codigoRQ, estado, fechaSolicitud }: SearchProps) => {
+        fetchRequerimientos({
+            nPag: 1,
             cliente: cliente,
-            requerimiento: requerimiento,
+            codigoRQ: codigoRQ,
             estado: estado,
             fechaSolicitud: fechaSolicitud,
         });
     };
 
-    const executeSearch = useCallback(() => {
-        search({
-            cliente: clienteRef.current?.value || null,
-            requerimiento: RequerimientoRef.current?.value || null,
-            estado: selectedEstado,
-            fechaSolicitud: selectedDate ? selectedDate.toISOString() : null,
-        });
-    }, [selectedDate, selectedEstado]);
-
-    useEffect(() => {
-        executeSearch();
-    }, [selectedEstado, selectedDate, executeSearch]);
-
     const handleEstadoChangeFilter = (selectedValues: string[]) => {
         const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
         setSelectedEstado(newValue);
+        executeSearch({
+            estado: newValue,
+            fechaSolicitud: selectedDate ? selectedDate : null,
+        });
     };
 
     const handleDateSelected = (date: Date | null) => {
-        setSelectedDate(date);
+        if (date !== null) {
+            const searchDate = format(new Date(date), 'yyyy/MM/dd')
+            setSelectedDate(searchDate);
+            executeSearch({
+                estado: selectedEstado,
+                fechaSolicitud: date ? searchDate : null,
+            });
+        }
+    };
+
+    const executeSearch = (overrides: { estado?: number | null; fechaSolicitud?: string | null } = {}) => {
+        if (!loading) {
+            search({
+                cliente: clienteRef.current?.value || null,
+                codigoRQ: RequerimientoRef.current?.value || null,
+                estado: overrides.estado !== undefined ? overrides.estado : selectedEstado,
+                fechaSolicitud: overrides.fechaSolicitud !== undefined ? overrides.fechaSolicitud : (selectedDate ? selectedDate : null),
+            });
+        }
     };
 
     const handleSearch = () => {
         executeSearch();
     };
 
+    const openDetallesRQModal = (req: RequirementItem) => {
+        setIsDetallesRQModalOpen(true);
+        setSelectedRQ(req);
+    }
+
     return (
         <>
-            {loading && (<Loading />)}
+            {(loading || paramLoading) && (<Loading />)}
             <PantallaWrapper>
                 <h2 className="text-2xl font-semibold mb-4 flex gap-2">
                     <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>
@@ -99,7 +128,7 @@ export const PantallaRequerimientos = () => {
                             <FilterDropDown
                                 name="estado"
                                 label="Estado"
-                                options={[{ value: "1", label: "option 1" }, { value: "2", label: "option 2" }]}
+                                options={options}
                                 optionsType="radio"
                                 optionsPanelSize="w-36"
                                 inputPosition="right"
@@ -114,8 +143,15 @@ export const PantallaRequerimientos = () => {
                             <button
                                 type="button"
                                 onClick={handleSearch}
-                                className="bg-zinc-600 rounded-lg px-4 py-2 text-white hover:bg-zinc-700 transition duration-200">Buscar</button>
-                            <button type="button" className="bg-[#009688] rounded-lg px-4 py-2 text-white hover:bg-[#359c92] transition duration-200">Nuevo RQ</button>
+                                className="bg-zinc-600 rounded-lg px-4 py-2 text-white hover:bg-zinc-700 transition duration-200">
+                                Buscar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsNuevoRQModalOpen(true)}
+                                className="bg-[#009688] rounded-lg px-4 py-2 text-white hover:bg-[#359c92] transition duration-200">
+                                Nuevo RQ
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -148,13 +184,15 @@ export const PantallaRequerimientos = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.cliente}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.codigoRQ}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.fechaSolicitud}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.Estado}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.Vacantes}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <button className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
                                                 Asignar
                                             </button>
-                                            <button className="bg-[#009688] text-white rounded-lg px-3 py-1 hover:bg-[#359c92] transition duration-200">
+                                            <button
+                                                onClick={() => openDetallesRQModal(req)}
+                                                className="bg-[#009688] text-white rounded-lg px-3 py-1 hover:bg-[#359c92] transition duration-200">
                                                 Detalles
                                             </button>
                                         </td>
@@ -165,6 +203,8 @@ export const PantallaRequerimientos = () => {
                     </table>
                 </div>
             </PantallaWrapper>
+            {isNuevoRQModalOpen && <AgregarRQModal onClose={() => setIsNuevoRQModalOpen(false)} updateRQList={executeSearch} estadoOptions={options} />}
+            {isDetallesRQModalOpen && <ModalDetallesRQ onClose={() => setIsDetallesRQModalOpen(false)} estadoOptions={options} RQ={selectedRQ} />}
         </>
     );
 };

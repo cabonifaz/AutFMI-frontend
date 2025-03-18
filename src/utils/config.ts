@@ -14,6 +14,12 @@ export const MARCA_EQUIPO = '5';
 export const TIPO_HARDWARE = '21';
 export const ANEXO_HARDWARE = '22';
 export const TIPO_SOFTWARE = '23';
+export const ESTADO_RQ = '24';
+
+
+// RQ TALENT STATE
+export const ESTADO_OBSERVADO = 1;
+export const ESTADO_ACEPTADO = 2;
 
 // MODALIDADES
 export const MODALIDAD_PLANILLA = "Planilla";

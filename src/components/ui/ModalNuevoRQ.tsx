@@ -6,6 +6,7 @@ import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { usePostHook } from "../../hooks/usePostHook";
 import Loading from "../loading/Loading";
+import { ClientType } from "../../models/type/ClientType";
 
 interface Archivo {
     name: string;
@@ -15,13 +16,15 @@ interface Archivo {
 
 interface Props {
     onClose: () => void;
-    updateRQList: () => void;
+    updateRQData: () => void;
     estadoOptions: ParamType[];
+    clientes: ClientType[];
 }
 
-export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) => {
+export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const { postData, postloading } = usePostHook();
+    const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
     const {
         register,
@@ -31,7 +34,7 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
     } = useForm<newRQSchemaType>({
         resolver: zodResolver(newRQSchema),
         defaultValues: {
-            cliente: "",
+            idCliente: "",
             fechaSolicitud: "",
             descripcion: "",
             estado: "pendiente",
@@ -58,14 +61,22 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
         setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
     };
 
+    const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedClienteId = event.target.value;
+        const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
+        setClienteSeleccionado(selectedClienteText);
+        setValue("idCliente", selectedClienteId);
+    };
+
     const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
         try {
             // 1. Transformar el estado a número
             const estadoNumber = Number(data.estado);
+            const idCliente = Number(data.idCliente);
 
             // 2. Transformar los archivos
             const lstArchivos = await Promise.all(
-                data.lstArchivos.map(async (archivo) => {
+                data.lstArchivos?.map(async (archivo) => {
                     const base64 = await fileToBase64(archivo.file);
                     const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(archivo.name);
                     const idTipoArchivo = getTipoArchivoId(extensionArchivo);
@@ -75,12 +86,14 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
                         extensionArchivo,
                         idTipoArchivo,
                     };
-                })
+                }) || []
             );
 
             // 3. Crear el objeto final para enviar
             const payload = {
                 ...data,
+                idCliente: idCliente,
+                cliente: clienteSeleccionado,
                 estado: estadoNumber,
                 lstArchivos,
             };
@@ -90,7 +103,7 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
 
             if (response.idTipoMensaje === 2) {
                 onClose();
-                updateRQList();
+                updateRQData();
             }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
@@ -99,90 +112,103 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
 
     return (
         <>
-            {postloading && (<Loading />)}
+            {(postloading) && (<Loading />)}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md">
                     <h2 className="text-xl font-bold mb-4">Agregar Nuevo RQ</h2>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        {/* Cliente */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Cliente:</label>
-                            <input
-                                {...register("cliente")}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            {errors.cliente && (
-                                <p className="text-red-500 text-sm mt-1">{errors.cliente.message}</p>
-                            )}
-                        </div>
+                        <div className="max-h-[42vh] overflow-y-auto pr-2">
+                            <div className="space-y-4 flex-1">
+                                {/* Cliente */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
+                                    <select
+                                        {...register("idCliente")}
+                                        onChange={handleClienteChange}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Elige un cliente</option>
+                                        {clientes.map((cliente) => (
+                                            <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                {cliente.razonSocial}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {errors.idCliente && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                )}
 
-                        {/* Cod. RG */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Código RQ:</label>
-                            <input
-                                {...register("codigoRQ")}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            {errors.codigoRQ && (
-                                <p className="text-red-500 text-sm mt-1">{errors.codigoRQ.message}</p>
-                            )}
-                        </div>
+                                {/* Código RQ */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
+                                    <input
+                                        {...register("codigoRQ")}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                {errors.codigoRQ && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
+                                )}
 
-                        {/* Fecha de Solicitud */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
-                            <input
-                                type="date"
-                                {...register("fechaSolicitud")}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            {errors.fechaSolicitud && (
-                                <p className="text-red-500 text-sm mt-1">{errors.fechaSolicitud.message}</p>
-                            )}
-                        </div>
+                                {/* Fecha de Solicitud */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
+                                    <input
+                                        type="date"
+                                        {...register("fechaSolicitud")}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                {errors.fechaSolicitud && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
+                                )}
 
-                        {/* Descripción */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Descripción:</label>
-                            <textarea
-                                {...register("descripcion")}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
-                            />
-                            {errors.descripcion && (
-                                <p className="text-red-500 text-sm mt-1">{errors.descripcion.message}</p>
-                            )}
-                        </div>
+                                {/* Descripción */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
+                                    <textarea
+                                        {...register("descripcion")}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                    />
+                                </div>
+                                {errors.descripcion && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
+                                )}
 
-                        {/* Estado */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Estado:</label>
-                            <select
-                                {...register("estado")}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                {estadoOptions.map((option) => (
-                                    <option key={option.num1} value={option.num1}>
-                                        {option.string1}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.estado && (
-                                <p className="text-red-500 text-sm mt-1">{errors.estado.message}</p>
-                            )}
-                        </div>
+                                {/* Estado */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
+                                    <select
+                                        {...register("estado")}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        {estadoOptions.map((option) => (
+                                            <option key={option.num1} value={option.num1}>
+                                                {option.string1}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {errors.estado && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.estado.message}</p>
+                                )}
 
-                        {/* Vacantes */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Vacantes:</label>
-                            <input
-                                type="number"
-                                {...register("vacantes", { valueAsNumber: true })}
-                                onFocus={(e) => e.target.select()}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            {errors.vacantes && (
-                                <p className="text-red-500 text-sm mt-1">{errors.vacantes.message}</p>
-                            )}
+                                {/* Vacantes */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
+                                    <input
+                                        type="number"
+                                        {...register("vacantes", { valueAsNumber: true })}
+                                        onFocus={(e) => e.target.select()}
+                                        min={0}
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                                {errors.vacantes && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.vacantes.message}</p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Archivos */}
@@ -207,7 +233,7 @@ export const AgregarRQModal = ({ onClose, updateRQList, estadoOptions }: Props) 
                                 accept=".pdf,.doc,.docx,.xls,.xlsx"
                             />
 
-                            <div className="mt-2 max-h-32 overflow-y-auto">
+                            <div className="mt-2 max-h-20 overflow-y-auto">
                                 {archivos.map((archivo, index) => (
                                     <div
                                         key={index}

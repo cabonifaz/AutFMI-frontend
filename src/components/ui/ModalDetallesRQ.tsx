@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
-import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "./Tabs";
 import { RequirementItem } from "../../models/type/RequirementItemType";
 import { useFetchRequirement } from "../../hooks/useFetchRequirement";
 import Loading from "../loading/Loading";
 import { format } from 'date-fns';
+import { ClientType } from "../../models/type/ClientType";
 
 interface Archivo {
     name: string;
@@ -19,16 +19,19 @@ interface Archivo {
 
 interface Props {
     onClose: () => void;
+    updateRQData: () => void;
     RQ: RequirementItem | null;
     estadoOptions: ParamType[];
+    clientes: ClientType[];
 }
 
-export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
+export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const [isEditing, setIsEditing] = useState(false);
+    const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
     const { postData, postloading } = usePostHook();
-    const { requirement, loading } = useFetchRequirement(RQ?.idRequerimiento || null);
+    const { requirement, loading: reqLoading } = useFetchRequirement(RQ?.idRequerimiento || null);
 
     const {
         register,
@@ -38,7 +41,7 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
     } = useForm<newRQSchemaType>({
         resolver: zodResolver(newRQSchema),
         defaultValues: {
-            cliente: "",
+            idCliente: "",
             fechaSolicitud: "",
             descripcion: "",
             estado: "pendiente",
@@ -49,7 +52,7 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
 
     useEffect(() => {
         if (requirement) {
-            setValue("cliente", requirement.requerimiento.cliente);
+            setValue("idCliente", requirement.requerimiento.idCliente.toString());
             setValue("codigoRQ", requirement.requerimiento.codigoRQ);
             setValue("fechaSolicitud", format(new Date(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
             setValue("descripcion", requirement.requerimiento.descripcion);
@@ -62,6 +65,7 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                 file: new File([], archivo.nombreArchivo),
             }));
             setArchivos(archivosFormateados);
+            setClienteSeleccionado(requirement.requerimiento.cliente);
             setValue("lstArchivos", archivosFormateados);
         }
     }, [requirement, setValue]);
@@ -84,37 +88,36 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
         setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
     };
 
+    const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedClienteId = event.target.value;
+        const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
+        setClienteSeleccionado(selectedClienteText);
+        setValue("idCliente", selectedClienteId);
+    };
+
     const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
         try {
             const estadoNumber = Number(data.estado);
+            const idCliente = Number(data.idCliente);
 
-            const lstArchivos = await Promise.all(
-                data.lstArchivos.map(async (archivo) => {
-                    const base64 = await fileToBase64(archivo.file);
-                    const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(archivo.name);
-                    const idTipoArchivo = getTipoArchivoId(extensionArchivo);
-                    return {
-                        string64: base64,
-                        nombreArchivo,
-                        extensionArchivo,
-                        idTipoArchivo,
-                    };
-                })
-            );
+            const { lstArchivos, ...cleanData } = data;
 
-            const payload = {
-                ...data,
-                estado: estadoNumber,
-                lstArchivos,
-            };
+            if (RQ) {
+                const payload = {
+                    ...cleanData,
+                    idRequerimiento: RQ.idRequerimiento,
+                    idCliente: idCliente,
+                    cliente: clienteSeleccionado,
+                    estado: estadoNumber,
+                };
 
-            console.log("Datos transformados:", payload);
+                const response = await postData("/fmi/requirement/update", payload);
 
-            // const response = await postData("/fmi/requirement/save", payload);
-
-            // if (response.idTipoMensaje === 2) {
-            //     onClose();
-            // }
+                if (response.idTipoMensaje === 2) {
+                    onClose();
+                    updateRQData();
+                }
+            }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -131,9 +134,12 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
 
     return (
         <>
-            {loading && <Loading />}
+            {(reqLoading || postloading) && <Loading />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-full md:w-[90%] lg:w-[800px] h-[720px] overflow-y-auto">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
+                    <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>
+                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" />
+                    </button>
                     <Tabs
                         tabs={[
                             {
@@ -155,14 +161,22 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                             {/* Cliente */}
                                             <div className="flex items-center">
                                                 <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
-                                                <input
-                                                    {...register("cliente")}
+                                                <select
+                                                    {...register("idCliente")}
                                                     disabled={!isEditing}
+                                                    onChange={handleClienteChange}
                                                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
+                                                >
+                                                    <option value="">Elige un cliente</option>
+                                                    {clientes.map((cliente) => (
+                                                        <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                            {cliente.razonSocial}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                            {errors.cliente && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.cliente.message}</p>
+                                            {errors.idCliente && (
+                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
                                             )}
 
                                             {/* Código RQ */}
@@ -230,7 +244,9 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                                 <input
                                                     type="number"
                                                     {...register("vacantes", { valueAsNumber: true })}
+                                                    onFocus={(e) => e.target.select()}
                                                     disabled={!isEditing}
+                                                    min={0}
                                                     className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                 />
                                             </div>
@@ -239,8 +255,25 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                             )}
                                         </div>
 
+                                        {/* Botones de acción */}
+                                        <div className="flex justify-end space-x-4 mt-4">
+                                            <button
+                                                type="submit"
+                                                disabled={!isEditing}
+                                                className={`px-4 py-2 text-white rounded-md ${isEditing ? "bg-[#009688]  hover:bg-[#359c92]" : "bg-zinc-400"}`}
+                                            >
+                                                Actualizar
+                                            </button>
+                                        </div>
+                                    </form>
+                                ),
+                            },
+                            {
+                                label: "Archivos",
+                                children: (
+                                    <div className="p-4 ">
                                         {/* Lista de archivos */}
-                                        <div className="mt-4 flex-1">
+                                        <div>
                                             <div className="flex items-center justify-between">
                                                 <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
                                                 <button
@@ -248,7 +281,7 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                                     onClick={() => document.getElementById("fileInput")?.click()}
                                                     className="text-blue-500 hover:text-blue-600 focus:outline-none"
                                                 >
-                                                    Elegir archivos
+                                                    Agregar archivos
                                                 </button>
                                             </div>
                                             <input
@@ -259,7 +292,7 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                                 id="fileInput"
                                                 accept=".pdf,.doc,.docx,.xls,.xlsx"
                                             />
-                                            <div className="mt-2 max-h-32 overflow-y-auto">
+                                            <div className="mt-2 max-h-96 overflow-y-auto">
                                                 {archivos.map((archivo, index) => (
                                                     <div
                                                         key={index}
@@ -279,32 +312,49 @@ export const ModalDetallesRQ = ({ onClose, estadoOptions, RQ }: Props) => {
                                                 ))}
                                             </div>
                                         </div>
-
-                                        {/* Botones de acción */}
-                                        <div className="flex justify-end space-x-4 mt-4">
-                                            <button
-                                                type="button"
-                                                onClick={handleCancelClick}
-                                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 hover:text-white"
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={!isEditing}
-                                                className="px-4 py-2 bg-[#009688] text-white rounded-md hover:bg-[#359c92]"
-                                            >
-                                                Actualizar
-                                            </button>
-                                        </div>
-                                    </form>
-                                ),
+                                    </div>
+                                )
                             },
                             {
                                 label: "Postulantes",
                                 children: (
-                                    <div className="p-4">
-                                        <p>Lista de postulantes.</p>
+                                    <div className="p-1">
+                                        <div className="bg-white rounded-lg shadow-md overflow-auto max-w-full max-h-[445px]">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Nombres</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Apellidos</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">DNI</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Celular</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Email</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Situación</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {requirement?.requerimiento.lstRqTalento.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                                                                No hay postulantes disponibles.
+                                                            </td>
+                                                        </tr>
+                                                    ) : (
+                                                        requirement?.requerimiento.lstRqTalento.map((talento) => (
+                                                            <tr key={talento.idTalento}>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.nombresTalento}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.apellidosTalento}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.dni}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.celular}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.email}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.situacion}</td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.estado}</td>
+                                                            </tr>
+                                                        ))
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 ),
                             },

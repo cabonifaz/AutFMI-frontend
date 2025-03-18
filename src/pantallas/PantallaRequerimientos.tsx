@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { PantallaWrapper } from "./PantallaWrapper";
-import { FilterDropDown } from "../components/ui/FilterDropDown";
+import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
@@ -12,9 +12,10 @@ import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
 import { format } from 'date-fns';
 import { useNavigate } from "react-router-dom";
+import { useFetchClients } from "../hooks/useFetchClients";
 
 interface SearchProps {
-    cliente: string | null;
+    idCliente: number | null;
     codigoRQ: string | null;
     estado: number | null;
     fechaSolicitud: string | null;
@@ -22,27 +23,37 @@ interface SearchProps {
 
 export const PantallaRequerimientos = () => {
     const navigate = useNavigate();
-    const clienteRef = useRef<HTMLInputElement>(null);
     const RequerimientoRef = useRef<HTMLInputElement>(null);
 
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
+    const [selectedCliente, setSelectedCliente] = useState<number | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
     const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
     const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
 
     const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
+    const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
     const { params, paramLoading } = useFetchParams(`${ESTADO_RQ}`);
 
     const options = params?.filter((param) => param.idMaestro === Number(ESTADO_RQ)) || [];
+    const paramOptions: BaseOption[] = params?.filter((param) => param.idMaestro === Number(ESTADO_RQ)).map((param) => ({
+        value: param.num1.toString(),
+        label: param.string1,
+    })) || [];
+
+    const clientOptions: BaseOption[] = clientes.filter((client) => client.total > 0).map((client) => ({
+        value: client.idCliente.toString(),
+        label: client.razonSocial,
+    }));
 
     const { toggleMenu } = useMenu();
 
-    const search = ({ cliente, codigoRQ, estado, fechaSolicitud }: SearchProps) => {
+    const search = ({ idCliente, codigoRQ, estado, fechaSolicitud }: SearchProps) => {
         fetchRequerimientos({
             nPag: 1,
-            cliente: cliente,
+            idCliente: idCliente,
             codigoRQ: codigoRQ,
             estado: estado,
             fechaSolicitud: fechaSolicitud,
@@ -58,6 +69,16 @@ export const PantallaRequerimientos = () => {
         });
     };
 
+    const handleClienteChangeFilter = (selectedValues: string[]) => {
+        const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
+        setSelectedCliente(newValue);
+        executeSearch({
+            estado: selectedEstado,
+            fechaSolicitud: selectedDate ? selectedDate : null,
+            idCliente: newValue
+        });
+    };
+
     const handleDateSelected = (date: Date | null) => {
         if (date !== null) {
             const searchDate = format(new Date(date), 'yyyy/MM/dd')
@@ -69,10 +90,10 @@ export const PantallaRequerimientos = () => {
         }
     };
 
-    const executeSearch = (overrides: { estado?: number | null; fechaSolicitud?: string | null } = {}) => {
+    const executeSearch = (overrides: { estado?: number | null; fechaSolicitud?: string | null; idCliente?: number | null } = {}) => {
         if (!loading) {
             search({
-                cliente: clienteRef.current?.value || null,
+                idCliente: overrides.idCliente !== undefined ? overrides.idCliente : selectedCliente,
                 codigoRQ: RequerimientoRef.current?.value || null,
                 estado: overrides.estado !== undefined ? overrides.estado : selectedEstado,
                 fechaSolicitud: overrides.fechaSolicitud !== undefined ? overrides.fechaSolicitud : (selectedDate ? selectedDate : null),
@@ -89,13 +110,18 @@ export const PantallaRequerimientos = () => {
         setSelectedRQ(req);
     }
 
+    const updateRQData = () => {
+        executeSearch();
+        fetchClients();
+    }
+
     const handleAsignarClick = () => {
         navigate('/tableAsignarTalento');
     };
 
     return (
         <>
-            {(loading || paramLoading) && (<Loading />)}
+            {(loading || paramLoading || clientsLoading) && (<Loading />)}
             <PantallaWrapper>
                 <h2 className="text-2xl font-semibold mb-4 flex gap-2">
                     <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>
@@ -110,16 +136,6 @@ export const PantallaRequerimientos = () => {
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col lg:flex-row gap-4">
                             <div className="flex-1">
-                                <label htmlFor="cliente" className="block text-sm font-medium text-gray-700">Cliente</label>
-                                <input
-                                    type="text"
-                                    name="cliente"
-                                    id="cliente"
-                                    ref={clienteRef}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 shadow-sm focus:outline-none sm:text-sm px-4 py-2"
-                                />
-                            </div>
-                            <div className="flex-1">
                                 <label htmlFor="requerimiento" className="block text-sm font-medium text-gray-700">Requerimiento</label>
                                 <input
                                     type="text"
@@ -132,9 +148,21 @@ export const PantallaRequerimientos = () => {
                         </div>
                         <div className="flex gap-4">
                             <FilterDropDown
+                                name="cliente"
+                                label="Cliente"
+                                options={clientOptions}
+                                optionsType="radio"
+                                optionsPanelSize="w-36"
+                                inputPosition="right"
+                                isOpen={openDropdown === 0}
+                                onToggle={() => setOpenDropdown(openDropdown === 0 ? null : 0)}
+                                selectedValues={selectedCliente ? [selectedCliente.toString()] : []}
+                                onChange={handleClienteChangeFilter}
+                            />
+                            <FilterDropDown
                                 name="estado"
                                 label="Estado"
-                                options={options}
+                                options={paramOptions}
                                 optionsType="radio"
                                 optionsPanelSize="w-36"
                                 inputPosition="right"
@@ -193,7 +221,7 @@ export const PantallaRequerimientos = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button 
+                                            <button
                                                 onClick={handleAsignarClick}
                                                 className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
                                                 Asignar
@@ -211,8 +239,8 @@ export const PantallaRequerimientos = () => {
                     </table>
                 </div>
             </PantallaWrapper>
-            {isNuevoRQModalOpen && <AgregarRQModal onClose={() => setIsNuevoRQModalOpen(false)} updateRQList={executeSearch} estadoOptions={options} />}
-            {isDetallesRQModalOpen && <ModalDetallesRQ onClose={() => setIsDetallesRQModalOpen(false)} estadoOptions={options} RQ={selectedRQ} />}
+            {isNuevoRQModalOpen && <AgregarRQModal onClose={() => setIsNuevoRQModalOpen(false)} updateRQData={updateRQData} estadoOptions={options} clientes={clientes} />}
+            {isDetallesRQModalOpen && <ModalDetallesRQ onClose={() => setIsDetallesRQModalOpen(false)} estadoOptions={options} RQ={selectedRQ} clientes={clientes} updateRQData={updateRQData} />}
         </>
     );
 };

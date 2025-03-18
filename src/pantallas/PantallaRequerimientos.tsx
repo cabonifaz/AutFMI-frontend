@@ -11,6 +11,7 @@ import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
 import { format } from 'date-fns';
+import { useNavigate } from "react-router-dom";
 
 interface SearchProps {
     cliente: string | null;
@@ -20,6 +21,7 @@ interface SearchProps {
 }
 
 export const PantallaRequerimientos = () => {
+    const navigate = useNavigate();
     const clienteRef = useRef<HTMLInputElement>(null);
     const RequerimientoRef = useRef<HTMLInputElement>(null);
 
@@ -86,6 +88,10 @@ export const PantallaRequerimientos = () => {
         setIsDetallesRQModalOpen(true);
         setSelectedRQ(req);
     }
+
+    const handleAsignarClick = () => {
+        navigate('/tableAsignarTalento');
+    };
 
     return (
         <>
@@ -187,7 +193,9 @@ export const PantallaRequerimientos = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
+                                            <button 
+                                                onClick={handleAsignarClick}
+                                                className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
                                                 Asignar
                                             </button>
                                             <button

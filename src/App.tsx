@@ -7,6 +7,7 @@ import { PantallaCese, PantallaDatos, PantallaIngreso, PantallaListaTalentos, Pa
 import PantallaSolicitarEquipo from './pantallas/PantallaSolicitarEquipo';
 import { PantallaRequerimientos } from './pantallas/PantallaRequerimientos';
 import { MenuProvider } from './context/MenuContext';
+import TalentTable from './pantallas/PantallaAsignarTalento';
 
 function App() {
 
@@ -21,7 +22,6 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<PantallaLogin />} />
-
               <Route path="/*" element={<ProtectedRoute><PantallaListaTalentos /></ProtectedRoute>} />
               <Route path="/listaTalentos" element={<ProtectedRoute><PantallaListaTalentos /></ProtectedRoute>} />
               <Route path="/formIngreso" element={<ProtectedRoute><PantallaIngreso /></ProtectedRoute>} />
@@ -30,7 +30,8 @@ function App() {
               <Route path="/formCese" element={<ProtectedRoute><PantallaCese /></ProtectedRoute>} />
               <Route path="/formSolicitarEquipo" element={<ProtectedRoute><PantallaSolicitarEquipo /></ProtectedRoute>} />
               <Route path="/requerimientos" element={<ProtectedRoute><PantallaRequerimientos /></ProtectedRoute>} />
-            </Routes>
+              <Route path="/tableAsignarTalento" element={<ProtectedRoute><TalentTable /></ProtectedRoute>} />
+          </Routes>
           </Router>
         </SnackbarProvider>
       </MenuProvider>

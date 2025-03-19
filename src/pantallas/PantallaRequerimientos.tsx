@@ -115,8 +115,8 @@ export const PantallaRequerimientos = () => {
         fetchClients();
     }
 
-    const handleAsignarClick = () => {
-        navigate('/tableAsignarTalento');
+    const handleAsignarClick = (idRequerimiento: number) => {
+        navigate('/tableAsignarTalento', { state: { idRequerimiento } });
     };
 
     return (
@@ -221,8 +221,8 @@ export const PantallaRequerimientos = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button
-                                                onClick={handleAsignarClick}
+                                            <button 
+                                                onClick={() => handleAsignarClick(req.idRequerimiento)}
                                                 className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
                                                 Asignar
                                             </button>

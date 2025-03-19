@@ -3,7 +3,8 @@ import { validDropdown } from './Validations';
 
 export const EquipoFormSchema = z.object({
     nombres: z.string().min(1, { message: "El nombre es requerido" }),
-    apellidos: z.string().min(1, { message: "Los apellidos son requeridos" }),
+    apellidoPaterno: z.string().min(1, { message: "El apellido paterno es requerido" }),
+    apellidoMaterno: z.string().min(1, { message: "El apellido materno es requerido" }),
     cliente: z.string().min(1, { message: "El cliente es requerido" }),
     area: validDropdown,
     cargo: z.string().min(1, { message: "El cargo es requerido" }),

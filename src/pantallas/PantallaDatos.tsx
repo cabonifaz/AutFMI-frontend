@@ -34,7 +34,8 @@ const PantallaDatos = () => {
         mode: "onTouched",
         defaultValues: {
             nombres: "",
-            apellidos: "",
+            apellidoPaterno: "",
+            apellidoMaterno: "",
             telefono: "",
             dni: "",
             email: "",
@@ -53,7 +54,8 @@ const PantallaDatos = () => {
         if (talentoDetails) {
             reset({
                 nombres: talentoDetails?.nombres || "",
-                apellidos: talentoDetails?.apellidos || "",
+                apellidoPaterno: talentoDetails?.apellidoPaterno || "",
+                apellidoMaterno: talentoDetails?.apellidoMaterno || "",
                 telefono: talentoDetails?.telefono || "",
                 dni: talentoDetails?.dni || "",
                 email: talentoDetails?.email || "",
@@ -70,7 +72,7 @@ const PantallaDatos = () => {
     }, [talentoDetails, reset]);
 
     const saveData: SubmitHandler<DataFormType> = async (data) => {
-        const response = await postData("/fmi/talent/save", { idTalento: talento.idTalento, ...data });
+        const response = await postData("/fmi/talent/save", { idTalento: talento.idTalento, APELLIDO_PATERNO: talento.apellidoPaterno, ...data });
         if (response.idTipoMensaje === 2) {
             goBack();
         }
@@ -89,7 +91,8 @@ const PantallaDatos = () => {
                         Datos Personales
                     </h3>
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
+                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
                     <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} />
                     <InputForm name="dni" control={control} label="DNI" type="text" error={errors.dni} />
                     <InputForm name="email" control={control} label="Correo personal" error={errors.email} />

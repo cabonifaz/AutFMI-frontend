@@ -30,7 +30,8 @@ const PantallaMovimiento = () => {
         mode: "onTouched",
         defaultValues: {
             nombres: "",
-            apellidos: "",
+            apellidoPaterno: "",
+            apellidoMaterno: "",
             idUnidad: 0,
             empresa: "",
             montoBase: 0,
@@ -48,7 +49,8 @@ const PantallaMovimiento = () => {
         if (employee && !employeeLoading) {
             reset({
                 nombres: employee.nombres || "",
-                apellidos: employee.apellidos || "",
+                apellidoPaterno: employee.apellidoPaterno || "",
+                apellidoMaterno: employee.apellidoMaterno || "",
                 idUnidad: employee.idUnidad || 0,
                 montoBase: employee.remuneracion || 0,
             });
@@ -85,7 +87,8 @@ const PantallaMovimiento = () => {
                         Datos del talento
                     </h3>
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
+                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
 
                     <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}

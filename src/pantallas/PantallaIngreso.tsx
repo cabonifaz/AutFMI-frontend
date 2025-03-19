@@ -33,7 +33,8 @@ const PantallaIngreso = () => {
     defaultValues: {
       idModalidad: 0,
       nombres: "",
-      apellidos: "",
+      apellidoPaterno: "",
+      apellidoMaterno: "",
       idUnidad: 0,
       empresa: "",
       idMotivo: 0,
@@ -55,7 +56,8 @@ const PantallaIngreso = () => {
     if (talentoDetails) {
       reset({
         nombres: talentoDetails?.nombres || "",
-        apellidos: talentoDetails?.apellidos || "",
+        apellidoPaterno: talentoDetails?.apellidoPaterno || "",
+        apellidoMaterno: talentoDetails?.apellidoMaterno || "",
         cargo: talentoDetails?.cargo || "",
         montoBase: talentoDetails?.remuneracion || 0,
         idModalidad: talentoDetails?.idModalidad || 0,
@@ -99,7 +101,8 @@ const PantallaIngreso = () => {
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold">Datos del talento</h3>
           <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-          <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
+          <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
+          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
 
           <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}

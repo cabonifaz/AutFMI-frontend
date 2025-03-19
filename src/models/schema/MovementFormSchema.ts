@@ -3,7 +3,8 @@ import { validDropdown } from "./Validations";
 
 export const MovementFormSchema = z.object({
     nombres: z.string().min(1, "Campo obligatorio"),
-    apellidos: z.string().min(1, "Campo obligatorio"),
+    apellidoPaterno: z.string().min(1, "Campo obligatorio"),
+    apellidoMaterno: z.string().min(1, "Campo obligatorio"),
     idUnidad: validDropdown,
     empresa: z.string().optional(),
     montoBase: z.number(),

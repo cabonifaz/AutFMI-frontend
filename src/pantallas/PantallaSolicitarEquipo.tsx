@@ -50,7 +50,8 @@ const PantallaSolicitarEquipo = () => {
         mode: "onTouched",
         defaultValues: {
             nombres: "",
-            apellidos: "",
+            apellidoPaterno: "",
+            apellidoMaterno: "",
             cliente: "",
             area: 1,
             cargo: "",
@@ -136,7 +137,8 @@ const PantallaSolicitarEquipo = () => {
         if (employee && !employeeLoading) {
             reset({
                 nombres: employee.nombres || "",
-                apellidos: employee.apellidos || "",
+                apellidoPaterno: employee.apellidoPaterno || "",
+                apellidoMaterno: employee.apellidoMaterno || "",
                 cliente: "",
                 area: 1,
                 cargo: "",
@@ -159,37 +161,43 @@ const PantallaSolicitarEquipo = () => {
     }, [employee, employeeLoading, reset, tipoHardwareParams, anexoHardwareParams]);
 
     const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
-        const formattedData = {
-            idUsuarioEmpleado: talento?.idUsuarioTalento,
-            nombreEmpleado: data.nombres,
-            apellidosEmpleado: data.apellidos,
-            empresaCliente: data.cliente,
-            area: unitValues.find(unit => unit.num1 === data.area)?.string1 || "",
-            puesto: data.cargo,
-            fechaSolicitud: data.fechaSolicitud,
-            fechaEntrega: data.fechaEntrega,
-            idTipoEquipo: data.tipoHardware,
-            tipoEquipo: tipoHardwareParams.find(param => param.num1 === data.tipoHardware)?.string1 || "",
-            procesador: data.procesador,
-            ram: data.ram,
-            hd: data.disco,
-            marca: data.marca,
-            anexo: anexoHardwareParams.find(param => param.num1 === data.anexoHardware)?.string1 || "",
-            idAnexo: data.anexoHardware,
-            celular: data.celular === "si",
-            internetMovil: data.internetMovil === "si",
-            accesorios: data.accesorios,
-            lstSoftware: data.software.map((sw, index) => ({
-                idItem: index + 1,
-                producto: sw.producto,
-                prodVersion: sw.version
-            }))
-        };
-
-        const response = await postData("/fmi/employee/solicitud/equipo", formattedData);
-
-        if (response.idTipoMensaje === 2) {
-            goBack();
+        
+        try {
+            const formattedData = {
+                idUsuarioEmpleado: talento?.idUsuarioTalento,
+                nombreEmpleado: data.nombres,
+                apellidoPaternoEmpleado: data.apellidoPaterno,
+                apellidoMaternoEmpleado: data.apellidoMaterno,
+                empresaCliente: data.cliente,
+                area: unitValues.find(unit => unit.num1 === data.area)?.string1 || "",
+                puesto: data.cargo,
+                fechaSolicitud: data.fechaSolicitud,
+                fechaEntrega: data.fechaEntrega,
+                idTipoEquipo: data.tipoHardware,
+                tipoEquipo: tipoHardwareParams.find(param => param.num1 === data.tipoHardware)?.string1 || "",
+                procesador: data.procesador,
+                ram: data.ram,
+                hd: data.disco,
+                marca: data.marca,
+                anexo: anexoHardwareParams.find(param => param.num1 === data.anexoHardware)?.string1 || "",
+                idAnexo: data.anexoHardware,
+                celular: data.celular === "si",
+                internetMovil: data.internetMovil === "si",
+                accesorios: data.accesorios,
+                lstSoftware: data.software.map((sw, index) => ({
+                    idItem: index + 1,
+                    producto: sw.producto,
+                    prodVersion: sw.version
+                }))
+            };
+    
+            const response = await postData("/fmi/employee/solicitud/equipo", formattedData);
+    
+            if (response.idTipoMensaje === 2) {
+                goBack();
+            }
+        } catch (error) {
+            console.error("Error al enviar el formulario:", error);
         }
     };
 
@@ -211,7 +219,8 @@ const PantallaSolicitarEquipo = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                        <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} />
+                        <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
+                        <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
                         <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} />
                         <DropdownForm name="area" control={control} label="Área" error={errors.area}
                             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
@@ -361,53 +370,60 @@ const PantallaSolicitarEquipo = () => {
                    {/* Datos de Instalación de Software */}
                     <h3 className="text-2xl font-semibold mt-4">Datos de Instalación de Software</h3>
 
-                    <div className="border p-4 rounded-lg">
-                        {/* Encabezado de la tabla */}
-                        <div className="grid grid-cols-12 gap-8 mb-2">
-                            <div className="col-span-1 text-sm font-medium flex items-center justify-center">Item</div>
-                            <div className="col-span-6 text-sm font-medium flex items-center justify-center">Producto</div>
-                            <div className="col-span-5 text-sm font-medium flex items-center justify-center">Versión</div>
-                        </div>
-
-                        {/* Filas de la tabla */}
-                        {fields.map((field, index) => (
-                            <div key={field.id} className="grid grid-cols-12 gap-8 mb-4">
-                                {/* Columna Item */}
-                                <div className="col-span-1 flex items-center h-10 justify-center">{index + 1}</div>
-
-                                {/* Columna Producto */}
-                                <div className="col-span-6 justify-center">
-                                    <InputForm
-                                        name={`software.${index}.producto`}
-                                        control={control}
-                                        label=""
-                                        error={errors.software?.[index]?.producto}
-                                    />
-                                </div>
-
-                                {/* Columna Versión */}
-                                <div className="col-span-5 flex items-center justify-center">
-                                    <div className="w-full">
-                                        <InputForm
-                                            name={`software.${index}.version`}
-                                            control={control}
-                                            label=""
-                                            error={errors.software?.[index]?.version}
-                                        />
-                                    </div>
-                                    {/* Solo mostrar botón de eliminar para software NO predeterminado */}
-                                    {!isDefaultSoftware(field.id) && (
-                                        <button
-                                            type="button"
-                                            className="ml-2 text-red-500 hover:text-red-700"
-                                            onClick={() => remove(index)}
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
+                    <div className="border p-4 rounded-lg overflow-x-auto">
+                        {/* Tabla con scroll horizontal en móvil */}
+                        <div className="min-w-[500px]">
+                            {/* Encabezado de la tabla */}
+                            <div className="grid grid-cols-12 gap-2 mb-2">
+                                <div className="col-span-1 text-sm font-medium flex items-center justify-center">Item</div>
+                                <div className="col-span-6 text-sm font-medium flex items-center justify-center">Producto</div>
+                                <div className="col-span-5 text-sm font-medium flex items-center justify-center">Versión</div>
                             </div>
-                        ))}
+
+                            {/* Filas de la tabla */}
+                            {fields.map((field, index) => (
+                                <div key={field.id} className="grid grid-cols-12 gap-2 mb-2">
+                                    {/* Columna Item */}
+                                    <div className="col-span-1 flex items-center justify-center">{index + 1}</div>
+
+                                    {/* Columna Producto - eliminando espacio extra */}
+                                    <div className="col-span-6 px-10">
+                                        <div className="w-full">
+                                            <InputForm
+                                                name={`software.${index}.producto`}
+                                                control={control}
+                                                label=""
+                                                error={errors.software?.[index]?.producto}
+                                                isTable={true}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Columna Versión - eliminando espacio extra */}
+                                    <div className="col-span-5 flex items-center">
+                                        <div className="flex-grow px-4">
+                                            <InputForm
+                                                name={`software.${index}.version`}
+                                                control={control}
+                                                label=""
+                                                error={errors.software?.[index]?.version}
+                                                isTable={true}
+                                            />
+                                        </div>
+                                        {/* Solo mostrar botón de eliminar para software NO predeterminado */}
+                                        {!isDefaultSoftware(field.id) && (
+                                            <button
+                                                type="button"
+                                                className="ml-1 text-red-500 hover:text-red-700"
+                                                onClick={() => remove(index)}
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
                         {/* Botón para agregar nueva fila */}
                         <div className="mt-4">
@@ -420,7 +436,6 @@ const PantallaSolicitarEquipo = () => {
                             </button>
                         </div>
                     </div>
-
                     {/* Form options */}
                     <div className="flex justify-center gap-8">
                         <button 

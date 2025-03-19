@@ -114,8 +114,11 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
         <>
             {(postloading) && (<Loading />)}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md relative">
                     <h2 className="text-xl font-bold mb-4">Agregar Nuevo RQ</h2>
+                    <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
+                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
+                    </button>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="max-h-[42vh] overflow-y-auto pr-2">
                             <div className="space-y-4 flex-1">
@@ -259,13 +262,6 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
 
                         {/* Botones de acción */}
                         <div className="flex justify-end space-x-4 mt-6">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 hover:text-white"
-                            >
-                                Cancelar
-                            </button>
                             <button
                                 type="submit"
                                 className="px-4 py-2 bg-[#009688] text-white rounded-md hover:bg-[#359c92]"

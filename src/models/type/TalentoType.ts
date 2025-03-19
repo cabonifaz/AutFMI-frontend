@@ -4,6 +4,7 @@ export type TalentoType = {
     idTipoHistorial: number;
     esTrabajador: boolean;
     nombres: string;
-    apellidos: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
     modalidad: string;
 }

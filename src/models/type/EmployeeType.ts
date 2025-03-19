@@ -1,6 +1,7 @@
 export type EmployeeType = {
     nombres: string;
-    apellidos: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
     telefono: string;
     idUnidad: number;
     remuneracion: number;

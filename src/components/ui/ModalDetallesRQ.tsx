@@ -10,8 +10,12 @@ import { useFetchRequirement } from "../../hooks/useFetchRequirement";
 import Loading from "../loading/Loading";
 import { format } from 'date-fns';
 import { ClientType } from "../../models/type/ClientType";
+import { useDeleteHook } from "../../hooks/useDeleteHook";
+import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileSchema";
+import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 
 interface Archivo {
+    idRequerimientoArchivo: number;
     name: string;
     size: number;
     file: File;
@@ -31,7 +35,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
     const { postData, postloading } = usePostHook();
-    const { requirement, loading: reqLoading } = useFetchRequirement(RQ?.idRequerimiento || null);
+    const { requirement, loading: reqLoading, fetchRequirement } = useFetchRequirement(RQ?.idRequerimiento || null);
+    const { deleteData, deleteLoading } = useDeleteHook();
 
     const {
         register,
@@ -50,6 +55,16 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         },
     });
 
+    const {
+        handleSubmit: handleSubmitFiles,
+        setValue: setValueFiles,
+    } = useForm<AddFilesSchemaType>({
+        resolver: zodResolver(addFilesSchema),
+        defaultValues: {
+            lstArchivos: [],
+        },
+    });
+
     useEffect(() => {
         if (requirement) {
             setValue("idCliente", requirement.requerimiento.idCliente.toString());
@@ -58,34 +73,47 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue("descripcion", requirement.requerimiento.descripcion);
             setValue("estado", requirement.requerimiento.estado.toString());
             setValue("vacantes", requirement.requerimiento.vacantes);
+            setClienteSeleccionado(requirement.requerimiento.cliente);
 
             const archivosFormateados = requirement.requerimiento.lstRqArchivo.map((archivo) => ({
+                idRequerimientoArchivo: archivo.idRequerimientoArchivo,
                 name: archivo.nombreArchivo,
                 size: 0,
                 file: new File([], archivo.nombreArchivo),
             }));
+
             setArchivos(archivosFormateados);
-            setClienteSeleccionado(requirement.requerimiento.cliente);
-            setValue("lstArchivos", archivosFormateados);
+            setValueFiles("lstArchivos", archivosFormateados);
         }
-    }, [requirement, setValue]);
+    }, [requirement, setValue, setValueFiles]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
             const nuevosArchivos = Array.from(event.target.files).map((file) => ({
+                idRequerimientoArchivo: 0,
                 name: file.name,
                 size: file.size,
                 file,
             }));
+
             setArchivos((prevArchivos) => [...prevArchivos, ...nuevosArchivos]);
-            setValue("lstArchivos", nuevosArchivos, { shouldValidate: true });
+            setValueFiles("lstArchivos", nuevosArchivos, { shouldValidate: true });
         }
     };
 
-    const handleRemoveFile = (index: number) => {
+    const handleRemoveFile = async (index: number, idArchivo: number) => {
         const updatedArchivos = archivos.filter((_, i) => i !== index);
+
+        if (idArchivo !== 0) {
+            const deleteResponse = await deleteData(`/fmi/requirement/file/remove?idRqFile=${idArchivo}`);
+
+            if (deleteResponse.idTipoMensaje === 2) {
+                fetchRequirement();
+            }
+            return;
+        }
         setArchivos(updatedArchivos);
-        setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
+        setValueFiles("lstArchivos", updatedArchivos, { shouldValidate: true });
     };
 
     const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -93,6 +121,37 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
         setClienteSeleccionado(selectedClienteText);
         setValue("idCliente", selectedClienteId);
+    };
+
+    const onSubmitAddFiles: SubmitHandler<AddFilesSchemaType> = async (data) => {
+        if (RQ) {
+            // new files only
+            const nuevosArchivos = data.lstArchivos.filter((archivo) => archivo.idRequerimientoArchivo === 0);
+
+            const lstArchivos = await Promise.all(
+                nuevosArchivos.map(async (archivo) => {
+                    const base64 = await fileToBase64(archivo.file);
+                    const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(archivo.name);
+                    const idTipoArchivo = getTipoArchivoId(extensionArchivo);
+                    return {
+                        string64: base64,
+                        nombreArchivo,
+                        extensionArchivo,
+                        idTipoArchivo,
+                    };
+                }) || []
+            );
+
+            const payload = {
+                idRequerimiento: RQ.idRequerimiento,
+                lstArchivos,
+            }
+
+            const response = await postData("/fmi/requirement/file/save", payload);
+            if (response.idTipoMensaje === 2) {
+                fetchRequirement();
+            }
+        }
     };
 
     const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
@@ -132,9 +191,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         onClose();
     };
 
+    const newFiles = archivos.some((archivo) => archivo.idRequerimientoArchivo === 0);
+
     return (
         <>
-            {(reqLoading || postloading) && <Loading />}
+            {(reqLoading || postloading || deleteLoading) && <Loading />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
                     <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>
@@ -274,43 +335,57 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     <div className="p-4 ">
                                         {/* Lista de archivos */}
                                         <div>
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => document.getElementById("fileInput")?.click()}
-                                                    className="text-blue-500 hover:text-blue-600 focus:outline-none"
-                                                >
-                                                    Agregar archivos
-                                                </button>
-                                            </div>
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={handleFileChange}
-                                                className="hidden"
-                                                id="fileInput"
-                                                accept=".pdf,.doc,.docx,.xls,.xlsx"
-                                            />
-                                            <div className="mt-2 max-h-96 overflow-y-auto">
-                                                {archivos.map((archivo, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
+                                            <form onSubmit={handleSubmitFiles(onSubmitAddFiles)} className="flex flex-col">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => document.getElementById("fileInput")?.click()}
+                                                        className="text-blue-500 hover:text-blue-600 focus:outline-none"
                                                     >
-                                                        <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                                                            {archivo.name}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveFile(index)}
-                                                            className="text-red-500 hover:text-red-600 focus:outline-none"
+                                                        Elegir archivos
+                                                    </button>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    onChange={handleFileChange}
+                                                    className="hidden"
+                                                    id="fileInput"
+                                                    accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                                />
+                                                <div className="mt-2 max-h-80 overflow-y-auto">
+                                                    {archivos.map((archivo, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
                                                         >
-                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                                            <span className="text-sm text-gray-700 truncate flex-1 mr-2">
+                                                                {archivo.name}
+                                                            </span>
+                                                            {archivo.idRequerimientoArchivo === 0 && (
+                                                                <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
+                                                                    Nuevo
+                                                                </span>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveFile(index, archivo.idRequerimientoArchivo)}
+                                                                className="text-red-500 hover:text-red-600 focus:outline-none"
+                                                            >
+                                                                <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button
+                                                    type="submit"
+                                                    disabled={!newFiles}
+                                                    className={`px-4 py-2 mt-4 w-fit self-end text-white rounded-md ${newFiles ? "bg-[#009688] hover:bg-[#359c92]" : "bg-zinc-400"
+                                                        }`}>
+                                                    Agregar archivos nuevos
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 )

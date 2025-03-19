@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "notistack";
 import { apiClientWithToken } from "../utils/apiClient";
 import { RequirementResponse } from "../models/response/RequirementResponse";
@@ -8,32 +8,32 @@ export const useFetchRequirement = (idRequerimiento: number | null) => {
     const [loading, setLoading] = useState<boolean>(false);
     const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
-        const fetchRequirement = async () => {
-            if (!idRequerimiento) return;
+    const fetchRequirement = useCallback(async () => {
+        if (!idRequerimiento) return;
 
-            setLoading(true);
-            try {
-                const response = await apiClientWithToken.get<RequirementResponse>(
-                    `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=true`
-                );
+        setLoading(true);
+        try {
+            const response = await apiClientWithToken.get<RequirementResponse>(
+                `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=true`
+            );
 
-                if (response.data.idTipoMensaje === 2) {
-                    setRequirement(response.data);
-                    return;
-                }
-                enqueueSnackbar(response.data.mensaje, { variant: "error" });
-            } catch (error) {
-                enqueueSnackbar("Error al cargar los datos del requerimiento", {
-                    variant: "error",
-                });
-            } finally {
-                setLoading(false);
+            if (response.data.idTipoMensaje === 2) {
+                setRequirement(response.data);
+                return;
             }
-        };
+            enqueueSnackbar(response.data.mensaje, { variant: "error" });
+        } catch (error) {
+            enqueueSnackbar("Error al cargar los datos del requerimiento", {
+                variant: "error",
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
+    useEffect(() => {
         fetchRequirement();
-    }, [enqueueSnackbar, idRequerimiento]);
+    }, [fetchRequirement]);
 
-    return { requirement, loading };
+    return { requirement, loading, fetchRequirement };
 };

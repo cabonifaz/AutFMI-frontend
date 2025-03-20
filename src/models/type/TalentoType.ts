@@ -6,5 +6,6 @@ export type TalentoType = {
     nombres: string;
     apellidoPaterno: string;
     apellidoMaterno: string;
+    apellidos?: string;
     modalidad: string;
 }

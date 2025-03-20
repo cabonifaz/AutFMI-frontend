@@ -76,7 +76,7 @@ const PantallaListaTalentos = () => {
                 <tr key={index} className="border-t border-gray-200">
                   <td className="py-2 px-4">
                     <div className="flex flex-col">
-                      <span>{talento.nombres + ' ' + talento.apellidoPaterno + talento.apellidoMaterno}</span>
+                      <span>{talento.nombres + ' ' + talento.apellidos}</span>
                       <small className="text-gray-600">{talento.modalidad}</small>
                     </div>
                   </td>

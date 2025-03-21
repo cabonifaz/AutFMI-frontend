@@ -196,7 +196,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </div>
             <button
               onClick={handleSearchSubmit}
-              className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="ml-2 px-4 py-2 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors"
             >
               Buscar
             </button>
@@ -217,7 +217,11 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
                 isSelected={selectedTalents.some(t => t.idTalento === talent.idTalento)}
               />
             ))
-          ) : <></>}
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              {searchTerm ? "No se encontraron talentos con ese criterio de búsqueda" : "Ingrese un término para buscar talentos"}
+            </div>
+          )}
         </div>
       </div>
     </div>

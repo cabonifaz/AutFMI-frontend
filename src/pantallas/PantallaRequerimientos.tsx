@@ -6,7 +6,7 @@ import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
 import Loading from "../components/loading/Loading";
 import useFetchParams from "../hooks/useFetchParams";
-import { ESTADO_RQ } from "../utils/config";
+import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
@@ -221,9 +221,10 @@ export const PantallaRequerimientos = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button 
+                                            <button
                                                 onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
+                                                disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                className={`text-white rounded-lg px-3 py-1 mr-2  transition duration-200 ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}>
                                                 Asignar
                                             </button>
                                             <button

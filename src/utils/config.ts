@@ -21,6 +21,10 @@ export const ESTADO_RQ = '24';
 export const ESTADO_OBSERVADO = 1;
 export const ESTADO_ACEPTADO = 2;
 
+// RQ STATE
+export const ESTADO_ASIGNADO = 1;
+export const ESTADO_ATENDIDO = 2;
+
 // MODALIDADES
 export const MODALIDAD_PLANILLA = "Planilla";
 export const MODALIDAD_LOC_SERVICIOS = "RxH";

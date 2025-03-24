@@ -4,5 +4,6 @@ export type RequirementItem = {
     codigoRQ: string;
     fechaSolicitud: string;
     estado: string;
+    idEstado: number;
     vacantes: number;
 };

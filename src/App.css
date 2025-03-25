@@ -8,12 +8,12 @@
   --color-blue-hover: #0B6E99;
 
   /* Colores naranja */
-  --color-orange: theme('colors.orange.500');
-  --color-orange-hover: theme('colors.orange.600');
+  --color-orange: #FAAB34;
+  --color-orange-hover: #E0992A;
 
   /* Colores rojos */
-  --color-red: theme('colors.red.600');
-  --color-red-hover: theme('colors.red.700');
+  --color-red: theme('colors.red.500');
+  --color-red-hover: theme('colors.red.600');
 
   /* Colores grises/neutrales */
   --color-gray-border: #BDBDBD;

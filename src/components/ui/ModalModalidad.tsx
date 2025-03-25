@@ -42,11 +42,11 @@ const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
           <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
             options={options?.map((option) => ({ value: option.num1, label: option.string1 })) || []}
           />
-          <div className="flex justify-center gap-4 mt-4">
-            <button type="button" className="bg-slate-600 rounded-lg py-2 px-4 text-white" onClick={onClose}>
+          <div className="flex justify-between gap-4 mt-4">
+            <button type="button" className="btn btn-outline-gray" onClick={onClose}>
               Cancelar
             </button>
-            <button className="bg-green-600 rounded-lg py-2 px-4 text-white" onClick={handleSubmit(onContinue)}>
+            <button className="btn btn-primary" onClick={handleSubmit(onContinue)}>
               Continuar
             </button>
           </div>

@@ -23,22 +23,22 @@ const PantallaSolicitarEquipo = () => {
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
     const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
 
-    const tipoHardwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === Number(TIPO_HARDWARE)) || [], 
-        [params]
-    );
-    
-    const anexoHardwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === Number(ANEXO_HARDWARE)) || [], 
+    const tipoHardwareParams = useMemo(() =>
+        params?.filter(param => param.idMaestro === Number(TIPO_HARDWARE)) || [],
         [params]
     );
 
-    const tipoSoftwareParams = useMemo(() => 
-        params?.filter(param => param.idMaestro === Number(TIPO_SOFTWARE)) || [], 
+    const anexoHardwareParams = useMemo(() =>
+        params?.filter(param => param.idMaestro === Number(ANEXO_HARDWARE)) || [],
         [params]
     );
 
-    const unitValues = useMemo(() => 
+    const tipoSoftwareParams = useMemo(() =>
+        params?.filter(param => param.idMaestro === Number(TIPO_SOFTWARE)) || [],
+        [params]
+    );
+
+    const unitValues = useMemo(() =>
         params?.filter((param) => param.idMaestro === Number(UNIDAD)) || [],
         [params]
     );
@@ -91,42 +91,42 @@ const PantallaSolicitarEquipo = () => {
 
         if (isPcOrLaptop) {
             const defaultProductNames = tipoSoftwareParams?.map(param => param.string1) || [];
-            
-            const existingDefaultSoftware = fields.filter(field => 
-                defaultProductNames.includes(field.producto??"")
+
+            const existingDefaultSoftware = fields.filter(field =>
+                defaultProductNames.includes(field.producto ?? "")
             );
-            
+
             const existingDefaultProductNames = existingDefaultSoftware.map(field => field.producto);
-            
-            const missingDefaultSoftware = tipoSoftwareParams?.filter(param => 
+
+            const missingDefaultSoftware = tipoSoftwareParams?.filter(param =>
                 !existingDefaultProductNames.includes(param.string1)
             ).map(param => ({
                 producto: param.string1,
                 version: param.string2
             })) || [];
-            
-            const manualSoftware = fields.filter(field => 
-                !defaultProductNames.includes(field.producto??"")
+
+            const manualSoftware = fields.filter(field =>
+                !defaultProductNames.includes(field.producto ?? "")
             );
-            
+
             const newFields = [
                 ...existingDefaultSoftware,
                 ...missingDefaultSoftware,
                 ...manualSoftware
             ];
-            
+
             replace(newFields);
-            
+
             setTimeout(() => {
                 const newDefaultIds = fields
-                    .filter(field => defaultProductNames.includes(field.producto??""))
+                    .filter(field => defaultProductNames.includes(field.producto ?? ""))
                     .map(field => field.id);
                 setDefaultSoftwareIds(newDefaultIds);
             }, 0);
         } else {
             const defaultProductNames = tipoSoftwareParams?.map(param => param.string1) || [];
-            const manualSoftware = fields.filter(field => 
-                !defaultProductNames.includes(field.producto??"")
+            const manualSoftware = fields.filter(field =>
+                !defaultProductNames.includes(field.producto ?? "")
             );
             replace(manualSoftware);
             setDefaultSoftwareIds([]);
@@ -161,7 +161,7 @@ const PantallaSolicitarEquipo = () => {
     }, [employee, employeeLoading, reset, tipoHardwareParams, anexoHardwareParams]);
 
     const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
-        
+
         try {
             const formattedData = {
                 idUsuarioEmpleado: talento?.idUsuarioTalento,
@@ -190,9 +190,9 @@ const PantallaSolicitarEquipo = () => {
                     prodVersion: sw.version
                 }))
             };
-    
+
             const response = await postData("/fmi/employee/solicitud/equipo", formattedData);
-    
+
             if (response.idTipoMensaje === 2) {
                 goBack();
             }
@@ -230,66 +230,66 @@ const PantallaSolicitarEquipo = () => {
 
                     {/* Fechas */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <InputForm 
-                            name="fechaSolicitud" 
-                            control={control} 
-                            label="Fecha de Solicitud" 
-                            type="date" 
-                            error={errors.fechaSolicitud} 
+                        <InputForm
+                            name="fechaSolicitud"
+                            control={control}
+                            label="Fecha de Solicitud"
+                            type="date"
+                            error={errors.fechaSolicitud}
                         />
-                        <InputForm 
-                            name="fechaEntrega" 
-                            control={control} 
-                            label="Fecha de Entrega" 
-                            type="date" 
-                            error={errors.fechaEntrega} 
+                        <InputForm
+                            name="fechaEntrega"
+                            control={control}
+                            label="Fecha de Entrega"
+                            type="date"
+                            error={errors.fechaEntrega}
                         />
                     </div>
 
                     {/* Datos de Requerimiento de Hardware */}
                     <h3 className="text-2xl font-semibold mt-4">Datos de Requerimiento de Hardware</h3>
-                    
+
                     {/* Tipo de Equipo */}
                     <div className="min-w-[9rem]">
                         <DropdownForm
                             name="tipoHardware"
                             control={control}
                             label="Tipo de Equipo"
-                            options={tipoHardwareParams?.map(param => ({ 
-                                value: param.num1, 
-                                label: param.string1 
+                            options={tipoHardwareParams?.map(param => ({
+                                value: param.num1,
+                                label: param.string1
                             })) || []}
                             error={errors.tipoHardware}
                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <InputForm 
-                            name="procesador" 
-                            control={control} 
-                            label={`Procesador`} 
-                            error={errors.procesador} 
+                        <InputForm
+                            name="procesador"
+                            control={control}
+                            label={`Procesador`}
+                            error={errors.procesador}
                             disabled={!isPcOrLaptop}
                         />
-                        <InputForm 
-                            name="ram" 
-                            control={control} 
+                        <InputForm
+                            name="ram"
+                            control={control}
                             label={`RAM`}
-                            error={errors.ram} 
+                            error={errors.ram}
                             disabled={!isPcOrLaptop}
                         />
-                        <InputForm 
-                            name="disco" 
-                            control={control} 
+                        <InputForm
+                            name="disco"
+                            control={control}
                             label={`Disco Duro`}
-                            error={errors.disco} 
+                            error={errors.disco}
                             disabled={!isPcOrLaptop}
                         />
-                        <InputForm 
+                        <InputForm
                             name="marca"
-                            control={control} 
-                            label="Marca (Opcional)" 
-                            error={errors.marca} 
+                            control={control}
+                            label="Marca (Opcional)"
+                            error={errors.marca}
                             disabled={!isPcOrLaptop}
                         />
                     </div>
@@ -303,53 +303,53 @@ const PantallaSolicitarEquipo = () => {
                                 name="anexoHardware"
                                 control={control}
                                 label="Anexo"
-                                options={anexoHardwareParams?.map(param => ({ 
-                                    value: param.num1, 
-                                    label: param.string1 
+                                options={anexoHardwareParams?.map(param => ({
+                                    value: param.num1,
+                                    label: param.string1
                                 })) || []}
                                 error={errors.anexoHardware}
                             />
                         </div>
-                        
+
                         {/* Contenedor para Celular e Internet Móvil */}
                         <div className="col-span-1 lg:col-span-6 grid grid-cols-2 gap-6">
                             {/* Celular */}
                             <div className="col-span-1">
                                 <label className="block mb-2 font-medium">Celular</label>
                                 <div className="flex gap-8">
-                                    <CheckboxForm 
-                                        name="celular" 
-                                        control={control} 
-                                        label="Sí" 
-                                        value="si" 
+                                    <CheckboxForm
+                                        name="celular"
+                                        control={control}
+                                        label="Sí"
+                                        value="si"
                                         group="celular"
                                     />
-                                    <CheckboxForm 
-                                        name="celular" 
-                                        control={control} 
-                                        label="No" 
+                                    <CheckboxForm
+                                        name="celular"
+                                        control={control}
+                                        label="No"
                                         value="no"
                                         defaultChecked={true}
                                         group="celular"
                                     />
                                 </div>
                             </div>
-                            
+
                             {/* Internet Móvil */}
                             <div className="col-span-1">
                                 <label className="block mb-2 font-medium">Internet Móvil</label>
                                 <div className="flex gap-8">
-                                    <CheckboxForm 
-                                        name="internetMovil" 
-                                        control={control} 
-                                        label="Sí" 
+                                    <CheckboxForm
+                                        name="internetMovil"
+                                        control={control}
+                                        label="Sí"
                                         value="si"
                                         group="internetMovil"
                                     />
-                                    <CheckboxForm 
-                                        name="internetMovil" 
-                                        control={control} 
-                                        label="No" 
+                                    <CheckboxForm
+                                        name="internetMovil"
+                                        control={control}
+                                        label="No"
                                         value="no"
                                         defaultChecked={true}
                                         group="internetMovil"
@@ -359,15 +359,15 @@ const PantallaSolicitarEquipo = () => {
                         </div>
                     </div>
 
-                    
-                    <InputForm 
-                        name="accesorios" 
-                        control={control} 
-                        label="Accesorios" 
-                        error={errors.accesorios} 
+
+                    <InputForm
+                        name="accesorios"
+                        control={control}
+                        label="Accesorios"
+                        error={errors.accesorios}
                     />
 
-                   {/* Datos de Instalación de Software */}
+                    {/* Datos de Instalación de Software */}
                     <h3 className="text-2xl font-semibold mt-4">Datos de Instalación de Software</h3>
 
                     <div className="border p-4 rounded-lg overflow-x-auto">
@@ -429,7 +429,7 @@ const PantallaSolicitarEquipo = () => {
                         <div className="mt-4">
                             <button
                                 type="button"
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500"
+                                className="btn btn-blue"
                                 onClick={addNewSoftwareRow}
                             >
                                 Agregar
@@ -438,16 +438,16 @@ const PantallaSolicitarEquipo = () => {
                     </div>
                     {/* Form options */}
                     <div className="flex justify-center gap-8">
-                        <button 
-                            type="button" 
-                            className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" 
+                        <button
+                            type="button"
+                            className="btn btn-outline-gray"
                             onClick={goBack}
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+                            className={`btn ${isDirty ? "btn-primary" : "bg-gray-400 cursor-not-allowed"}`}
                             disabled={!isDirty}
                         >
                             Guardar

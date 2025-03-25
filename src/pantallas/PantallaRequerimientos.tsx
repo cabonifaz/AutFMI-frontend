@@ -177,13 +177,13 @@ export const PantallaRequerimientos = () => {
                             <button
                                 type="button"
                                 onClick={handleSearch}
-                                className="bg-zinc-600 rounded-lg px-4 py-2 text-white hover:bg-zinc-700 transition duration-200">
+                                className="btn btn-primary">
                                 Buscar
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setIsNuevoRQModalOpen(true)}
-                                className="bg-[#009688] rounded-lg px-4 py-2 text-white hover:bg-[#359c92] transition duration-200">
+                                className="btn btn-blue">
                                 Nuevo RQ
                             </button>
                         </div>
@@ -224,12 +224,12 @@ export const PantallaRequerimientos = () => {
                                             <button
                                                 onClick={() => handleAsignarClick(req.idRequerimiento)}
                                                 disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                className={`text-white rounded-lg px-3 py-1 mr-2  transition duration-200 ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}>
+                                                className={`btn ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'btn-blue'}`}>
                                                 Asignar
                                             </button>
                                             <button
                                                 onClick={() => openDetallesRQModal(req)}
-                                                className="bg-[#009688] text-white rounded-lg px-3 py-1 hover:bg-[#359c92] transition duration-200">
+                                                className="btn btn-primary">
                                                 Detalles
                                             </button>
                                         </td>

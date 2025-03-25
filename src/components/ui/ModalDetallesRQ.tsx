@@ -321,7 +321,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             <button
                                                 type="submit"
                                                 disabled={!isEditing}
-                                                className={`px-4 py-2 text-white rounded-md ${isEditing ? "bg-[#009688]  hover:bg-[#359c92]" : "bg-zinc-400"}`}
+                                                className={`btn ${isEditing ? "btn-primary" : "bg-zinc-400"}`}
                                             >
                                                 Actualizar
                                             </button>
@@ -381,7 +381,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 <button
                                                     type="submit"
                                                     disabled={!newFiles}
-                                                    className={`px-4 py-2 mt-4 w-fit self-end text-white rounded-md ${newFiles ? "bg-[#009688] hover:bg-[#359c92]" : "bg-zinc-400"
+                                                    className={`btn w-fit self-end ${newFiles ? "btn-primary" : "bg-zinc-400"
                                                         }`}>
                                                     Agregar archivos nuevos
                                                 </button>

@@ -92,12 +92,12 @@ const PantallaCese = () => {
 
                     {/* Form options */}
                     <div className="flex justify-center gap-4">
-                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
+                        <button type="button" className="btn btn-outline-gray" onClick={goBack}>
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+                            className={`btn ${isDirty ? "btn-primary" : "bg-gray-400 cursor-not-allowed"}`}
                             disabled={!isDirty}>
                             Guardar
                         </button>

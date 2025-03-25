@@ -264,7 +264,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                         <div className="flex justify-end space-x-4 mt-6">
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-[#009688] text-white rounded-md hover:bg-[#359c92]"
+                                className="btn btn-primary"
                             >
                                 Agregar RQ
                             </button>

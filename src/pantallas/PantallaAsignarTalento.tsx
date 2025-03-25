@@ -66,33 +66,32 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
     <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
     <td className="py-3 px-4 whitespace-nowrap">{talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}</td>
     <td className="py-3 px-4 whitespace-nowrap">
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        talento.estado?.toUpperCase() === 'ACEPTADO' ? 'bg-green-100 text-green-800' : 
-        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'bg-yellow-100 text-yellow-800' : 
-        'bg-gray-100 text-gray-800'
-      }`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'bg-green-100 text-green-800' :
+        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
         {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
       </span>
     </td>
     <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
-      <button 
-        onClick={() => onUpdate(talento)} 
+      <button
+        onClick={() => onUpdate(talento)}
         disabled={(talento.estado?.toUpperCase() !== 'OBSERVADO' && talento.idEstado !== 2) || disabled}
-        className={`px-3 py-1 ${
-          (talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
-          ? 'bg-blue-600 text-white hover:bg-blue-700' 
-            : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-        } text-xs rounded transition-colors`}
+        className={`px-3 py-1 ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
+          ? 'btn btn-blue'
+          : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+          } text-xs rounded transition-colors`}
       >
         Actualizar
       </button>
 
-      <button 
-        onClick={() => onRemove(talento.idTalento)} 
+      <button
+        onClick={() => onRemove(talento.idTalento)}
         disabled={disabled}
-        className={`px-3 py-1 ${
-          disabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'
-        } text-xs rounded transition-colors`}
+        className={`px-3 py-1 text-xs rounded transition-colors ${disabled
+          ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+          : 'btn btn-red'
+          }`}
       >
         Remover
       </button>
@@ -115,11 +114,10 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, i
     <button
       onClick={() => onSelect(talent)}
       disabled={isSelected}
-      className={`px-4 py-2 rounded ${
-        isSelected 
-          ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-          : 'bg-blue-600 text-white hover:bg-blue-700'
-      }`}
+      className={`px-4 py-2 rounded ${isSelected
+        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+        : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
     </button>
@@ -138,18 +136,18 @@ interface SelectionModalProps {
   isLoading: boolean;
 }
 
-const SelectionModal: React.FC<SelectionModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  availableTalents, 
+const SelectionModal: React.FC<SelectionModalProps> = ({
+  isOpen,
+  onClose,
+  availableTalents,
   selectedTalents,
   onSelectTalent,
   onSearch,
-  searchTerm, 
+  searchTerm,
   setSearchTerm,
   isLoading
 }) => {
-  
+
   const handleClearSearch = () => {
     setSearchTerm('');
     onSearch('');
@@ -172,7 +170,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </svg>
           </button>
         </div>
-        
+
         <div className="p-4 border-b">
           <div className="flex items-center">
             <div className="relative flex-grow">
@@ -184,7 +182,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
-                <button 
+                <button
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
@@ -202,7 +200,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </button>
           </div>
         </div>
-        
+
         <div className="overflow-y-auto flex-grow">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">
@@ -244,13 +242,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
         <h2 className="text-xl font-semibold mb-4">Confirmación</h2>
         <p className="mb-6">{message}</p>
         <div className="flex justify-end gap-4">
-          <button 
+          <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
           >
             Cancelar
           </button>
-          <button 
+          <button
             onClick={onConfirm}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
@@ -301,10 +299,10 @@ const TalentTable: React.FC = () => {
         // const response = await axios.get(
         //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
         // );
-        
+
         if (response.data.idTipoMensaje === 2) {
           setRequerimiento(response.data.requerimiento);
-          
+
           // Format date
           if (response.data.requerimiento.fechaSolicitud) {
             const date = new Date(response.data.requerimiento.fechaSolicitud);
@@ -326,7 +324,7 @@ const TalentTable: React.FC = () => {
               situacion: talent.situacion,
               idSituacion: talent.idSituacion
             }));
-            
+
             setSelectedTalents(formattedTalents);
             formattedTalents.length > 0 ? setIsTalent(true) : setIsTalent(false);
           }
@@ -340,7 +338,7 @@ const TalentTable: React.FC = () => {
 
     fetchRequerimiento();
   }, [idRequerimiento]);
-  
+
   // Función para buscar y cargar detalles de un talento específico
   const fetchTalentDetails = async (idTalento: number) => {
     try {
@@ -348,26 +346,26 @@ const TalentTable: React.FC = () => {
       const response = await apiClientWithToken.get(
         `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/data?idTalento=${idTalento}`
       );
-      
+
       if (response.data.idTipoMensaje === 2) {
         const talent = response.data.talento;
         // Actualizar los datos en la lista de talentos seleccionados
-        setSelectedTalents(prev => prev.map(t => 
-          t.idTalento === idTalento ? 
-          {
-            ...t,
-            nombres: talent.nombres,
-            apellidos: talent.apellidos,
-            dni: talent.dni,
-            celular: talent.celular,
-            email: talent.email,
-            idSituacion: talent.idSituacion,
-            situacion: talent.situacion,
-            idEstado: talent.idEstado,
-            estado: talent.estado
-          } : t
+        setSelectedTalents(prev => prev.map(t =>
+          t.idTalento === idTalento ?
+            {
+              ...t,
+              nombres: talent.nombres,
+              apellidos: talent.apellidos,
+              dni: talent.dni,
+              celular: talent.celular,
+              email: talent.email,
+              idSituacion: talent.idSituacion,
+              situacion: talent.situacion,
+              idEstado: talent.idEstado,
+              estado: talent.estado
+            } : t
         ));
-        
+
         // Guardar el talento seleccionado para posible uso posterior
         setSelectedTalent(talent);
       }
@@ -379,7 +377,7 @@ const TalentTable: React.FC = () => {
   };
 
   const handleSearch = async (term: string) => {
-    
+
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
@@ -388,7 +386,7 @@ const TalentTable: React.FC = () => {
       // const response = await axios.get(
       //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
       // );
-      
+
       if (response.data.idTipoMensaje === 2) {
         // Format the talent data to match our expected format
         const formattedTalents = response.data.talentos.map((talent: any) => ({
@@ -402,7 +400,7 @@ const TalentTable: React.FC = () => {
           idEstado: 1, // Default to ACEPTADO
           idSituacion: 1, // Default to LIBRE
         }));
-        
+
         setSearchResults(formattedTalents);
       }
     } catch (error) {
@@ -423,10 +421,10 @@ const TalentTable: React.FC = () => {
       // const response = await apiClientWithToken.get(
       //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
       // );
-      
+
       if (response.data.idTipoMensaje === 2) {
         const talentDetails = response.data.talento;
-        
+
         // Format the talent data with the obtained details
         const formattedTalent = {
           idTalento: talentDetails.idTalento,
@@ -441,15 +439,15 @@ const TalentTable: React.FC = () => {
           situacion: talentDetails.situacion || 'LIBRE',
           idSituacion: talentDetails.idSituacion || 1
         };
-        
+
         setSelectedTalents(prev => [...prev, formattedTalent]);
       } else {
         // Si no se pudo obtener detalles, usar los datos que ya tenemos
         const formattedTalent = {
           idTalento: talent.idTalento,
           nombres: talent.nombres,
-          apellidos: talent.apellidoPaterno && talent.apellidoMaterno ? 
-            `${talent.apellidoPaterno} ${talent.apellidoMaterno}` : 
+          apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
+            `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
             talent.apellidos || '',
           dni: talent.dni || '',
           telefono: talent.telefono || talent.celular || '',
@@ -460,18 +458,18 @@ const TalentTable: React.FC = () => {
           idEstado: talent.idEstado || 1,
           idSituacion: talent.idSituacion || 1,
         };
-        
+
         setSelectedTalents(prev => [...prev, formattedTalent]);
       }
     } catch (error) {
       console.error('Error fetching talent details:', error);
-      
+
       // En caso de error, usar los datos que ya tenemos
       const formattedTalent = {
         idTalento: talent.idTalento,
         nombres: talent.nombres,
-        apellidos: talent.apellidoPaterno && talent.apellidoMaterno ? 
-          `${talent.apellidoPaterno} ${talent.apellidoMaterno}` : 
+        apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
+          `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
           talent.apellidos || '',
         dni: talent.dni || '',
         telefono: talent.telefono || talent.celular || '',
@@ -482,7 +480,7 @@ const TalentTable: React.FC = () => {
         idEstado: talent.idEstado || 1,
         idSituacion: talent.idSituacion || 1,
       };
-      
+
       setSelectedTalents(prev => [...prev, formattedTalent]);
     } finally {
       setIsLoading(false);
@@ -503,7 +501,7 @@ const TalentTable: React.FC = () => {
     const hasAcceptedTalents = selectedTalents.some(
       talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2
     );
-    
+
     if (hasAcceptedTalents) {
       setIsConfirmModalOpen(true);
     } else {
@@ -519,7 +517,7 @@ const TalentTable: React.FC = () => {
       //   alert('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.');
       //   return;
       // }
-      
+
       // Format the data for the API
       const talentos = selectedTalents.map(talent => ({
         idTalento: talent.idTalento,
@@ -531,12 +529,12 @@ const TalentTable: React.FC = () => {
         idEstado: talent.idEstado || (talent.estado === 'ACEPTADO' ? 1 : 2),
         idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2)
       }));
-      
+
       const payload = {
         idRequerimiento,
         lstTalentos: talentos
       };
-      
+
       const response = await apiClientWithToken.post(
         '/fmi/requirement/talents/save',
         payload
@@ -546,7 +544,7 @@ const TalentTable: React.FC = () => {
       //   'https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/save',
       //   payload
       // );
-      
+
       if (response.data && response.data.idTipoMensaje === 2) {
         setSavedSuccessfully(true);
         setIsConfirmModalOpen(false);
@@ -563,68 +561,66 @@ const TalentTable: React.FC = () => {
   };
 
   const goBack = () => navigate(-1);
-  
+
   // Determine if buttons should be disabled
   const buttonsDisabled = savedSuccessfully || isTalent;
 
   return (
     <div className="container mx-auto p-4">
-    
-    <div className="flex flex-col gap-4">
-      <h3 className="text-2xl font-semibold flex gap-2">
-        <BackButton backClicked={goBack} />
-        Módulo para búsqueda de talentos
-      </h3>
 
-      {/* Cuadro de requerimientos */}
-      <div className="bg-white shadow-md rounded-lg p-4 w-full">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-gray-600"><span className="font-medium">Id:</span> {idRequerimiento}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Cliente:</span> {requerimiento?.cliente || 'Cargando...'}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Rq:</span> {requerimiento?.codigoRQ || 'Cargando...'}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Fecha Solicitud:</span> {dateFormatted || 'Cargando...'}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado === 1 ? 'Asignado' : 'Pendiente'}</p>
-          <p className="text-sm text-gray-600"><span className="font-medium">Vacantes:</span> {requerimiento?.vacantes || 'Cargando...'}</p>
+      <div className="flex flex-col gap-4">
+        <h3 className="text-2xl font-semibold flex gap-2">
+          <BackButton backClicked={goBack} />
+          Módulo para búsqueda de talentos
+        </h3>
+
+        {/* Cuadro de requerimientos */}
+        <div className="bg-white shadow-md rounded-lg p-4 w-full">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-600"><span className="font-medium">Id:</span> {idRequerimiento}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">Cliente:</span> {requerimiento?.cliente || 'Cargando...'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">Rq:</span> {requerimiento?.codigoRQ || 'Cargando...'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">Fecha Solicitud:</span> {dateFormatted || 'Cargando...'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado === 1 ? 'Asignado' : 'Pendiente'}</p>
+            <p className="text-sm text-gray-600"><span className="font-medium">Vacantes:</span> {requerimiento?.vacantes || 'Cargando...'}</p>
+          </div>
+        </div>
+
+        {/* Botones */}
+        <div className="flex justify-between w-full pb-4">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSearchResults([]);
+              setIsModalOpen(true);
+              handleSearch('');
+            }}
+            disabled={buttonsDisabled}
+            className={`px-4 py-2 rounded-lg transition-colors ${buttonsDisabled
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              : 'btn btn-blue'
+              }`}
+          >
+            Agregar Talento
+          </button>
+          <button
+            onClick={handleConfirmOpen}
+            disabled={
+              selectedTalents.length === 0 ||
+              buttonsDisabled ||
+              !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
+              selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
+            }
+            className={`px-4 py-2 rounded-lg transition-colors ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
+              selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              : 'btn btn-primary'
+              }`}
+          >
+            Finalizar
+          </button>
         </div>
       </div>
-
-      {/* Botones */}
-      <div className="flex justify-between w-full pb-4">
-        <button
-          onClick={() => {
-            setSearchTerm('');
-            setSearchResults([]);
-            setIsModalOpen(true);
-            handleSearch('');
-          }}
-          disabled={buttonsDisabled}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            buttonsDisabled
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          Agregar Talento
-        </button>
-        <button
-          onClick={handleConfirmOpen}
-          disabled={
-            selectedTalents.length === 0 || 
-            buttonsDisabled || 
-            !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
-            selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-          }
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
-            selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'bg-green-600 text-white hover:bg-green-700'
-          }`}
-        >
-          Finalizar
-        </button>
-      </div>
-    </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">

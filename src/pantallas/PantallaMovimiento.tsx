@@ -7,10 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { MovementFormSchema, MovementFormType } from '../models/schema/MovementFormSchema';
 import { useEffect } from 'react';
-import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
+import { Loading } from '../components/ui/Loading';
 
 const PantallaMovimiento = () => {
     const navigate = useNavigate();
@@ -76,9 +76,7 @@ const PantallaMovimiento = () => {
 
     return (
         <>
-            {paramLoading && <Loading />}
-            {postloading && <Loading />}
-            {employeeLoading && <Loading />}
+            {(paramLoading || postloading || employeeLoading) && <Loading overlayMode={true} />}
             <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}

@@ -6,7 +6,8 @@ import { DropdownForm } from '../forms';
 import { ModalModalidadSchema, ModalModalidadType } from '../../models/schema/ModalModalidadSchema';
 import useFetchParams from '../../hooks/useFetchParams';
 import { TIPO_MODAL_MODALIDAD } from '../../utils/config';
-import Loading from '../loading/Loading';
+import { Loading } from './Loading';
+
 interface ModalModalidadProps {
   talento: TalentoType;
   isOpen: boolean;
@@ -34,7 +35,7 @@ const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
 
   return (
     <>
-      {paramLoading && <Loading />}
+      {paramLoading && <Loading overlayMode={true} />}
       <div className="flex justify-center items-center bg-gray-500 bg-opacity-50 fixed top-0 left-0 w-full h-full z-50">
         <div className="p-4 rounded-lg w-80 bg-white">
           <h3 className="text-center mb-4 text-2xl font-semibold">Modalidad</h3>

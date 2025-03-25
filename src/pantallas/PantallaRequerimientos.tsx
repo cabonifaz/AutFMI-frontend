@@ -4,7 +4,6 @@ import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
-import Loading from "../components/loading/Loading";
 import useFetchParams from "../hooks/useFetchParams";
 import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
@@ -13,6 +12,7 @@ import { RequirementItem } from "../models/type/RequirementItemType";
 import { format } from 'date-fns';
 import { useNavigate } from "react-router-dom";
 import { useFetchClients } from "../hooks/useFetchClients";
+import { Loading } from "../components/ui/Loading";
 
 interface SearchProps {
     idCliente: number | null;
@@ -121,7 +121,7 @@ export const PantallaRequerimientos = () => {
 
     return (
         <>
-            {(loading || paramLoading || clientsLoading) && (<Loading />)}
+            {(loading || paramLoading || clientsLoading) && (<Loading overlayMode={true} />)}
             <PantallaWrapper>
                 <h2 className="text-2xl font-semibold mb-4 flex gap-2">
                     <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>

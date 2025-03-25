@@ -6,11 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { EntryFormType, EntryFormSchema } from '../models/schema/EntryFormSchema';
 import { useEffect } from 'react';
-import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm, SalaryStructureForm } from '../components/forms';
 import { sedeSunatList } from '../models/type/SedeSunatType';
 import BackButton from '../components/ui/BackButton';
 import useFetchTalento from '../hooks/useFetchTalento';
+import { Loading } from '../components/ui/Loading';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -85,9 +85,7 @@ const PantallaIngreso = () => {
 
   return (
     <>
-      {paramLoading && <Loading />}
-      {postloading && <Loading />}
-      {TalentoLoading && <Loading />}
+      {(paramLoading || postloading || TalentoLoading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Modality */}
         <div className="flex items-center">

@@ -52,12 +52,12 @@ const PantallaListaTalentos = () => {
             id="searchInput"
             type="text"
             ref={textSearchRef}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-gray-300 focus:outline-none"
+            className="w-full px-4 border border-gray-300 rounded-md focus:ring focus:ring-gray-300 focus:outline-none"
             placeholder="🔍 Buscar"
           />
           <button
             type="button"
-            className="border bg-slate-700 rounded-lg px-4 md:px-8 text-white hover:bg-slate-600"
+            className="px-4 md:px-8 btn btn-primary"
             onClick={handleSearch}>
             Buscar
           </button>
@@ -97,32 +97,32 @@ const PantallaListaTalentos = () => {
                       </button>
                     </div>
                   </td>
-                  <td className="py-5 lg:px-4 flex flex-col md:flex-row *:w-full *:md:w-fit gap-2 lg:gap-6 justify-center">
+                  <td className="py-5 lg:px-4 flex flex-col md:flex-row *:w-[90%] *:md:w-fit gap-2 justify-center">
                     <button
-                      className={`px-4 py-1 max-h-fit rounded-lg text-white ${talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-blue-400 hover:bg-blue-500'}`}
+                      className={`btn ${talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'btn-blue'}`}
                       onClick={() => handleOpenModal(talento)}
                       aria-label="Ingreso de talento"
                       disabled={talento.esTrabajador}>
                       Ingreso
                     </button>
                     <button
-                      className={`px-4 py-1 max-h-fit rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-orange-500 hover:bg-orange-600'}`}
+                      className={`btn ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'btn-orange'}`}
                       onClick={() => navigate('/formMovimiento', { state: { talento } })}
                       aria-label="Movimiento"
                       disabled={!talento.esTrabajador}>
                       Movimiento
                     </button>
                     <button
-                      className={`px-4 py-1 max-h-fit rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-red-500 hover:bg-red-600'}`}
+                      className={`btn ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'btn-red'}`}
                       onClick={() => navigate('/formCese', { state: { talento } })}
                       aria-label="Cese"
                       disabled={!talento.esTrabajador}>
                       Cese
                     </button>
                     <button
-                      className={`px-4 py-1 max-h-fit rounded-lg text-white ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'bg-green-500 hover:bg-green-600'}`}
+                      className={`btn ${!talento.esTrabajador ? 'bg-gray-300 text-slate-500' : 'btn-primary'}`}
                       onClick={() => navigate('/formSolicitarEquipo', { state: { talento } })}
-                      aria-label="Cese"
+                      aria-label="equipo"
                       disabled={!talento.esTrabajador}>
                       Solicitar equipo
                     </button>
@@ -136,14 +136,14 @@ const PantallaListaTalentos = () => {
           {talentos.length > 0 && (
             <div className="flex justify-center items-center gap-4 my-2">
               <button
-                className={`px-4 py-2 rounded-lg text-white ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                className={`btn ${currentPage === 1 || emptyList ? 'bg-slate-500 cursor-default' : 'btn-blue'}`}
                 onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
                 disabled={currentPage === 1 || emptyList}>
                 Anterior
               </button>
               <span>Página {currentPage}</span>
               <button
-                className={`px-4 py-2 rounded-lg text-white ${talentos.length < 15 || emptyList ? 'bg-slate-500 cursor-default' : 'bg-slate-800 hover:bg-slate-900'}`}
+                className={`btn ${talentos.length < 15 || emptyList ? 'bg-slate-500 cursor-default' : 'btn-blue'}`}
                 onClick={() => setCurrentPage(prevPage => prevPage + 1)}
                 disabled={emptyList || talentos.length < 15}>
                 Siguiente

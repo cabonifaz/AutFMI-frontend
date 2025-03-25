@@ -101,7 +101,7 @@ const PantallaDatos = () => {
                         <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
                         <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
-                            flex = {true}
+                            flex={true}
                         />
                     </FormRow>
 
@@ -112,7 +112,7 @@ const PantallaDatos = () => {
                         <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
                         <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
-                            flex = {true}
+                            flex={true}
                         />
                     </FormRow>
 
@@ -123,12 +123,12 @@ const PantallaDatos = () => {
 
                     {/* Form options */}
                     <div className="flex justify-center gap-4">
-                        <button type="button" className="w-40 bg-slate-600 rounded-lg text-white py-2 hover:bg-slate-500" onClick={goBack}>
+                        <button type="button" className="btn btn-outline-gray" onClick={goBack}>
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className={`w-40 rounded-lg text-white py-2 ${isDirty ? "bg-green-700 hover:bg-green-600" : "bg-gray-400 cursor-not-allowed"}`}
+                            className={`btn ${isDirty ? "btn-primary" : "bg-gray-400 cursor-not-allowed"}`}
                             disabled={!isDirty}>
                             Guardar
                         </button>

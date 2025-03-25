@@ -1,38 +1,82 @@
-.App {
-  text-align: center;
+:root {
+  /* Colores principales */
+  --color-primary: #009688;
+  --color-primary-hover: #2d8d8d;
+
+  /* Colores azules */
+  --color-blue: #0B85C3;
+  --color-blue-hover: #0B6E99;
+
+  /* Colores naranja */
+  --color-orange: theme('colors.orange.500');
+  --color-orange-hover: theme('colors.orange.600');
+
+  /* Colores rojos */
+  --color-red: theme('colors.red.600');
+  --color-red-hover: theme('colors.red.700');
+
+  /* Colores grises/neutrales */
+  --color-gray-border: #BDBDBD;
+  --color-gray-text: #71717a;
+  --color-dark-bg: #334155;
+
+  /* Colores para tabs */
+  --color-tab-active: #0B85C3;
+  --color-tab-inactive: #6b7280;
+  --color-tab-hover: #374151;
+
+  /* Blanco */
+  --color-white: #ffffff;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.btn {
+  @apply focus:outline-none rounded-lg py-2 px-4 mx-1;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.filter {
+  @apply py-2 px-4 rounded-full whitespace-nowrap transition-all duration-300 text-sm border;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.btn-primary {
+  @apply bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-blue {
+  @apply bg-[var(--color-blue)] hover:bg-[var(--color-blue-hover)] text-white;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.btn-orange {
+  @apply bg-[var(--color-orange)] hover:bg-[var(--color-orange-hover)] text-white;
+}
+
+.btn-red {
+  @apply bg-[var(--color-red)] hover:bg-[var(--color-red-hover)] text-white;
+}
+
+.btn-filter {
+  @apply bg-white hover:bg-[var(--color-dark-bg)] hover:text-white;
+}
+
+.btn-filter-active {
+  @apply bg-[var(--color-dark-bg)] text-white;
+}
+
+.btn-outline-blue {
+  @apply bg-transparent border-[var(--color-blue)] text-[var(--color-blue)] hover:bg-[var(--color-blue)] hover:text-white;
+}
+
+.btn-outline-gray {
+  @apply bg-transparent border border-[var(--color-gray-border)] text-[var(--color-gray-text)] hover:bg-[var(--color-gray-border)] hover:text-white;
+}
+
+.tab {
+  @apply px-4 py-2 text-sm font-medium;
+}
+
+.tab-active {
+  @apply text-[var(--color-tab-active)] border-b-2 border-[var(--color-tab-active)];
+}
+
+.tab-inactive {
+  @apply text-[var(--color-tab-inactive)] hover:text-[var(--color-tab-hover)];
 }

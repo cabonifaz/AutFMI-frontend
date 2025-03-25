@@ -39,7 +39,7 @@ const PantallaLogin = () => {
             passwordVisible={passwordVisible}
             togglePasswordVisibility={togglePasswordVisibility}
           />
-          <button type="submit" className="bg-blue-600 text-white rounded-lg py-2 my-2">{loading ? 'Cargando...' : 'Iniciar sesión'}</button>
+          <button type="submit" className="btn btn-primary">{loading ? 'Cargando...' : 'Iniciar sesión'}</button>
         </form>
       </div>
     </>

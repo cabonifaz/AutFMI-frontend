@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { usePostHook } from "../../hooks/usePostHook";
-import Loading from "../loading/Loading";
 import { ClientType } from "../../models/type/ClientType";
+import { Loading } from "./Loading";
 
 interface Archivo {
     name: string;
@@ -112,7 +112,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
 
     return (
         <>
-            {(postloading) && (<Loading />)}
+            {(postloading) && (<Loading overlayMode={true} />)}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md relative">
                     <h2 className="text-xl font-bold mb-4">Agregar Nuevo RQ</h2>

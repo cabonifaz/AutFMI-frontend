@@ -1,10 +1,10 @@
 import useLogin from '../hooks/useLogin';
-import Loading from '../components/loading/Loading';
 import { InputForm } from '../components/forms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { LoginFormSchema, LoginFormType } from '../models/schema/LoginFormSchema';
 import { useState } from 'react';
+import { Loading } from '../components/ui/Loading';
 
 const PantallaLogin = () => {
   const { handleLogin, loading } = useLogin();

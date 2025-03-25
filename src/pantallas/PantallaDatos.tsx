@@ -5,13 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DropdownForm, FormRow, InputForm } from "../components/forms";
 import { TalentoType } from "../models/type/TalentoType";
 import useFetchTalento from "../hooks/useFetchTalento";
-import Loading from "../components/loading/Loading";
 import { useEffect } from "react";
 import { usePostHook } from "../hooks/usePostHook";
 import useFetchParams from "../hooks/useFetchParams";
 import { TIPO_MODALIDAD, TIPO_MONEDA, TIPO_TIEMPO } from "../utils/config";
 import { formatDateToDMY } from "../utils/util";
 import BackButton from "../components/ui/BackButton";
+import { Loading } from "../components/ui/Loading";
 
 const PantallaDatos = () => {
     const navigate = useNavigate();
@@ -80,9 +80,7 @@ const PantallaDatos = () => {
 
     return (
         <>
-            {paramLoading && (<Loading />)}
-            {loading && (<Loading />)}
-            {postloading && (<Loading />)}
+            {(paramLoading || loading || postloading) && (<Loading overlayMode={true} />)}
             <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 {/* Data form */}
                 <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-8">

@@ -2,12 +2,12 @@ import { useRef, useState } from 'react';
 import { TalentoType } from '../models/type/TalentoType';
 import { useNavigate } from 'react-router-dom';
 import useTalentos from '../hooks/useTalentos';
-import Loading from '../components/loading/Loading';
 import ModalModalidad from '../components/ui/ModalModalidad';
 import { enqueueSnackbar } from 'notistack';
 import useDownloadPdf from '../hooks/useDownloadPdf';
 import { PantallaWrapper } from './PantallaWrapper';
 import { useMenu } from '../context/MenuContext';
+import { Loading } from '../components/ui/Loading';
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
@@ -38,8 +38,8 @@ const PantallaListaTalentos = () => {
 
   return (
     <>
-      {loading && (<Loading />)}
-      {downloadPdfLoading && (<Loading />)}
+      {loading && (<Loading overlayMode={true} />)}
+      {downloadPdfLoading && (<Loading overlayMode={true} />)}
       <PantallaWrapper>
         <div className="mb-3 flex gap-2 md:gap-4">
           <div className="space-y-1 cursor-pointer self-center ms-1 lg:hidden" onClick={toggleMenu}>

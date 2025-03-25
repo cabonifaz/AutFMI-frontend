@@ -7,12 +7,12 @@ import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "./Tabs";
 import { RequirementItem } from "../../models/type/RequirementItemType";
 import { useFetchRequirement } from "../../hooks/useFetchRequirement";
-import Loading from "../loading/Loading";
 import { format } from 'date-fns';
 import { ClientType } from "../../models/type/ClientType";
 import { useDeleteHook } from "../../hooks/useDeleteHook";
 import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileSchema";
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
+import { Loading } from "./Loading";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -195,7 +195,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
     return (
         <>
-            {(reqLoading || postloading || deleteLoading) && <Loading />}
+            {(reqLoading || postloading || deleteLoading) && <Loading overlayMode={true} />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
                     <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>

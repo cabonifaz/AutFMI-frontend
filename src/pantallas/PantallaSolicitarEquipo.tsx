@@ -5,13 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm, useFieldArray } from 'react-hook-form';
 import { EquipoFormSchema, EquipoFormType } from '../models/schema/EquipoFormSchema';
 import { useEffect, useMemo, useState } from 'react';
-import Loading from '../components/loading/Loading';
 import { DropdownForm, InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import CheckboxForm from '../components/forms/CheckboxForm';
 import useFetchParams from '../hooks/useFetchParams';
 import { ANEXO_HARDWARE, TIPO_HARDWARE, TIPO_SOFTWARE, UNIDAD } from '../utils/config';
+import { Loading } from '../components/ui/Loading';
 
 const PantallaSolicitarEquipo = () => {
     const navigate = useNavigate();
@@ -209,7 +209,7 @@ const PantallaSolicitarEquipo = () => {
 
     return (
         <>
-            {isLoading && <Loading />}
+            {isLoading && <Loading overlayMode={true} />}
             <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Datos del Colaborador */}

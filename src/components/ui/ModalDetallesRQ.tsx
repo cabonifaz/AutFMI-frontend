@@ -195,8 +195,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
     return (
         <>
-            {(reqLoading || postloading || deleteLoading) && <Loading overlayMode={true} />}
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            {(postloading || deleteLoading) && <Loading overlayMode={true} />}
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
                     <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" />
@@ -206,127 +206,132 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Detalles RQ",
                                 children: (
-                                    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={handleEditClick}
-                                                className="focus:outline-none"
-                                            >
-                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
-                                            </button>
-                                        </div>
+                                    <div>
+                                        {reqLoading ? (<p className="text-gray-500 text-center">Cargando Requerimiento...</p>) : (
+                                            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleEditClick}
+                                                        className="focus:outline-none"
+                                                    >
+                                                        <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
+                                                    </button>
+                                                </div>
 
-                                        {/* Campos del formulario */}
-                                        <div className="space-y-4 flex-1">
-                                            {/* Cliente */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
-                                                <select
-                                                    {...register("idCliente")}
-                                                    disabled={!isEditing}
-                                                    onChange={handleClienteChange}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                >
-                                                    <option value="">Elige un cliente</option>
-                                                    {clientes.map((cliente) => (
-                                                        <option key={cliente.idCliente} value={cliente.idCliente}>
-                                                            {cliente.razonSocial}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            {errors.idCliente && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
-                                            )}
+                                                {/* Campos del formulario */}
+                                                <div className="space-y-4 flex-1">
+                                                    {/* Cliente */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
+                                                        <select
+                                                            {...register("idCliente")}
+                                                            disabled={!isEditing}
+                                                            onChange={handleClienteChange}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        >
+                                                            <option value="">Elige un cliente</option>
+                                                            {clientes.map((cliente) => (
+                                                                <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                                    {cliente.razonSocial}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    {errors.idCliente && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                                    )}
 
-                                            {/* Código RQ */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
-                                                <input
-                                                    {...register("codigoRQ")}
-                                                    disabled={!isEditing}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            {errors.codigoRQ && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
-                                            )}
+                                                    {/* Código RQ */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
+                                                        <input
+                                                            {...register("codigoRQ")}
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    {errors.codigoRQ && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
+                                                    )}
 
-                                            {/* Fecha de Solicitud */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
-                                                <input
-                                                    type="date"
-                                                    {...register("fechaSolicitud")}
-                                                    disabled={!isEditing}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            {errors.fechaSolicitud && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
-                                            )}
+                                                    {/* Fecha de Solicitud */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
+                                                        <input
+                                                            type="date"
+                                                            {...register("fechaSolicitud")}
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    {errors.fechaSolicitud && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
+                                                    )}
 
-                                            {/* Descripción */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
-                                                <textarea
-                                                    {...register("descripcion")}
-                                                    disabled={!isEditing}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                                />
-                                            </div>
-                                            {errors.descripcion && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
-                                            )}
+                                                    {/* Descripción */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
+                                                        <textarea
+                                                            {...register("descripcion")}
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                        />
+                                                    </div>
+                                                    {errors.descripcion && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
+                                                    )}
 
-                                            {/* Estado */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
-                                                <select
-                                                    {...register("estado")}
-                                                    disabled={!isEditing}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                >
-                                                    {estadoOptions.map((option) => (
-                                                        <option key={option.num1} value={option.num1}>
-                                                            {option.string1}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            {errors.estado && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.estado.message}</p>
-                                            )}
+                                                    {/* Estado */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
+                                                        <select
+                                                            {...register("estado")}
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        >
+                                                            {estadoOptions.map((option) => (
+                                                                <option key={option.num1} value={option.num1}>
+                                                                    {option.string1}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    {errors.estado && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.estado.message}</p>
+                                                    )}
 
-                                            {/* Vacantes */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
-                                                <input
-                                                    type="number"
-                                                    {...register("vacantes", { valueAsNumber: true })}
-                                                    onFocus={(e) => e.target.select()}
-                                                    disabled={!isEditing}
-                                                    min={0}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            {errors.vacantes && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.vacantes.message}</p>
-                                            )}
-                                        </div>
+                                                    {/* Vacantes */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
+                                                        <input
+                                                            type="number"
+                                                            {...register("vacantes", { valueAsNumber: true })}
+                                                            onFocus={(e) => e.target.select()}
+                                                            disabled={!isEditing}
+                                                            min={0}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    {errors.vacantes && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.vacantes.message}</p>
+                                                    )}
+                                                </div>
 
-                                        {/* Botones de acción */}
-                                        <div className="flex justify-end space-x-4 mt-4">
-                                            <button
-                                                type="submit"
-                                                disabled={!isEditing}
-                                                className={`btn ${isEditing ? "btn-primary" : "bg-zinc-400"}`}
-                                            >
-                                                Actualizar
-                                            </button>
-                                        </div>
-                                    </form>
+                                                {/* Botones de acción */}
+                                                <div className="flex justify-end space-x-4 mt-4">
+                                                    <button
+                                                        type="submit"
+                                                        disabled={!isEditing}
+                                                        className={`btn ${isEditing ? "btn-primary" : "bg-zinc-400"}`}
+                                                    >
+                                                        Actualizar
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        )}
+                                    </div>
+
                                 ),
                             },
                             {
@@ -381,7 +386,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 <button
                                                     type="submit"
                                                     disabled={!newFiles}
-                                                    className={`btn w-fit self-end ${newFiles ? "btn-primary" : "bg-zinc-400"
+                                                    className={`btn w-fit self-end mt-4 ${newFiles ? "btn-primary" : "bg-zinc-400"
                                                         }`}>
                                                     Agregar archivos nuevos
                                                 </button>

@@ -72,21 +72,23 @@ const PantallaCese = () => {
                         <BackButton backClicked={goBack} />
                         Datos del talento
                     </h3>
-                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
+                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
+                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
                     <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                        required={true}
                     />
 
                     {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
 
                     {/* CESE */}
                     <DropdownForm name="idMotivo" control={control} label="Motivo de cese" error={errors.idMotivo}
-                        options={reasonValues?.map((reason) => ({ value: reason.num1, label: reason.string1 })) || []} />
+                        options={reasonValues?.map((reason) => ({ value: reason.num1, label: reason.string1 })) || []}  required={true}
+                    />
 
-                    <InputForm name="fchCese" control={control} label="Fecha de cese" error={errors.fchCese} type="date" />
+                    <InputForm name="fchCese" control={control} label="Fecha de cese" error={errors.fchCese} type="date" required={true} />
 
                     {/* Form options */}
                     <div className="flex justify-center gap-4">

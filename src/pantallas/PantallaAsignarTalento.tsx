@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../components/ui/BackButton';
-import axios from 'axios'; // Asegúrate de tener axios instalado
 import { apiClientWithToken } from '../utils/apiClient';
 import Toast from '../components/ui/Toast';
 
-// Types
 type TalentoType = {
   idTalento: number;
   nombres: string;
@@ -32,19 +30,18 @@ type RequerimientoType = {
   idRequerimiento?: number;
 };
 
-// Components
 const TableHeader: React.FC = () => (
   <thead>
-    <tr className="bg-gray-100 text-gray-700 text-sm">
-      <th className="py-3 px-4 text-left font-semibold">ID</th>
-      <th className="py-3 px-4 text-left font-semibold">Nombres</th>
-      <th className="py-3 px-4 text-left font-semibold">Apellidos</th>
-      <th className="py-3 px-4 text-left font-semibold">DNI</th>
-      <th className="py-3 px-4 text-left font-semibold">Cel</th>
-      <th className="py-3 px-4 text-left font-semibold">Email</th>
-      <th className="py-3 px-4 text-left font-semibold">Situación</th>
-      <th className="py-3 px-4 text-left font-semibold">Estado</th>
-      <th className="py-3 px-4 text-left font-semibold">Acciones</th>
+    <tr className="table-header">
+      <th className="table-header-cell">ID</th>
+      <th className="table-header-cell">Nombres</th>
+      <th className="table-header-cell">Apellidos</th>
+      <th className="table-header-cell">DNI</th>
+      <th className="table-header-cell">Cel</th>
+      <th className="table-header-cell">Email</th>
+      <th className="table-header-cell">Situación</th>
+      <th className="table-header-cell">Estado</th>
+      <th className="table-header-cell">Acciones</th>
     </tr>
   </thead>
 );
@@ -57,18 +54,18 @@ interface TableRowProps {
 }
 
 const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabled }) => (
-  <tr className="border-b hover:bg-gray-50">
-    <td className="py-3 px-4 whitespace-nowrap">{talento.idTalento}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.nombres}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.dni}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.telefono || talento.celular}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}</td>
-    <td className="py-3 px-4 whitespace-nowrap">
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'bg-green-100 text-green-800' :
-        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-gray-100 text-gray-800'
+  <tr className="table-row">
+    <td className="table-cell">{talento.idTalento}</td>
+    <td className="table-cell">{talento.nombres}</td>
+    <td className="table-cell">{talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}</td>
+    <td className="table-cell">{talento.dni}</td>
+    <td className="table-cell">{talento.telefono || talento.celular}</td>
+    <td className="table-cell">{talento.email}</td>
+    <td className="table-cell">{talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}</td>
+    <td className="table-cell">
+      <span className={`badge ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'badge-green' :
+        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
+          ''
         }`}>
         {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
       </span>
@@ -77,10 +74,10 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
       <button
         onClick={() => onUpdate(talento)}
         disabled={(talento.estado?.toUpperCase() !== 'OBSERVADO' && talento.idEstado !== 2) || disabled}
-        className={`px-3 py-1 ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
-          ? 'btn btn-blue'
-          : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-          } text-xs rounded transition-colors`}
+        className={`btn btn-actions ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
+          ? 'btn-blue'
+          : 'btn-disabled'
+          }`}
       >
         Actualizar
       </button>
@@ -88,10 +85,7 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
       <button
         onClick={() => onRemove(talento.idTalento)}
         disabled={disabled}
-        className={`px-3 py-1 text-xs rounded transition-colors ${disabled
-          ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-          : 'btn btn-red'
-          }`}
+        className={`btn btn-actions ${disabled ? 'btn-disabled': 'btn btn-red'}`}
       >
         Remover
       </button>
@@ -109,15 +103,11 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, i
   <div className="flex items-center justify-between p-4 border-b">
     <div>
       <p className="font-medium">{talent.nombres} {talent.apellidoPaterno} {talent.apellidoMaterno}</p>
-      {/* <p className="text-sm text-gray-600">ID: {talent.idTalento}</p> */}
     </div>
     <button
       onClick={() => onSelect(talent)}
       disabled={isSelected}
-      className={`px-4 py-2 rounded ${isSelected
-        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-        : 'bg-blue-600 text-white hover:bg-blue-700'
-        }`}
+      className={`btn ${isSelected ? 'btn-disabled': 'btn-blue'}`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
     </button>
@@ -172,19 +162,20 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
         </div>
 
         <div className="p-4 border-b">
-          <div className="flex items-center">
-            <div className="relative flex-grow">
+          <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex relative h-10 w-11/12">
+              <img src="/assets/ic_search.svg" alt="search icon" className="absolute top-2 left-3" />
               <input
                 type="text"
                 placeholder="Buscar por nombre"
-                className="w-full px-4 py-2 border rounded-lg pr-10"
+                className="input-search-container"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
                 <button
                   onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="handle-clear-search"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -194,7 +185,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </div>
             <button
               onClick={handleSearchSubmit}
-              className="ml-2 px-4 py-2 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+              className="btn btn-primary"
             >
               Buscar
             </button>
@@ -277,17 +268,14 @@ const TalentTable: React.FC = () => {
   const [isTalent, setIsTalent] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Función para mostrar el toast
   const showToast = (message: string, type: 'success' | 'error') => {
     setToastMessage({ message, type });
   };
 
-  // Función para cerrar el toast
   const closeToast = () => {
     setToastMessage(null);
   };
 
-  // Fetch requerimiento data
   useEffect(() => {
     const fetchRequerimiento = async () => {
       try {
@@ -295,10 +283,6 @@ const TalentTable: React.FC = () => {
         const response = await apiClientWithToken.get(
           `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
         );
-
-        // const response = await axios.get(
-        //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
-        // );
 
         if (response.data.idTipoMensaje === 2) {
           setRequerimiento(response.data.requerimiento);
@@ -309,7 +293,6 @@ const TalentTable: React.FC = () => {
             setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
           }
 
-          // Add this section: Initialize selectedTalents with lstRqTalento if available
           if (response.data.requerimiento.lstRqTalento && response.data.requerimiento.lstRqTalento.length > 0) {
             const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
               idTalento: talent.idTalento,
@@ -339,7 +322,6 @@ const TalentTable: React.FC = () => {
     fetchRequerimiento();
   }, [idRequerimiento]);
 
-  // Función para buscar y cargar detalles de un talento específico
   const fetchTalentDetails = async (idTalento: number) => {
     try {
       setIsLoading(true);
@@ -349,7 +331,6 @@ const TalentTable: React.FC = () => {
 
       if (response.data.idTipoMensaje === 2) {
         const talent = response.data.talento;
-        // Actualizar los datos en la lista de talentos seleccionados
         setSelectedTalents(prev => prev.map(t =>
           t.idTalento === idTalento ?
             {
@@ -366,7 +347,6 @@ const TalentTable: React.FC = () => {
             } : t
         ));
 
-        // Guardar el talento seleccionado para posible uso posterior
         setSelectedTalent(talent);
       }
     } catch (error) {
@@ -383,22 +363,17 @@ const TalentTable: React.FC = () => {
       const response = await apiClientWithToken.get(
         `/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
       );
-      // const response = await axios.get(
-      //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
-      // );
 
       if (response.data.idTipoMensaje === 2) {
-        // Format the talent data to match our expected format
         const formattedTalents = response.data.talentos.map((talent: any) => ({
           idTalento: talent.idTalento,
           nombres: talent.nombres,
           apellidoPaterno: talent.apellidoPaterno,
           apellidoMaterno: talent.apellidoMaterno,
-          // Add default values for required fields
           dni: talent.dni || '',
           email: talent.email || '',
-          idEstado: 1, // Default to ACEPTADO
-          idSituacion: 1, // Default to LIBRE
+          idEstado: 1,
+          idSituacion: 1,
         }));
 
         setSearchResults(formattedTalents);
@@ -411,21 +386,15 @@ const TalentTable: React.FC = () => {
   };
 
   const handleSelectTalent = async (talent: TalentoType) => {
-    // Primero, buscar los detalles completos del talento usando el nuevo endpoint
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
         `/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
       );
 
-      // const response = await apiClientWithToken.get(
-      //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
-      // );
-
       if (response.data.idTipoMensaje === 2) {
         const talentDetails = response.data.talento;
 
-        // Format the talent data with the obtained details
         const formattedTalent = {
           idTalento: talentDetails.idTalento,
           nombres: talentDetails.nombres,
@@ -442,7 +411,6 @@ const TalentTable: React.FC = () => {
 
         setSelectedTalents(prev => [...prev, formattedTalent]);
       } else {
-        // Si no se pudo obtener detalles, usar los datos que ya tenemos
         const formattedTalent = {
           idTalento: talent.idTalento,
           nombres: talent.nombres,
@@ -464,7 +432,6 @@ const TalentTable: React.FC = () => {
     } catch (error) {
       console.error('Error fetching talent details:', error);
 
-      // En caso de error, usar los datos que ya tenemos
       const formattedTalent = {
         idTalento: talent.idTalento,
         nombres: talent.nombres,
@@ -497,7 +464,6 @@ const TalentTable: React.FC = () => {
   };
 
   const handleConfirmOpen = () => {
-    // Check if there are any ACEPTADO talents
     const hasAcceptedTalents = selectedTalents.some(
       talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2
     );
@@ -506,19 +472,13 @@ const TalentTable: React.FC = () => {
       setIsConfirmModalOpen(true);
     } else {
       showToast('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.', 'error');
-      // alert('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.');
     }
   };
 
   const handleFinalize = async () => {
     try {
       setIsLoading(true);
-      // if (!selectedTalents.some(talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2)) {
-      //   alert('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.');
-      //   return;
-      // }
 
-      // Format the data for the API
       const talentos = selectedTalents.map(talent => ({
         idTalento: talent.idTalento,
         nombres: talent.nombres,
@@ -540,11 +500,6 @@ const TalentTable: React.FC = () => {
         payload
       );
 
-      // const response = await axios.post(
-      //   'https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/save',
-      //   payload
-      // );
-
       if (response.data && response.data.idTipoMensaje === 2) {
         setSavedSuccessfully(true);
         setIsConfirmModalOpen(false);
@@ -562,7 +517,6 @@ const TalentTable: React.FC = () => {
 
   const goBack = () => navigate(-1);
 
-  // Determine if buttons should be disabled
   const buttonsDisabled = savedSuccessfully || isTalent;
 
   return (
@@ -575,14 +529,14 @@ const TalentTable: React.FC = () => {
         </h3>
 
         {/* Cuadro de requerimientos */}
-        <div className="bg-white shadow-md rounded-lg p-4 w-full">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-gray-600"><span className="font-medium">Id:</span> {idRequerimiento}</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">Cliente:</span> {requerimiento?.cliente || 'Cargando...'}</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">Rq:</span> {requerimiento?.codigoRQ || 'Cargando...'}</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">Fecha Solicitud:</span> {dateFormatted || 'Cargando...'}</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado === 1 ? 'Asignado' : 'Pendiente'}</p>
-            <p className="text-sm text-gray-600"><span className="font-medium">Vacantes:</span> {requerimiento?.vacantes || 'Cargando...'}</p>
+        <div className="card">
+          <div className="card-content">
+            <p className="card-title"><span className="font-medium">Id:</span> {idRequerimiento}</p>
+            <p className="card-title"><span className="font-medium">Cliente:</span> {requerimiento?.cliente || 'Cargando...'}</p>
+            <p className="card-title"><span className="font-medium">Rq:</span> {requerimiento?.codigoRQ || 'Cargando...'}</p>
+            <p className="card-title"><span className="font-medium">Fecha Solicitud:</span> {dateFormatted || 'Cargando...'}</p>
+            <p className="card-title"><span className="font-medium">Estado:</span> {requerimiento?.estado === 1 ? 'Asignado' : 'Pendiente'}</p>
+            <p className="card-title"><span className="font-medium">Vacantes:</span> {requerimiento?.vacantes || 'Cargando...'}</p>
           </div>
         </div>
 
@@ -596,10 +550,7 @@ const TalentTable: React.FC = () => {
               handleSearch('');
             }}
             disabled={buttonsDisabled}
-            className={`px-4 py-2 rounded-lg transition-colors ${buttonsDisabled
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'btn btn-blue'
-              }`}
+            className={`btn ${buttonsDisabled ? 'btn-disabled': 'btn-blue'}`}
           >
             Agregar Talento
           </button>
@@ -611,10 +562,10 @@ const TalentTable: React.FC = () => {
               !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
               selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
             }
-            className={`px-4 py-2 rounded-lg transition-colors ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
+            className={`btn ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
               selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'btn btn-primary'
+              ? 'btn-disabled'
+              : 'btn-primary'
               }`}
           >
             Finalizar
@@ -622,9 +573,9 @@ const TalentTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto">
+      <div className="table-container">
+        <div className='table-wrapper'>
+          <table className="table">
             <TableHeader />
             <tbody>
               {selectedTalents.map(talento => (
@@ -638,7 +589,7 @@ const TalentTable: React.FC = () => {
               ))}
               {selectedTalents.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-4 text-center text-gray-500">
+                  <td colSpan={9} className="table-empty">
                     No hay talentos seleccionados
                   </td>
                 </tr>

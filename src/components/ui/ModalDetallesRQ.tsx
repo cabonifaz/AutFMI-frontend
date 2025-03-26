@@ -346,7 +346,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <button
                                                         type="button"
                                                         onClick={() => document.getElementById("fileInput")?.click()}
-                                                        className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                                                        className="btn btn-text"
                                                     >
                                                         Elegir archivos
                                                     </button>
@@ -399,41 +399,50 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 label: "Postulantes",
                                 children: (
                                     <div className="p-1">
-                                        <div className="bg-white rounded-lg shadow-md overflow-auto max-w-full max-h-[445px]">
-                                            <table className="min-w-full divide-y divide-gray-200">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Nombres</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Apellidos</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">DNI</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Celular</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Email</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Situación</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
-                                                    {requirement?.requerimiento.lstRqTalento.length === 0 ? (
-                                                        <tr>
-                                                            <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                                                No hay postulantes disponibles.
-                                                            </td>
+                                        <div className="table-container">
+                                            <div className="table-wrapper">
+                                                <table className="table">
+                                                    <thead>
+                                                        <tr className="table-header">
+                                                            <th scope="col" className="table-header-cell">Nombres</th>
+                                                            <th scope="col" className="table-header-cell">Apellidos</th>
+                                                            <th scope="col" className="table-header-cell">DNI</th>
+                                                            <th scope="col" className="table-header-cell">Celular</th>
+                                                            <th scope="col" className="table-header-cell">Email</th>
+                                                            <th scope="col" className="table-header-cell">Situación</th>
+                                                            <th scope="col" className="table-header-cell">Estado</th>
                                                         </tr>
-                                                    ) : (
-                                                        requirement?.requerimiento.lstRqTalento.map((talento) => (
-                                                            <tr key={talento.idTalento}>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.nombresTalento}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.apellidosTalento}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.dni}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.celular}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.email}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.situacion}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.estado}</td>
+                                                    </thead>
+                                                    <tbody>
+                                                        {requirement?.requerimiento.lstRqTalento.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan={7} className="table-empty">
+                                                                    No hay postulantes disponibles.
+                                                                </td>
                                                             </tr>
-                                                        ))
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                                        ) : (
+                                                            requirement?.requerimiento.lstRqTalento.map((talento) => (
+                                                                <tr key={talento.idTalento} className="table-row">
+                                                                    <td className="table-cell">{talento.nombresTalento}</td>
+                                                                    <td className="table-cell">{talento.apellidosTalento}</td>
+                                                                    <td className="table-cell">{talento.dni}</td>
+                                                                    <td className="table-cell">{talento.celular}</td>
+                                                                    <td className="table-cell">{talento.email}</td>
+                                                                    <td className="table-cell">{talento.situacion}</td>
+                                                                    <td className="table-cell">
+                                                                        <span className={`badge ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'badge-green' :
+                                                                            talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
+                                                                            ''
+                                                                            }`}>
+                                                                            {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 ),

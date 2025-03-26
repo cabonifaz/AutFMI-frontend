@@ -88,35 +88,50 @@ const PantallaIngreso = () => {
       {(paramLoading || postloading || TalentoLoading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Modality */}
-        <div className="flex items-center">
-          <BackButton backClicked={goBack} />
-          <h3 className="text-2xl font-semibold me-60">Modalidad</h3>
-          <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
-            options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
-          />
+        <div className="flex justify-between items-start w-full">
+          <div className="flex items-center gap-2 md:gap-4">
+            <BackButton backClicked={goBack} />
+            <h3 className="text-xl md:text-2xl font-semibold whitespace-nowrap">Modalidad</h3>
+          </div>
+          
+          <div className="w-[180px] md:w-[200px]"> {/* Ancho fijo responsivo */}
+            <DropdownForm 
+              name="idModalidad" 
+              control={control} 
+              error={errors.idModalidad}
+              options={modalityValues?.map((modality) => ({ 
+                value: modality.num1, 
+                label: modality.string1 
+              })) || []}
+              required={true}
+              flex={true}  // Asegura que el dropdown ocupe todo el ancho disponible
+            />
+          </div>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
           {/* Talent Data */}
-          <h3 className="text-2xl font-semibold">Datos del talento</h3>
-          <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-          <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
+          <h3 className="text-2xl font-semibold mt-2">Datos del talento</h3>
+          <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
+          <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
+          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
           <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+            required={true}
           />
 
-          {Number(data.idModalidad) === 2 && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
+          {Number(data.idModalidad) === 2 && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} required={true} />)}
 
           {/* Entry */}
           <h3 className="text-2xl font-semibold">Ingreso</h3>
 
           <DropdownForm name="idMotivo" control={control} label="Motivo de ingreso" error={errors.idMotivo}
             options={reasonValues?.map((reason) => ({ value: reason.num1, label: reason.string1 })) || []}
+            required={true}
           />
 
-          <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
-          <InputForm name="horarioTrabajo" control={control} label="Horario de trabajo" error={errors.horarioTrabajo} />
+          <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} required={true} />
+          <InputForm name="horarioTrabajo" control={control} label="Horario de trabajo" error={errors.horarioTrabajo} required={true} />
           {/* Salary */}
           <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
             inputs={[
@@ -127,18 +142,20 @@ const PantallaIngreso = () => {
             ]}
           />
           {/* Dates and aditional info */}
-          <InputForm name="fchInicioContrato" control={control} label="F. Inicio contrato" type="date" error={errors.fchInicioContrato} />
-          <InputForm name="fchTerminoContrato" control={control} label="F. Termino contrato" type="date" error={errors.fchTerminoContrato} />
-          <InputForm name="proyectoServicio" control={control} label="Proyecto / Servicio" error={errors.proyectoServicio} />
-          <InputForm name="objetoContrato" control={control} label="Objeto del contrato" error={errors.objetoContrato} />
+          <InputForm name="fchInicioContrato" control={control} label="F. Inicio contrato" type="date" error={errors.fchInicioContrato} required={true} />
+          <InputForm name="fchTerminoContrato" control={control} label="F. Termino contrato" type="date" error={errors.fchTerminoContrato} required={true} />
+          <InputForm name="proyectoServicio" control={control} label="Proyecto / Servicio" error={errors.proyectoServicio} required={true} />
+          <InputForm name="objetoContrato" control={control} label="Objeto del contrato" error={errors.objetoContrato} required={true} />
           {/* SUNAT */}
           <h3 className="text-2xl font-semibold">Declaración en SUNAT (*)</h3>
           <DropdownForm name="declararSunat" control={control} label="¿Declarado en SUNAT?" error={errors.declararSunat}
             options={[{ value: 1, label: "Sí" }, { value: 2, label: "No" }]}
             word_wrap={true}
+            required={true}
           />
           <DropdownForm name="idSedeDeclarar" control={control} label="Sede a declarar" error={errors.idSedeDeclarar}
             options={sedeSunatList.map((sede) => ({ value: sede.idSede, label: sede.nombre }))}
+            required={true}
           />
           {/* Form options */}
           <div className="flex justify-center gap-4">

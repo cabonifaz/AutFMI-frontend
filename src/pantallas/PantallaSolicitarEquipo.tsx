@@ -218,14 +218,15 @@ const PantallaSolicitarEquipo = () => {
                         Datos del Colaborador
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                        <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                        <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
-                        <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} />
+                        <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
+                        <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
+                        <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
+                        <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} required={true} />
                         <DropdownForm name="area" control={control} label="Área" error={errors.area}
                             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                            required={true}
                         />
-                        <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} />
+                        <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} required={true} />
                     </div>
 
                     {/* Fechas */}
@@ -236,6 +237,7 @@ const PantallaSolicitarEquipo = () => {
                             label="Fecha de Solicitud"
                             type="date"
                             error={errors.fechaSolicitud}
+                            required={true}
                         />
                         <InputForm
                             name="fechaEntrega"
@@ -243,6 +245,7 @@ const PantallaSolicitarEquipo = () => {
                             label="Fecha de Entrega"
                             type="date"
                             error={errors.fechaEntrega}
+                            required={true}
                         />
                     </div>
 
@@ -260,6 +263,7 @@ const PantallaSolicitarEquipo = () => {
                                 label: param.string1
                             })) || []}
                             error={errors.tipoHardware}
+                            required={true}
                         />
                     </div>
 
@@ -270,6 +274,7 @@ const PantallaSolicitarEquipo = () => {
                             label={`Procesador`}
                             error={errors.procesador}
                             disabled={!isPcOrLaptop}
+                            required={isPcOrLaptop}
                         />
                         <InputForm
                             name="ram"
@@ -277,6 +282,7 @@ const PantallaSolicitarEquipo = () => {
                             label={`RAM`}
                             error={errors.ram}
                             disabled={!isPcOrLaptop}
+                            required={isPcOrLaptop}
                         />
                         <InputForm
                             name="disco"
@@ -284,6 +290,7 @@ const PantallaSolicitarEquipo = () => {
                             label={`Disco Duro`}
                             error={errors.disco}
                             disabled={!isPcOrLaptop}
+                            required={isPcOrLaptop}
                         />
                         <InputForm
                             name="marca"
@@ -308,6 +315,7 @@ const PantallaSolicitarEquipo = () => {
                                     label: param.string1
                                 })) || []}
                                 error={errors.anexoHardware}
+                                required={true}
                             />
                         </div>
 

@@ -88,36 +88,39 @@ const PantallaDatos = () => {
                         <BackButton backClicked={goBack} />
                         Datos Personales
                     </h3>
-                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
-                    <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} />
-                    <InputForm name="dni" control={control} label="DNI" type="text" error={errors.dni} />
-                    <InputForm name="email" control={control} label="Correo personal" error={errors.email} />
+                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
+                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
+                    <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} required={true} />
+                    <InputForm name="dni" control={control} label="DNI" type="text" error={errors.dni} required={true} />
+                    <InputForm name="email" control={control} label="Correo personal" error={errors.email} required={true} />
 
                     <FormRow>
-                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
+                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} required={true} />
                         <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                             flex={true}
+                            required={true}
                         />
                     </FormRow>
 
-                    <InputForm name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} />
-                    <InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
+                    <InputForm name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} required={true} />
+                    <InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} required={true} />
 
                     <FormRow>
-                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
+                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} required={true} />
                         <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                             flex={true}
+                            required={true}
                         />
                     </FormRow>
 
                     <DropdownForm name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
                         options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
+                        required={true}
                     />
-                    <InputForm name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
+                    <InputForm name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} required={true} />
 
                     {/* Form options */}
                     <div className="flex justify-center gap-4">

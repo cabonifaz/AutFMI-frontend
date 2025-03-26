@@ -147,7 +147,7 @@ const PantallaIngreso = () => {
             </button>
             <button
               type="submit"
-              className={`btn ${isDirty && !isSubmitSuccessful ? "btn-primary" : "bg-gray-400 cursor-not-allowed"}`}
+              className={`btn ${isDirty && !isSubmitSuccessful ? "btn-primary" : "btn-disabled"}`}
               disabled={!isDirty || isSubmitSuccessful}>
               Guardar
             </button>

@@ -95,7 +95,7 @@ const PantallaCese = () => {
                         </button>
                         <button
                             type="submit"
-                            className={`btn ${isDirty ? "btn-primary" : "bg-gray-400 cursor-not-allowed"}`}
+                            className={`btn ${isDirty ? "btn-primary" : "btn-disabled"}`}
                             disabled={!isDirty}>
                             Guardar
                         </button>

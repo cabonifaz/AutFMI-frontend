@@ -323,7 +323,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <button
                                                         type="submit"
                                                         disabled={!isEditing}
-                                                        className={`btn ${isEditing ? "btn-primary" : "bg-zinc-400"}`}
+                                                        className={`btn ${isEditing ? "btn-primary" : "btn-disabled"}`}
                                                     >
                                                         Actualizar
                                                     </button>
@@ -386,7 +386,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 <button
                                                     type="submit"
                                                     disabled={!newFiles}
-                                                    className={`btn w-fit self-end mt-4 ${newFiles ? "btn-primary" : "bg-zinc-400"
+                                                    className={`btn w-fit self-end mt-4 ${newFiles ? "btn-primary" : "btn-disabled"
                                                         }`}>
                                                     Agregar archivos nuevos
                                                 </button>
@@ -432,7 +432,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                     <td className="table-cell">
                                                                         <span className={`badge ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'badge-green' :
                                                                             talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
-                                                                            ''
+                                                                                ''
                                                                             }`}>
                                                                             {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
                                                                         </span>

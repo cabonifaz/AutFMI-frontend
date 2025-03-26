@@ -221,7 +221,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                 <button
                                     type="button"
                                     onClick={() => document.getElementById("fileInput")?.click()}
-                                    className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                                    className="btn btn-text"
                                 >
                                     Elegir archivos
                                 </button>

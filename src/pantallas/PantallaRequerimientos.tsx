@@ -132,19 +132,17 @@ export const PantallaRequerimientos = () => {
                     Requerimientos
                 </h2>
                 {/* filters */}
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div className="card mb-6">
                     <div className="flex flex-col gap-4">
-                        <div className="flex flex-col lg:flex-row gap-4">
-                            <div className="flex-1">
-                                <label htmlFor="requerimiento" className="block text-sm font-medium text-gray-700">Requerimiento</label>
-                                <input
-                                    type="text"
-                                    name="requerimiento"
-                                    id="requerimiento"
-                                    ref={RequerimientoRef}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 shadow-sm focus:outline-none sm:text-sm px-4 py-2"
-                                />
-                            </div>
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="requerimiento" className="input-label">Requerimiento</label>
+                            <input
+                                type="text"
+                                name="requerimiento"
+                                id="requerimiento"
+                                ref={RequerimientoRef}
+                                className="input"
+                            />
                         </div>
                         <div className="flex gap-4">
                             <FilterDropDown
@@ -191,53 +189,55 @@ export const PantallaRequerimientos = () => {
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-md overflow-x-auto max-w-full">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">ID</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Cliente</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Requerimiento</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Fecha Solicitud</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Vacantes</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {emptyList ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                        No hay requerimientos disponibles.
-                                    </td>
+                <div className="table-container">
+                    <div className="table-wrapper">
+                        <table className="table">
+                            <thead>
+                                <tr className="table-header">
+                                    <th className="table-header-cell">ID</th>
+                                    <th className="table-header-cell">Cliente</th>
+                                    <th className="table-header-cell">Requerimiento</th>
+                                    <th className="table-header-cell">Fecha Solicitud</th>
+                                    <th className="table-header-cell">Estado</th>
+                                    <th className="table-header-cell">Vacantes</th>
+                                    <th className="table-header-cell">Acciones</th>
                                 </tr>
-                            ) : (
-                                requerimientos.map((req) => (
-                                    <tr key={req.idRequerimiento}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.idRequerimiento}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.cliente}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.codigoRQ}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.fechaSolicitud}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button
-                                                onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                className={`btn ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'btn-blue'}`}>
-                                                Asignar
-                                            </button>
-                                            <button
-                                                onClick={() => openDetallesRQModal(req)}
-                                                className="btn btn-primary">
-                                                Detalles
-                                            </button>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {emptyList ? (
+                                    <tr>
+                                        <td colSpan={7} className="table-empty">
+                                            No hay requerimientos disponibles.
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    requerimientos.map((req) => (
+                                        <tr key={req.idRequerimiento} className="table-row">
+                                            <td className="table-cell">{req.idRequerimiento}</td>
+                                            <td className="table-cell">{req.cliente}</td>
+                                            <td className="table-cell">{req.codigoRQ}</td>
+                                            <td className="table-cell">{req.fechaSolicitud}</td>
+                                            <td className="table-cell">{req.estado}</td>
+                                            <td className="table-cell">{req.vacantes}</td>
+                                            <td className="table-cell">
+                                                <button
+                                                    onClick={() => handleAsignarClick(req.idRequerimiento)}
+                                                    disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                    className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
+                                                    Asignar
+                                                </button>
+                                                <button
+                                                    onClick={() => openDetallesRQModal(req)}
+                                                    className="btn btn-actions btn-primary">
+                                                    Detalles
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </PantallaWrapper>
             {isNuevoRQModalOpen && <AgregarRQModal onClose={() => setIsNuevoRQModalOpen(false)} updateRQData={updateRQData} estadoOptions={options} clientes={clientes} />}

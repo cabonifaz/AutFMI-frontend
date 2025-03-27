@@ -37,9 +37,17 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                                 id={name}
                                 type={type ? type : "text"}
                                 {...field}
-                                onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
+                                onChange={(e) => {
+                                    field.onChange(
+                                        type === 'number' 
+                                            ? e.target.value === '' 
+                                                ? null
+                                                : Number(e.target.value)
+                                            : e.target.value
+                                    );
+                                }}
                                 disabled={disabled}
-                                className={`input w-full px-2 h-10 ${type === 'number' ? "max-md:w-[50px]" : ""} ${error ? "border-red-400 ring-1 ring-red-400 focus:border-red-400" : ""}`}
+                                className={`input w-full px-2 h-10 ${type === 'number' ? "max-md:w-[4rem]" : ""} ${error ? "input-error" : ""}`}
                             />
                             {isPasswordField && (
                                 <button

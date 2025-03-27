@@ -267,6 +267,7 @@ const TalentTable: React.FC = () => {
   const [selectedTalent, setSelectedTalent] = useState<TalentoType | null>(null);
   const [isTalent, setIsTalent] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToastMessage({ message, type });
@@ -287,7 +288,6 @@ const TalentTable: React.FC = () => {
         if (response.data.idTipoMensaje === 2) {
           setRequerimiento(response.data.requerimiento);
 
-          // Format date
           if (response.data.requerimiento.fechaSolicitud) {
             const date = new Date(response.data.requerimiento.fechaSolicitud);
             setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
@@ -316,6 +316,7 @@ const TalentTable: React.FC = () => {
         console.error('Error fetching requerimiento:', error);
       } finally {
         setIsLoading(false);
+        setInitialLoad(false);
       }
     };
 
@@ -517,7 +518,7 @@ const TalentTable: React.FC = () => {
 
   const goBack = () => navigate(-1);
 
-  const buttonsDisabled = savedSuccessfully || isTalent;
+  const buttonsDisabled = savedSuccessfully || isTalent || initialLoad;
 
   return (
     <div className="container mx-auto p-4">

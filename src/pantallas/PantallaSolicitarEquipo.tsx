@@ -131,6 +131,7 @@ const PantallaSolicitarEquipo = () => {
             replace(manualSoftware);
             setDefaultSoftwareIds([]);
         }
+        // eslint-disable-next-line
     }, [tipoHardware, tipoSoftwareParams, replace, trigger]);
 
     useEffect(() => {

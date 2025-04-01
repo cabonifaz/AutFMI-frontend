@@ -75,6 +75,8 @@ const TableRow: React.FC<TableRowProps> = ({
   const isObservado = talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 1;
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(talento);
+
     // Si ya está confirmado desde API o no es ACEPTADO, no hacer nada
     if (isConfirmedFromAPI || !isAceptado) return;
 
@@ -86,6 +88,9 @@ const TableRow: React.FC<TableRowProps> = ({
     if (newValue !== talento.confirmado) {
       e.target.checked = !!talento.confirmado;
     }
+
+    console.log(talento);
+
   };
 
   return (
@@ -113,7 +118,7 @@ const TableRow: React.FC<TableRowProps> = ({
         <input
           type="checkbox"
           checked={talento.confirmado || false}
-          disabled={isConfirmedFromAPI || !isAceptado}
+          disabled={isConfirmedFromAPI || !isAceptado || disabled}
           onChange={handleCheckboxChange}
           className="input-checkbox"
         />
@@ -487,7 +492,7 @@ const TalentTable: React.FC = () => {
     setLocalTalents(prev =>
       prev.map(talent =>
         talent.idTalento === talento.idTalento
-          ? { ...talent, confirmado: confirm }
+          ? { ...talent, confirmado: confirm, isFromAPI: false }
           : talent
       )
     );

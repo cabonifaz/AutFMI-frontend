@@ -88,7 +88,7 @@ const PantallaMovimiento = () => {
                     <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
                     <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
 
-                    <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
+                    <DropdownForm name="idUnidad" control={control} label="Área" error={errors.idUnidad}
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
                     />
 

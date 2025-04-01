@@ -75,8 +75,6 @@ const TableRow: React.FC<TableRowProps> = ({
   const isObservado = talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 1;
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(talento);
-
     // Si ya está confirmado desde API o no es ACEPTADO, no hacer nada
     if (isConfirmedFromAPI || !isAceptado) return;
 
@@ -88,9 +86,6 @@ const TableRow: React.FC<TableRowProps> = ({
     if (newValue !== talento.confirmado) {
       e.target.checked = !!talento.confirmado;
     }
-
-    console.log(talento);
-
   };
 
   return (

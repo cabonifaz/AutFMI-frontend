@@ -93,15 +93,15 @@ const PantallaIngreso = () => {
             <BackButton backClicked={goBack} />
             <h3 className="text-xl md:text-2xl font-semibold whitespace-nowrap">Modalidad</h3>
           </div>
-          
+
           <div className="w-[180px] md:w-[200px]"> {/* Ancho fijo responsivo */}
-            <DropdownForm 
-              name="idModalidad" 
-              control={control} 
+            <DropdownForm
+              name="idModalidad"
+              control={control}
               error={errors.idModalidad}
-              options={modalityValues?.map((modality) => ({ 
-                value: modality.num1, 
-                label: modality.string1 
+              options={modalityValues?.map((modality) => ({
+                value: modality.num1,
+                label: modality.string1
               })) || []}
               required={true}
               flex={true}  // Asegura que el dropdown ocupe todo el ancho disponible
@@ -115,7 +115,7 @@ const PantallaIngreso = () => {
           <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
           <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
-          <DropdownForm name="idUnidad" control={control} label="Unidad" error={errors.idUnidad}
+          <DropdownForm name="idUnidad" control={control} label="Área" error={errors.idUnidad}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
             required={true}
           />

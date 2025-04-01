@@ -507,7 +507,7 @@ const TalentTable: React.FC = () => {
 
   // Actualizar talento
   const handleUpdateTalent = (talent: TalentoType) => {
-    navigate('/dashboard/formDatos', { state: { talento: talent } });
+    navigate('/formDatos', { state: { talento: talent } });
   };
 
   // Verificar confirmación

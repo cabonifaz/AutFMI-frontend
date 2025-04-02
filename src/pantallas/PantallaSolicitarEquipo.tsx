@@ -144,7 +144,7 @@ const PantallaSolicitarEquipo = () => {
                 apellidoMaterno: employee.apellidoMaterno || "",
                 idCliente: employee.idCliente || 0,
                 idArea: employee.idArea || 0,
-                cargo: "",
+                cargo: employee.cargo || "",
                 fechaSolicitud: new Date().toISOString().split('T')[0],
                 fechaEntrega: new Date().toISOString().split('T')[0],
                 tipoHardware: tipoHardwareParams?.length ? tipoHardwareParams[tipoHardwareParams.length - 1].num1 : 99,

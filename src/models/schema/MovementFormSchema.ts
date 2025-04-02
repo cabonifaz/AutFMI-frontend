@@ -6,7 +6,7 @@ export const MovementFormSchema = z.object({
     apellidoPaterno: z.string().min(1, "Campo obligatorio"),
     apellidoMaterno: z.string().min(1, "Campo obligatorio"),
     idArea: validDropdown,
-    idCliente: validDropdown.optional(),
+    idCliente: z.number().optional(),
     montoBase: z.number({
         required_error: "Campo obligatorio",
         invalid_type_error: "Monto base debe tener 2 decimales"

@@ -49,7 +49,7 @@ const PantallaSolicitarEquipo = () => {
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset, watch, trigger } = useForm<EquipoFormType>({
         resolver: zodResolver(EquipoFormSchema),
-        mode: "onTouched",
+        mode: "onChange",
         defaultValues: {
             nombres: "",
             apellidoPaterno: "",
@@ -316,6 +316,7 @@ const PantallaSolicitarEquipo = () => {
                             label="Marca (Opcional)"
                             error={errors.marca}
                             disabled={!isPcOrLaptop}
+                            required={false}
                         />
                     </div>
 
@@ -391,6 +392,7 @@ const PantallaSolicitarEquipo = () => {
                         control={control}
                         label="Accesorios"
                         error={errors.accesorios}
+                        required={false}
                     />
 
                     {/* Datos de Instalación de Software */}
@@ -421,6 +423,7 @@ const PantallaSolicitarEquipo = () => {
                                                 label=""
                                                 error={errors.software?.[index]?.producto}
                                                 isTable={true}
+                                                required={false}
                                             />
                                         </div>
                                     </div>
@@ -434,6 +437,7 @@ const PantallaSolicitarEquipo = () => {
                                                 label=""
                                                 error={errors.software?.[index]?.version}
                                                 isTable={true}
+                                                required={false}
                                             />
                                         </div>
                                         {/* Solo mostrar botón de eliminar para software NO predeterminado */}

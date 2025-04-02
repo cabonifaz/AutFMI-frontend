@@ -32,7 +32,7 @@ const PantallaIngreso = () => {
 
   const { control, handleSubmit, formState: { errors, isDirty, isSubmitSuccessful }, reset, setValue } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
-    mode: "onTouched",
+    mode: "onChange",
     defaultValues: {
       idModalidad: 0,
       nombres: "",
@@ -90,6 +90,8 @@ const PantallaIngreso = () => {
       fchHistorial: new Date().toJSON().slice(0, 10).replace(/-/g, '-'),
       declararSunat: data.declararSunat === 1 ? 1 : 0,
       sedeDeclarar: sedeSunatList.find((sede) => sede.idSede === idSedeDeclarar)?.nombre,
+      cliente: cliente,
+      area: area,
       ...filteredData,
     });
 
@@ -119,7 +121,7 @@ const PantallaIngreso = () => {
                 label: modality.string1
               })) || []}
               required={true}
-              flex={true}  // Asegura que el dropdown ocupe todo el ancho disponible
+              flex={true}
             />
           </div>
         </div>
@@ -155,10 +157,10 @@ const PantallaIngreso = () => {
           {/* Salary */}
           <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
             inputs={[
-              { label: "Monto Base", name: "montoBase", type: "number" },
-              { label: "Monto Movilidad", name: "montoMovilidad", type: "number" },
-              { label: "Monto Trimestral", name: "montoTrimestral", type: "number" },
-              { label: "Monto Semestral", name: "montoSemestral", type: "number" }
+              { label: "Monto Base", name: "montoBase", type: "number", regex: /^\d*(\.\d{0,2})?$/ },
+              { label: "Monto Movilidad", name: "montoMovilidad", type: "number", regex: /^\d*(\.\d{0,2})?$/ },
+              { label: "Monto Trimestral", name: "montoTrimestral", type: "number", regex: /^\d*(\.\d{0,2})?$/ },
+              { label: "Monto Semestral", name: "montoSemestral", type: "number", regex: /^\d*(\.\d{0,2})?$/ }
             ]}
           />
           {/* Dates and aditional info */}

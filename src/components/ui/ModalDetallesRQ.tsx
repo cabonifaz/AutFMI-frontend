@@ -13,6 +13,7 @@ import { useDeleteHook } from "../../hooks/useDeleteHook";
 import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileSchema";
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { Loading } from "./Loading";
+import { NumberInput } from "../forms/NumberInput";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -227,7 +228,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             {...register("idCliente")}
                                                             disabled={!isEditing}
                                                             onChange={handleClienteChange}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         >
                                                             <option value="">Elige un cliente</option>
                                                             {clientes.map((cliente) => (
@@ -247,7 +248,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <input
                                                             {...register("codigoRQ")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         />
                                                     </div>
                                                     {errors.codigoRQ && (
@@ -261,7 +262,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             type="date"
                                                             {...register("fechaSolicitud")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         />
                                                     </div>
                                                     {errors.fechaSolicitud && (
@@ -274,7 +275,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <textarea
                                                             {...register("descripcion")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
                                                         />
                                                     </div>
                                                     {errors.descripcion && (
@@ -287,7 +288,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <select
                                                             {...register("idEstado")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         >
                                                             {estadoOptions.map((option) => (
                                                                 <option key={option.num1} value={option.num1}>
@@ -303,13 +304,12 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     {/* Vacantes */}
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
-                                                        <input
-                                                            type="number"
-                                                            {...register("vacantes", { valueAsNumber: true })}
-                                                            onFocus={(e) => e.target.select()}
+                                                        <NumberInput<newRQSchemaType>
+                                                            register={register}
+                                                            name="vacantes"
                                                             disabled={!isEditing}
-                                                            min={0}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            defaultValue={requirement?.requerimiento?.vacantes.toString()}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         />
                                                     </div>
                                                     {errors.vacantes && (

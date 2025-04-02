@@ -27,10 +27,11 @@ const PantallaLogin = () => {
       <div className="p-4 w-screen h-screen flex justify-center items-center">
         <form onSubmit={handleSubmit(login)} className="flex flex-col gap-6 w-96 border-2 rounded-lg p-4">
           <h2 className="text-center mb-4 text-2xl font-semibold">AutFMI</h2>
-          <InputForm name="username" control={control} orientation='vertical' label="Usuario" error={errors.username} />
+          <InputForm name="username" control={control} orientation='vertical' label="Usuario" error={errors.username} required={false} />
           <InputForm
             name="password"
             control={control}
+            required={false}
             orientation='vertical'
             label="Contraseña"
             isPasswordField={true}

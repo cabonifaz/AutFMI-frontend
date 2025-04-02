@@ -30,7 +30,7 @@ const PantallaCese = () => {
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<OutFormType>({
         resolver: zodResolver(OutFormSchema),
-        mode: "onTouched",
+        mode: "onChange",
         defaultValues: {
             nombres: "",
             apellidoPaterno: "",

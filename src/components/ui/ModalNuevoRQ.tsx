@@ -7,6 +7,7 @@ import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../u
 import { usePostHook } from "../../hooks/usePostHook";
 import { ClientType } from "../../models/type/ClientType";
 import { Loading } from "./Loading";
+import { NumberInput } from "../forms/NumberInput";
 
 interface Archivo {
     name: string;
@@ -127,7 +128,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <select
                                         {...register("idCliente")}
                                         onChange={handleClienteChange}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     >
                                         <option value="">Elige un cliente</option>
                                         {clientes.map((cliente) => (
@@ -146,7 +147,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
                                     <input
                                         {...register("codigoRQ")}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     />
                                 </div>
                                 {errors.codigoRQ && (
@@ -159,7 +160,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <input
                                         type="date"
                                         {...register("fechaSolicitud")}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     />
                                 </div>
                                 {errors.fechaSolicitud && (
@@ -171,7 +172,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
                                     <textarea
                                         {...register("descripcion")}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
                                     />
                                 </div>
                                 {errors.descripcion && (
@@ -183,7 +184,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
                                     <select
                                         {...register("idEstado")}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     >
                                         {estadoOptions.map((option) => (
                                             <option key={option.num1} value={option.num1}>
@@ -199,12 +200,10 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                 {/* Vacantes */}
                                 <div className="flex items-center">
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
-                                    <input
-                                        type="number"
-                                        {...register("vacantes", { valueAsNumber: true })}
-                                        onFocus={(e) => e.target.select()}
-                                        min={0}
-                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    <NumberInput<newRQSchemaType>
+                                        register={register}
+                                        name="vacantes"
+                                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     />
                                 </div>
                                 {errors.vacantes && (

@@ -1,10 +1,13 @@
 import { Control, Controller, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { EntryFormType } from "../../models/schema/EntryFormSchema";
+import { useEffect, useState } from "react";
 
 interface InputItem {
     label: string;
     name: string;
     type?: string;
+    regex?: RegExp;
+    required?: boolean;
 }
 
 interface Props {
@@ -16,13 +19,37 @@ interface Props {
 }
 
 const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: Props) => {
+    // Función de manejo de cambios basada en InputForm
+    const handleChange = (input: InputItem, value: string, onChange: (value: any) => void) => {
+        // Caso especial: permitir borrado completo
+        if (value === '') {
+            onChange(null);
+            return;
+        }
+
+        // Verificar si el valor tiene más de un punto
+        const dotCount = (value.match(/\./g) || []).length;
+        const hasMultipleDots = dotCount > 1;
+
+        // Si pasa el regex (si existe) y no tiene múltiples puntos
+        if ((!input.regex || input.regex.test(value)) && !hasMultipleDots) {
+            // Solo convertir a número si es un valor completo (no termina en punto)
+            if (input.type === 'number' && !value.endsWith('.')) {
+                const numValue = Number(value);
+                onChange(isNaN(numValue) ? null : numValue);
+            } else {
+                onChange(value);
+            }
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row items-start justify-between gap-4 mt-4">
             <div className="w-full md:flex-1 md:basis-3/12">
                 <label className="text-lg font-semibold">{mainLabel}</label>
             </div>
 
-            <div className="w-full md:flex-1 md:basis-9/12 relative">
+            <div className="w-full md:flex-1 md:basis-9/12">
                 <div className="overflow-x-auto">
                     <table className="table-cell border-collapse border border-gray-300 rounded-lg w-full">
                         <thead>
@@ -46,6 +73,7 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
                                             />
                                             <label htmlFor={`checkbox-${input.name}`} className="text-xs font-semibold">
                                                 {input.label}
+                                                {input.required && <span className="text-red-400">*</span>}
                                             </label>
                                         </div>
                                     </th>
@@ -66,13 +94,12 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
                                                 <input
                                                     disabled={input.name !== "montoBase"}
                                                     id={input.name}
-                                                    {...field}
-                                                    type={input.type ?? "text"}
-                                                    onChange={(e) =>
-                                                        input.type === "number"
-                                                            ? field.onChange(Number(e.target.value))
-                                                            : field.onChange(e.target.value)
-                                                    }
+                                                    type={input.type === "number" ? "text" : input.type ?? "text"}
+                                                    value={field.value ?? ""}
+                                                    onChange={(e) => handleChange(input, e.target.value, field.onChange)}
+                                                    onBlur={field.onBlur}
+                                                    onWheel={(e) => e.currentTarget.blur()}
+                                                    inputMode={input.type === 'number' ? 'decimal' : undefined}
                                                     className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10"
                                                 />
                                             )}
@@ -83,9 +110,17 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
                         </tbody>
                     </table>
                 </div>
-                {errors.montoBase && typeof errors.montoBase.message === 'string' && (
-                    <span className="text-red-500 text-xs absolute -bottom-4">{errors.montoBase.message}</span>
-                )}
+
+                {/* Mensajes de error debajo de la tabla */}
+                <div className="mt-2 space-y-1">
+                    {inputs.map((input) => (
+                        errors[input.name] && typeof errors[input.name]?.message === 'string' && (
+                            <p key={`error-${input.name}`} className="text-red-500 text-xs">
+                                {errors[input.name]?.message as string}
+                            </p>
+                        )
+                    ))}
+                </div>
             </div>
         </div>
     );

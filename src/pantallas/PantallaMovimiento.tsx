@@ -29,7 +29,7 @@ const PantallaMovimiento = () => {
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset, setValue } = useForm<MovementFormType>({
         resolver: zodResolver(MovementFormSchema),
-        mode: "onTouched",
+        mode: "onChange",
         defaultValues: {
             nombres: "",
             apellidoPaterno: "",

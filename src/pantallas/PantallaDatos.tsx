@@ -31,7 +31,7 @@ const PantallaDatos = () => {
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<DataFormType>({
         resolver: zodResolver(DataFormSchema),
-        mode: "onTouched",
+        mode: "onChange",
         defaultValues: {
             nombres: "",
             apellidoPaterno: "",
@@ -92,11 +92,11 @@ const PantallaDatos = () => {
                     <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
                     <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
                     <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} required={true} />
-                    <InputForm name="dni" control={control} label="DNI" type="text" error={errors.dni} required={true} />
+                    <InputForm name="dni" control={control} label="Doc. Identidad" type="text" error={errors.dni} required={true} />
                     <InputForm name="email" control={control} label="Correo personal" error={errors.email} required={true} />
 
                     <FormRow>
-                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} required={true} />
+                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" regex={/^\d*$/} error={errors.tiempoContrato} required={true} />
                         <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                             flex={true}
@@ -108,7 +108,7 @@ const PantallaDatos = () => {
                     <InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} required={true} />
 
                     <FormRow>
-                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} required={true} />
+                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" regex={/^\d*(\.\d{0,2})?$/} error={errors.remuneracion} required={true} />
                         <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                             flex={true}

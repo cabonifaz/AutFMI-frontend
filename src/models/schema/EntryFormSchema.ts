@@ -11,10 +11,22 @@ export const EntryFormSchema = z.object({
     idMotivo: validDropdown,
     cargo: z.string().min(1, "Campo obligatorio"),
     horarioTrabajo: z.string().min(1, "Campo obligatorio"),
-    montoBase: z.number(),
-    montoMovilidad: z.number().optional(),
-    montoTrimestral: z.number().optional(),
-    montoSemestral: z.number().optional(),
+    montoBase: z.number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Monto base debe tener 2 decimales"
+    }),
+    montoMovilidad: z.number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Monto movilidad debe tener 2 decimales"
+    }).optional(),
+    montoTrimestral: z.number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Monto trimestral debe tener 2 decimales"
+    }).optional(),
+    montoSemestral: z.number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Monto Semestral debe tener 2 decimales"
+    }).optional(),
     fchInicioContrato: z.string().date("Campo obligatorio"),
     fchTerminoContrato: z.string().date("Campo obligatorio"),
     proyectoServicio: z.string().min(1, "Campo obligatorio"),

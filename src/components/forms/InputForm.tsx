@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
 import { Control, Controller, FieldError } from "react-hook-form";
 
 interface Props {
     name: string;
-    control: Control<any>
+    control: Control<any>;
     label: string;
     type?: string;
     isPasswordField?: boolean;
@@ -14,40 +15,90 @@ interface Props {
     disabled?: boolean;
     word_wrap?: boolean;
     isTable?: boolean;
-    required?: boolean;
+    required: boolean;
+    regex?: RegExp;
 }
 
-const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled, word_wrap = false, isTable = false, required = false }: Props) => {
+const InputForm = ({
+    regex,
+    name,
+    control,
+    label,
+    type,
+    required,
+    orientation,
+    passwordVisible,
+    togglePasswordVisibility,
+    isPasswordField,
+    error,
+    disabled,
+    word_wrap = false,
+    isTable = false
+}: Props) => {
+    const [lastValidValue, setLastValidValue] = useState<string>('');
+
+    useEffect(() => {
+        const currentValue = control._formValues[name];
+        if (currentValue !== undefined) {
+            setLastValidValue(currentValue?.toString() || '');
+        }
+    }, [control._formValues, name]);
+
+    const handleChange = (value: string, onChange: (value: any) => void) => {
+        // Caso especial: permitir borrado completo
+        if (value === '') {
+            setLastValidValue('');
+            onChange(null);
+            return;
+        }
+
+        // Verificar si el valor tiene más de un punto
+        const dotCount = (value.match(/\./g) || []).length;
+        const hasMultipleDots = dotCount > 1;
+
+        // Si pasa el regex y no tiene múltiples puntos
+        if ((!regex || regex.test(value)) && !hasMultipleDots) {
+            setLastValidValue(value);
+
+            // Solo convertir a número si es un valor completo (no termina en punto)
+            if (type === 'number' && !value.endsWith('.')) {
+                const numValue = Number(value);
+                onChange(isNaN(numValue) ? null : numValue);
+            } else {
+                onChange(value);
+            }
+        } else {
+            // Revertir al último valor válido
+            if (lastValidValue === '') {
+                onChange(null);
+            } else if (type === 'number') {
+                const numValue = Number(lastValidValue);
+                onChange(isNaN(numValue) ? null : numValue);
+            } else {
+                onChange(lastValidValue);
+            }
+        }
+    };
+
     return (
-        <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"} min-w-0`}>
-            <label 
-                htmlFor={name} 
-                className={`${word_wrap ? "w-[9rem]" : isTable ? "" : "min-w-[9rem]"} flex items-center`}
-            >
-                {label}
-                {required && <span className="text-red-500">*</span>}
+        <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row gap-4"}`}>
+            <label className={`${word_wrap ? "w-[11rem]" : isTable ? "" : "min-w-[11rem]"}`}>
+                {label}{required && <span className="text-red-400">*</span>}
             </label>
-            <div className="flex-[2] min-w-0 flex flex-col">
+            <div className="flex-[2]">
                 <Controller
                     name={name}
                     control={control}
                     render={({ field }) => (
                         <div className="relative">
                             <input
-                                id={name}
-                                type={type ? type : "text"}
-                                {...field}
-                                onChange={(e) => {
-                                    field.onChange(
-                                        type === 'number' 
-                                            ? e.target.value === '' 
-                                                ? null
-                                                : Number(e.target.value)
-                                            : e.target.value
-                                    );
-                                }}
+                                type={type === 'number' ? 'text' : type}
+                                value={field.value ?? ''}
+                                onChange={(e) => handleChange(e.target.value, field.onChange)}
                                 disabled={disabled}
-                                className={`input w-full px-2 h-10 ${type === 'number' ? "max-md:w-[4rem]" : ""} ${error ? "input-error" : ""}`}
+                                onWheel={(e) => e.currentTarget.blur()}
+                                className={`${type === 'number' ? "max-md:w-[50px]" : "w-full"} input`}
+                                inputMode={type === 'number' ? 'decimal' : undefined}
                             />
                             {isPasswordField && (
                                 <button
@@ -65,13 +116,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                         </div>
                     )}
                 />
-                {error && (
-                    <div className="relative w-full">
-                        <p className="error-message absolute top-0 left-0 w-full break-words whitespace-pre-wrap">
-                            {error.message}
-                        </p>
-                    </div>
-                )}
+                {error && <p className="text-red-400 bg-transparent text-xs mt-2">{error.message}</p>}
             </div>
         </div>
     );

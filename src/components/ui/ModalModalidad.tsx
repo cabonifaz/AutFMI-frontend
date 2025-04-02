@@ -40,7 +40,7 @@ const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
         <div className="p-4 rounded-lg w-80 bg-white">
           <h3 className="text-center mb-4 text-2xl font-semibold">Modalidad</h3>
           <hr className="my-1" />
-          <DropdownForm name="idModalidad" control={control} error={errors.idModalidad}
+          <DropdownForm name="idModalidad" control={control} error={errors.idModalidad} required={true}
             options={options?.map((option) => ({ value: option.num1, label: option.string1 })) || []}
           />
           <div className="flex justify-between gap-4 mt-4">

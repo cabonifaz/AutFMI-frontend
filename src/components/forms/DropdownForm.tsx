@@ -8,18 +8,15 @@ interface Props {
     error?: FieldError;
     word_wrap?: boolean;
     flex?: boolean;
-    required?: boolean;
+    required: boolean;
 }
 
-const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, required = false  }: Props) => {
+const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, required }: Props) => {
     return (
-            <div className={`${flex ? "flex-1" : "flex flex-1"}`}>
-                {label && <label htmlFor={name} className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}>
-                    {label}
-                    {label && required && <span className="text-red-500">*</span>}
-                </label>}
-                
-                <div className={`${label ? "flex-[1.95]" : "basis-80"} `}>
+        <>
+            <div className={`${flex ? "flex-1" : "flex flex-1 gap-4"}`}>
+                {label && <label htmlFor={name} className={`${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}>{label}{required && <span className="text-red-400">*</span>}</label>}
+                <div className={`${label ? "flex-[2]" : "basis-80"} `}>
                     <Controller
                         name={name}
                         control={control}
@@ -28,7 +25,7 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                                 id={name}
                                 {...field}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
-                                className={`dropdown px-2 h-10 w-full ${error ? "input-error" : ""}`}
+                                className="input w-full h-12"
                             >
                                 <option value={0}>Elige una opción</option>
                                 {options.map((option) => (
@@ -39,13 +36,10 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                             </select>
                         )}
                     />
-                    {error && 
-                        <div className="relative w-full">
-                            <p className="error-message absolute top-0 left-0 w-full break-words whitespace-pre-wrap">{error.message}</p>
-                        </div>    
-                    }
+                    {error && <p className="text-red-400 bg-transparent text-xs mt-2">{error.message}</p>}
                 </div>
             </div>
+        </>
     );
 };
 

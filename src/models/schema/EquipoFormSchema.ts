@@ -5,18 +5,18 @@ export const EquipoFormSchema = z.object({
     nombres: z.string().min(1, { message: "El nombre es requerido" }),
     apellidoPaterno: z.string().min(1, { message: "El apellido paterno es requerido" }),
     apellidoMaterno: z.string().min(1, { message: "El apellido materno es requerido" }),
-    cliente: z.string().min(1, { message: "El cliente es requerido" }),
-    area: validDropdown,
+    idCliente: validDropdown,
+    idArea: validDropdown,
     cargo: z.string().min(1, { message: "El cargo es requerido" }),
     fechaSolicitud: z.string().min(1, { message: "La fecha de solicitud es requerida" }),
     fechaEntrega: z.string().min(1, { message: "La fecha de entrega es requerida" }),
-    
+
     // Nuevos campos para selección única
     tipoHardware: validDropdown,
     anexoHardware: validDropdown,
     celular: z.string().min(1, { message: "Celular es requerido" }),
     internetMovil: z.string().min(1, { message: "Internet Móvil es requerido" }),
-    
+
     // Mantener para compatibilidad con el backend
     isPc: z.boolean().default(false),
     isLaptop: z.boolean().default(false),
@@ -26,14 +26,14 @@ export const EquipoFormSchema = z.object({
     celularno: z.boolean().optional(),
     internetMovilsi: z.boolean().optional(),
     internetMovilno: z.boolean().optional(),
-    
+
     // Campos condicionales
     procesador: z.string().optional(),
     ram: z.string().optional(),
     disco: z.string().optional(),
     marca: z.string().optional(),
     accesorios: z.string().optional(),
-    
+
     // Array de software 
     software: z.array(
         z.object({
@@ -51,7 +51,7 @@ export const EquipoFormSchema = z.object({
                 path: ["procesador"]
             });
         }
-        
+
         if (!data.ram || data.ram.trim() === "") {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
@@ -59,7 +59,7 @@ export const EquipoFormSchema = z.object({
                 path: ["ram"]
             });
         }
-        
+
         if (!data.disco || data.disco.trim() === "") {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,

@@ -11,6 +11,7 @@ import { DropdownForm, InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import { Loading } from '../components/ui/Loading';
+import { useFetchClients } from '../hooks/useFetchClients';
 
 const PantallaCese = () => {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ const PantallaCese = () => {
 
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
+    const { clientes, loading: clientsLoading } = useFetchClients();
     const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${MOTIVO_CESE}`);
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
@@ -33,8 +35,8 @@ const PantallaCese = () => {
             nombres: "",
             apellidoPaterno: "",
             apellidoMaterno: "",
-            idUnidad: 0,
-            empresa: "",
+            idArea: 0,
+            idCliente: 0,
             idMotivo: 0,
             fchCese: ""
         }
@@ -46,7 +48,7 @@ const PantallaCese = () => {
                 nombres: employee.nombres || "",
                 apellidoPaterno: employee.apellidoPaterno || "",
                 apellidoMaterno: employee.apellidoMaterno || "",
-                idUnidad: employee.idUnidad || 0,
+                idArea: employee.idUnidad || 0,
             });
         }
     }, [employee, reset]);
@@ -64,7 +66,7 @@ const PantallaCese = () => {
 
     return (
         <>
-            {(paramLoading || postloading || employeeLoading) && <Loading overlayMode={true} />}
+            {(paramLoading || postloading || employeeLoading || clientsLoading) && <Loading overlayMode={true} />}
             <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}
@@ -76,12 +78,17 @@ const PantallaCese = () => {
                     <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
                     <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
-                    <DropdownForm name="idUnidad" control={control} label="Área" error={errors.idUnidad}
+                    <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
                         required={true}
                     />
 
-                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
+                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (
+                        <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
+                            options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
+                            required={true}
+                        />
+                    )}
 
                     {/* CESE */}
                     <DropdownForm name="idMotivo" control={control} label="Motivo de cese" error={errors.idMotivo}

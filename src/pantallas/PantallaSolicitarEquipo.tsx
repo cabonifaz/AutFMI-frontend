@@ -12,6 +12,7 @@ import CheckboxForm from '../components/forms/CheckboxForm';
 import useFetchParams from '../hooks/useFetchParams';
 import { ANEXO_HARDWARE, TIPO_HARDWARE, TIPO_SOFTWARE, UNIDAD } from '../utils/config';
 import { Loading } from '../components/ui/Loading';
+import { useFetchClients } from '../hooks/useFetchClients';
 
 const PantallaSolicitarEquipo = () => {
     const navigate = useNavigate();
@@ -21,6 +22,7 @@ const PantallaSolicitarEquipo = () => {
 
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
+    const { clientes, loading: clientsLoading } = useFetchClients();
     const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
 
     const tipoHardwareParams = useMemo(() =>
@@ -52,8 +54,8 @@ const PantallaSolicitarEquipo = () => {
             nombres: "",
             apellidoPaterno: "",
             apellidoMaterno: "",
-            cliente: "",
-            area: 1,
+            idCliente: 0,
+            idArea: 1,
             cargo: "",
             fechaSolicitud: new Date().toISOString().split('T')[0],
             fechaEntrega: new Date().toISOString().split('T')[0],
@@ -140,8 +142,8 @@ const PantallaSolicitarEquipo = () => {
                 nombres: employee.nombres || "",
                 apellidoPaterno: employee.apellidoPaterno || "",
                 apellidoMaterno: employee.apellidoMaterno || "",
-                cliente: "",
-                area: 1,
+                idCliente: 0,
+                idArea: 1,
                 cargo: "",
                 fechaSolicitud: new Date().toISOString().split('T')[0],
                 fechaEntrega: new Date().toISOString().split('T')[0],
@@ -169,8 +171,8 @@ const PantallaSolicitarEquipo = () => {
                 nombreEmpleado: data.nombres,
                 apellidoPaternoEmpleado: data.apellidoPaterno,
                 apellidoMaternoEmpleado: data.apellidoMaterno,
-                empresaCliente: data.cliente,
-                area: unitValues.find(unit => unit.num1 === data.area)?.string1 || "",
+                empresaCliente: data.idCliente,
+                area: unitValues.find(unit => unit.num1 === data.idArea)?.string1 || "",
                 puesto: data.cargo,
                 fechaSolicitud: data.fechaSolicitud,
                 fechaEntrega: data.fechaEntrega,
@@ -206,7 +208,7 @@ const PantallaSolicitarEquipo = () => {
         append({ producto: "", version: "" });
     };
 
-    const isLoading = postloading || employeeLoading || paramLoading;
+    const isLoading = postloading || employeeLoading || paramLoading || clientsLoading;
 
     return (
         <>
@@ -222,8 +224,11 @@ const PantallaSolicitarEquipo = () => {
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
                         <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
                         <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
-                        <InputForm name="cliente" control={control} label="Cliente" error={errors.cliente} required={true} />
-                        <DropdownForm name="area" control={control} label="Área" error={errors.area}
+                        <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
+                            options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
+                            required={true}
+                        />
+                        <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
                             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
                             required={true}
                         />

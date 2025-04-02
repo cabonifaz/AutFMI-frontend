@@ -53,13 +53,25 @@ const PantallaMovimiento = () => {
                 nombres: employee.nombres || "",
                 apellidoPaterno: employee.apellidoPaterno || "",
                 apellidoMaterno: employee.apellidoMaterno || "",
-                idArea: employee.idUnidad || 0,
+                idArea: employee.idArea || 0,
+                idCliente: employee.idCliente || 0,
                 montoBase: employee.remuneracion || 0,
             });
         }
     }, [employee, employeeLoading, reset]);
 
     const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
+        let cliente = "";
+        let area = "";
+
+        if (data?.idCliente && data.idCliente !== 0) {
+            cliente = clientes.find((cliente) => cliente.idCliente === data?.idCliente)?.razonSocial || "";
+        }
+
+        if (data.idArea !== 0) {
+            area = unitValues?.find((area) => area.num1 === data.idArea)?.string1 || "";
+        }
+
         const response = await postData("/fmi/employee/movement", {
             idUsuarioTalento: talento.idUsuarioTalento,
             idMoneda: null,
@@ -68,6 +80,8 @@ const PantallaMovimiento = () => {
             fchTerminoContrato: null,
             proyectoServicio: null,
             objetoContrato: null,
+            area: area,
+            cliente: cliente,
             ...data
         });
 

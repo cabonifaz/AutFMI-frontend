@@ -164,6 +164,16 @@ const PantallaSolicitarEquipo = () => {
     }, [employee, employeeLoading, reset, tipoHardwareParams, anexoHardwareParams]);
 
     const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
+        let cliente = "";
+        let area = "";
+
+        if (data?.idCliente && data.idCliente !== 0) {
+            cliente = clientes.find((cliente) => cliente.idCliente === data?.idCliente)?.razonSocial || "";
+        }
+
+        if (data.idArea !== 0) {
+            area = unitValues?.find((area) => area.num1 === data.idArea)?.string1 || "";
+        }
 
         try {
             const formattedData = {
@@ -171,8 +181,10 @@ const PantallaSolicitarEquipo = () => {
                 nombreEmpleado: data.nombres,
                 apellidoPaternoEmpleado: data.apellidoPaterno,
                 apellidoMaternoEmpleado: data.apellidoMaterno,
-                empresaCliente: data.idCliente,
-                area: unitValues.find(unit => unit.num1 === data.idArea)?.string1 || "",
+                idCliente: data.idCliente,
+                idArea: data.idArea,
+                area: area,
+                cliente: cliente,
                 puesto: data.cargo,
                 fechaSolicitud: data.fechaSolicitud,
                 fechaEntrega: data.fechaEntrega,

@@ -6,7 +6,7 @@ export const MovementFormSchema = z.object({
     apellidoPaterno: z.string().min(1, "Campo obligatorio"),
     apellidoMaterno: z.string().min(1, "Campo obligatorio"),
     idArea: validDropdown,
-    idCliente: validDropdown,
+    idCliente: validDropdown.optional(),
     montoBase: z.number(),
     montoMovilidad: z.number().optional(),
     montoTrimestral: z.number().optional(),

@@ -6,7 +6,7 @@ export const OutFormSchema = z.object({
     apellidoPaterno: z.string().min(1, "Campo obligatorio"),
     apellidoMaterno: z.string().min(1, "Campo obligatorio"),
     idArea: validDropdown,
-    idCliente: validDropdown,
+    idCliente: validDropdown.optional(),
     idMotivo: validDropdown,
     fchCese: z.string().date("Campo obligatorio"),
 });

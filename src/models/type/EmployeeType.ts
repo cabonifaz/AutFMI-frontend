@@ -3,6 +3,7 @@ export type EmployeeType = {
     apellidoPaterno: string;
     apellidoMaterno: string;
     telefono: string;
-    idUnidad: number;
+    idArea: number;
+    idCliente: number;
     remuneracion: number;
 }

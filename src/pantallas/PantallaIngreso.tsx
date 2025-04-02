@@ -41,6 +41,7 @@ const PantallaIngreso = () => {
       idCliente: 0,
       idMotivo: 0,
       cargo: "",
+      horarioTrabajo: "",
       montoBase: 0,
       montoMovilidad: 0,
       montoTrimestral: 0,
@@ -69,6 +70,16 @@ const PantallaIngreso = () => {
 
   const onSubmit: SubmitHandler<EntryFormType> = async (data) => {
     const { idSedeDeclarar, declararSunat, ...filteredData } = data;
+    let cliente = "";
+    let area = "";
+
+    if (data?.idCliente && data.idCliente !== 0) {
+      cliente = clientes.find((cliente) => cliente.idCliente === data?.idCliente)?.razonSocial || "";
+    }
+
+    if (data.idArea !== 0) {
+      area = unitValues?.find((area) => area.num1 === data.idArea)?.string1 || "";
+    }
 
     const response = await postData("/fmi/employee/entry", {
       idTalento: talento.idTalento,

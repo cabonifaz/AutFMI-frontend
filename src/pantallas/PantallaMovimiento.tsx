@@ -11,6 +11,7 @@ import { DropdownForm, InputForm, SalaryStructureForm } from '../components/form
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import { Loading } from '../components/ui/Loading';
+import { useFetchClients } from '../hooks/useFetchClients';
 
 const PantallaMovimiento = () => {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ const PantallaMovimiento = () => {
 
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
+    const { clientes, loading: clientsLoading } = useFetchClients();
     const { params, paramLoading } = useFetchParams(`${UNIDAD}`);
 
     const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
@@ -32,14 +34,14 @@ const PantallaMovimiento = () => {
             nombres: "",
             apellidoPaterno: "",
             apellidoMaterno: "",
-            idUnidad: 0,
-            empresa: "",
+            idArea: 0,
+            idCliente: 0,
             montoBase: 0,
             montoMovilidad: 0,
             montoTrimestral: 0,
             montoSemestral: 0,
             puesto: "",
-            area: "",
+            idMovArea: 0,
             jornada: "",
             fchMovimiento: ""
         }
@@ -51,7 +53,7 @@ const PantallaMovimiento = () => {
                 nombres: employee.nombres || "",
                 apellidoPaterno: employee.apellidoPaterno || "",
                 apellidoMaterno: employee.apellidoMaterno || "",
-                idUnidad: employee.idUnidad || 0,
+                idArea: employee.idUnidad || 0,
                 montoBase: employee.remuneracion || 0,
             });
         }
@@ -76,7 +78,7 @@ const PantallaMovimiento = () => {
 
     return (
         <>
-            {(paramLoading || postloading || employeeLoading) && <Loading overlayMode={true} />}
+            {(paramLoading || postloading || employeeLoading || clientsLoading) && <Loading overlayMode={true} />}
             <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
                     {/* Talent Data */}
@@ -84,15 +86,20 @@ const PantallaMovimiento = () => {
                         <BackButton backClicked={goBack} />
                         Datos del talento
                     </h3>
-                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
+                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
+                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
-                    <DropdownForm name="idUnidad" control={control} label="Área" error={errors.idUnidad}
+                    <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea} required={true}
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
                     />
 
-                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} />)}
+                    {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (
+                        <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
+                            options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
+                            required={true}
+                        />
+                    )}
 
                     {/* Movement */}
                     <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
@@ -104,10 +111,13 @@ const PantallaMovimiento = () => {
                         ]}
                     />
 
-                    <InputForm name="puesto" control={control} label="Puesto" error={errors.puesto} />
-                    <InputForm name="area" control={control} label="Área" error={errors.area} />
-                    <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} />
-                    <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} word_wrap={true} />
+                    <InputForm name="puesto" control={control} label="Puesto" error={errors.puesto} required={true} />
+                    <DropdownForm name="idMovArea" control={control} label="Nueva Área" error={errors.idMovArea}
+                        options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
+                        required={true}
+                    />
+                    <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} required={true} />
+                    <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} word_wrap={true} required={true} />
                     {/* Form options */}
                     <div className="flex justify-center gap-4">
                         <button type="button" className="btn btn-outline-gray" onClick={goBack}>

@@ -11,6 +11,7 @@ import { sedeSunatList } from '../models/type/SedeSunatType';
 import BackButton from '../components/ui/BackButton';
 import useFetchTalento from '../hooks/useFetchTalento';
 import { Loading } from '../components/ui/Loading';
+import { useFetchClients } from '../hooks/useFetchClients';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const PantallaIngreso = () => {
 
   const { postData, postloading } = usePostHook();
   const { talentoDetails, loading: TalentoLoading } = useFetchTalento(talento.idTalento);
+  const { clientes, loading: clientsLoading } = useFetchClients();
   const { params, paramLoading } = useFetchParams(`${TIPO_MODALIDAD}, ${UNIDAD}, ${MOTIVO_INGRESO}`);
 
   const modalityValues = params?.filter((param) => param.num2 === Number(data.idModalidad));
@@ -35,8 +37,8 @@ const PantallaIngreso = () => {
       nombres: "",
       apellidoPaterno: "",
       apellidoMaterno: "",
-      idUnidad: 0,
-      empresa: "",
+      idArea: 0,
+      idCliente: 0,
       idMotivo: 0,
       cargo: "",
       montoBase: 0,
@@ -85,7 +87,7 @@ const PantallaIngreso = () => {
 
   return (
     <>
-      {(paramLoading || postloading || TalentoLoading) && <Loading overlayMode={true} />}
+      {(paramLoading || postloading || TalentoLoading || clientsLoading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Modality */}
         <div className="flex justify-between items-start w-full">
@@ -115,12 +117,17 @@ const PantallaIngreso = () => {
           <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
           <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
 
-          <DropdownForm name="idUnidad" control={control} label="Área" error={errors.idUnidad}
+          <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
             required={true}
           />
 
-          {Number(data.idModalidad) === 2 && (<InputForm name="empresa" control={control} label="Empresa" error={errors.empresa} required={true} />)}
+          {Number(data.idModalidad) === 2 && (
+            <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
+              options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
+              required={true}
+            />
+          )}
 
           {/* Entry */}
           <h3 className="text-2xl font-semibold">Ingreso</h3>

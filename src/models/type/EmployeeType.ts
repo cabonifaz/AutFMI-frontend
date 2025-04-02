@@ -6,4 +6,5 @@ export type EmployeeType = {
     idArea: number;
     idCliente: number;
     remuneracion: number;
+    cargo: string;
 }

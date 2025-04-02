@@ -12,6 +12,7 @@ import BackButton from '../components/ui/BackButton';
 import useFetchTalento from '../hooks/useFetchTalento';
 import { Loading } from '../components/ui/Loading';
 import { useFetchClients } from '../hooks/useFetchClients';
+import { format } from 'date-fns';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -61,6 +62,7 @@ const PantallaIngreso = () => {
         nombres: talentoDetails?.nombres || "",
         apellidoPaterno: talentoDetails?.apellidoPaterno || "",
         apellidoMaterno: talentoDetails?.apellidoMaterno || "",
+        fchInicioContrato: format(new Date(talentoDetails?.fechaInicioLabores), "yyyy-MM-dd") || "",
         cargo: talentoDetails?.cargo || "",
         montoBase: talentoDetails?.remuneracion || 0,
         idModalidad: talentoDetails?.idModalidad || 0,

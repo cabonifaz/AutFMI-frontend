@@ -405,7 +405,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <tr className="table-header">
                                                             <th scope="col" className="table-header-cell">Nombres</th>
                                                             <th scope="col" className="table-header-cell">Apellidos</th>
-                                                            <th scope="col" className="table-header-cell">DNI</th>
+                                                            <th scope="col" className="table-header-cell">Doc. Identidad</th>
                                                             <th scope="col" className="table-header-cell">Celular</th>
                                                             <th scope="col" className="table-header-cell">Email</th>
                                                             <th scope="col" className="table-header-cell">Situación</th>

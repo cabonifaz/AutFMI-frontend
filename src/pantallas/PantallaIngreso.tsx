@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import useFetchParams from '../hooks/useFetchParams';
 import { usePostHook } from '../hooks/usePostHook';
 import { MOTIVO_INGRESO, TIPO_MODALIDAD, UNIDAD } from '../utils/config';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,6 +12,7 @@ import useFetchTalento from '../hooks/useFetchTalento';
 import { Loading } from '../components/ui/Loading';
 import { useFetchClients } from '../hooks/useFetchClients';
 import { format } from 'date-fns';
+import { useParams } from '../context/ParamsContext';
 
 const PantallaIngreso = () => {
   const navigate = useNavigate();
@@ -22,11 +22,11 @@ const PantallaIngreso = () => {
   const { postData, postloading } = usePostHook();
   const { talentoDetails, loading: TalentoLoading } = useFetchTalento(talento.idTalento);
   const { clientes, loading: clientsLoading } = useFetchClients();
-  const { params, paramLoading } = useFetchParams(`${TIPO_MODALIDAD}, ${UNIDAD}, ${MOTIVO_INGRESO}`);
+  const { paramsByMaestro, loading: paramLoading } = useParams(`${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO}`);
 
-  const modalityValues = params?.filter((param) => param.num2 === Number(data.idModalidad));
-  const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
-  const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_INGRESO));
+  const modalityValues = paramsByMaestro[data.idModalidad];
+  const unitValues = paramsByMaestro[UNIDAD];
+  const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
 
   const goBack = () => navigate(-1);
 

@@ -9,10 +9,10 @@ import { DropdownForm, InputForm } from '../components/forms';
 import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import CheckboxForm from '../components/forms/CheckboxForm';
-import useFetchParams from '../hooks/useFetchParams';
 import { ANEXO_HARDWARE, TIPO_HARDWARE, TIPO_SOFTWARE, UNIDAD } from '../utils/config';
 import { Loading } from '../components/ui/Loading';
 import { useFetchClients } from '../hooks/useFetchClients';
+import { useParams } from '../context/ParamsContext';
 
 const PantallaSolicitarEquipo = () => {
     const navigate = useNavigate();
@@ -23,27 +23,12 @@ const PantallaSolicitarEquipo = () => {
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
-    const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${TIPO_HARDWARE}, ${ANEXO_HARDWARE}, ${TIPO_SOFTWARE}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD},${TIPO_HARDWARE},${ANEXO_HARDWARE},${TIPO_SOFTWARE}`);
 
-    const tipoHardwareParams = useMemo(() =>
-        params?.filter(param => param.idMaestro === Number(TIPO_HARDWARE)) || [],
-        [params]
-    );
-
-    const anexoHardwareParams = useMemo(() =>
-        params?.filter(param => param.idMaestro === Number(ANEXO_HARDWARE)) || [],
-        [params]
-    );
-
-    const tipoSoftwareParams = useMemo(() =>
-        params?.filter(param => param.idMaestro === Number(TIPO_SOFTWARE)) || [],
-        [params]
-    );
-
-    const unitValues = useMemo(() =>
-        params?.filter((param) => param.idMaestro === Number(UNIDAD)) || [],
-        [params]
-    );
+    const tipoHardwareParams = useMemo(() => paramsByMaestro[TIPO_HARDWARE] || [], [paramsByMaestro]);
+    const anexoHardwareParams = useMemo(() => paramsByMaestro[ANEXO_HARDWARE] || [], [paramsByMaestro]);
+    const tipoSoftwareParams = useMemo(() => paramsByMaestro[TIPO_SOFTWARE] || [], [paramsByMaestro]);
+    const unitValues = useMemo(() => paramsByMaestro[UNIDAD] || [], [paramsByMaestro]);
 
     const goBack = () => navigate(-1);
 
@@ -80,8 +65,6 @@ const PantallaSolicitarEquipo = () => {
     });
 
     const tipoHardware = watch("tipoHardware");
-
-    // const isPcOrLaptop = tipoHardware === "PC" || tipoHardware === "Laptop";
     const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;
 
     const isDefaultSoftware = (id: any) => {

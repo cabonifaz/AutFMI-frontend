@@ -4,7 +4,6 @@ import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
-import useFetchParams from "../hooks/useFetchParams";
 import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
@@ -13,6 +12,7 @@ import { format } from 'date-fns';
 import { useNavigate } from "react-router-dom";
 import { useFetchClients } from "../hooks/useFetchClients";
 import { Loading } from "../components/ui/Loading";
+import { useParams } from "../context/ParamsContext";
 
 interface SearchProps {
     idCliente: number | null;
@@ -35,10 +35,10 @@ export const PantallaRequerimientos = () => {
 
     const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
     const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
-    const { params, paramLoading } = useFetchParams(`${ESTADO_RQ}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ}`);
 
-    const options = params?.filter((param) => param.idMaestro === Number(ESTADO_RQ)) || [];
-    const paramOptions: BaseOption[] = params?.filter((param) => param.idMaestro === Number(ESTADO_RQ)).map((param) => ({
+    const options = paramsByMaestro[ESTADO_RQ] || [];
+    const paramOptions: BaseOption[] = options.map((param) => ({
         value: param.num1.toString(),
         label: param.string1,
     })) || [];

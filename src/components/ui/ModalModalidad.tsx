@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { DropdownForm } from '../forms';
 import { ModalModalidadSchema, ModalModalidadType } from '../../models/schema/ModalModalidadSchema';
-import useFetchParams from '../../hooks/useFetchParams';
 import { TIPO_MODAL_MODALIDAD } from '../../utils/config';
 import { Loading } from './Loading';
+import { useParams } from '../../context/ParamsContext';
 
 interface ModalModalidadProps {
   talento: TalentoType;
@@ -16,9 +16,9 @@ interface ModalModalidadProps {
 
 const ModalModalidad = ({ talento, isOpen, onClose }: ModalModalidadProps) => {
   const navigate = useNavigate();
-  const { params, paramLoading } = useFetchParams(`${TIPO_MODAL_MODALIDAD}`);
+  const { paramsByMaestro, loading: paramLoading } = useParams(TIPO_MODAL_MODALIDAD);
 
-  const options = params?.filter((param) => param.idMaestro === Number(TIPO_MODAL_MODALIDAD));
+  const options = paramsByMaestro[TIPO_MODAL_MODALIDAD];
 
   const { control, handleSubmit, formState: { errors } } = useForm<ModalModalidadType>({
     resolver: zodResolver(ModalModalidadSchema),

@@ -4,7 +4,6 @@ import { TalentoType } from '../models/type/TalentoType';
 import { OutFormSchema, OutFormType } from '../models/schema/OutFormSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import useFetchParams from '../hooks/useFetchParams';
 import { usePostHook } from '../hooks/usePostHook';
 import { MODALIDAD_LOC_SERVICIOS, MOTIVO_CESE, UNIDAD } from '../utils/config';
 import { DropdownForm, InputForm } from '../components/forms';
@@ -12,6 +11,7 @@ import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import { Loading } from '../components/ui/Loading';
 import { useFetchClients } from '../hooks/useFetchClients';
+import { useParams } from '../context/ParamsContext';
 
 const PantallaCese = () => {
     const navigate = useNavigate();
@@ -21,10 +21,10 @@ const PantallaCese = () => {
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
-    const { params, paramLoading } = useFetchParams(`${UNIDAD}, ${MOTIVO_CESE}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD},${MOTIVO_CESE}`);
 
-    const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
-    const reasonValues = params?.filter((param) => param.idMaestro === Number(MOTIVO_CESE));
+    const unitValues = paramsByMaestro[UNIDAD];
+    const reasonValues = paramsByMaestro[MOTIVO_CESE];
 
     const goBack = () => navigate(-1);
 

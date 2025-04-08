@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TalentoType } from '../models/type/TalentoType';
-import useFetchParams from '../hooks/useFetchParams';
 import { usePostHook } from '../hooks/usePostHook';
 import { MODALIDAD_LOC_SERVICIOS, UNIDAD } from '../utils/config';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +11,7 @@ import BackButton from '../components/ui/BackButton';
 import useFetchEmpleado from '../hooks/useFetchEmpleado';
 import { Loading } from '../components/ui/Loading';
 import { useFetchClients } from '../hooks/useFetchClients';
+import { useParams } from '../context/ParamsContext';
 
 const PantallaMovimiento = () => {
     const navigate = useNavigate();
@@ -21,9 +21,9 @@ const PantallaMovimiento = () => {
     const { postData, postloading } = usePostHook();
     const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
-    const { params, paramLoading } = useFetchParams(`${UNIDAD}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD}`);
 
-    const unitValues = params?.filter((param) => param.idMaestro === Number(UNIDAD));
+    const unitValues = paramsByMaestro[UNIDAD] || [];
 
     const goBack = () => navigate(-1);
 

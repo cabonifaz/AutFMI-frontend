@@ -7,22 +7,22 @@ import { TalentoType } from "../models/type/TalentoType";
 import useFetchTalento from "../hooks/useFetchTalento";
 import { useEffect } from "react";
 import { usePostHook } from "../hooks/usePostHook";
-import useFetchParams from "../hooks/useFetchParams";
 import { TIPO_MODALIDAD, TIPO_MONEDA, TIPO_TIEMPO } from "../utils/config";
 import { formatDateToDMY } from "../utils/util";
 import BackButton from "../components/ui/BackButton";
 import { Loading } from "../components/ui/Loading";
+import { useParams } from "../context/ParamsContext";
 
 const PantallaDatos = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const { postData, postloading } = usePostHook();
-    const { params, paramLoading } = useFetchParams(`${TIPO_TIEMPO}, ${TIPO_MONEDA}, ${TIPO_MODALIDAD}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${TIPO_TIEMPO},${TIPO_MONEDA},${TIPO_MODALIDAD}`);
 
-    const timeValues = params?.filter((param) => param.idMaestro === Number(TIPO_TIEMPO));
-    const currencyValues = params?.filter((param) => param.idMaestro === Number(TIPO_MONEDA));
-    const modalityValues = params?.filter((param) => param.idMaestro === Number(TIPO_MODALIDAD));
+    const timeValues = paramsByMaestro[TIPO_TIEMPO];
+    const currencyValues = paramsByMaestro[TIPO_MONEDA];
+    const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
 
     const { talento } = location.state as { talento: TalentoType } || {};
     const { talentoDetails, loading } = useFetchTalento(talento.idTalento);

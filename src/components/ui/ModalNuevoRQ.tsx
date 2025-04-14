@@ -26,14 +26,17 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const { postData, postloading } = usePostHook();
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
+    const [autogenRQ, setAutogenRQ] = useState(false);
 
     const {
         register,
         handleSubmit,
         setValue,
+        clearErrors,
         formState: { errors },
     } = useForm<newRQSchemaType>({
         resolver: zodResolver(newRQSchema),
+        reValidateMode: 'onChange',
         defaultValues: {
             idCliente: "",
             fechaSolicitud: "",
@@ -93,6 +96,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
             const payload = {
                 ...data,
                 idCliente: idCliente,
+                codigoRQ: autogenRQ ? null : data.codigoRQ,
                 cliente: clienteSeleccionado,
                 estado: data.idEstado,
                 lstArchivos,
@@ -113,7 +117,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
     return (
         <>
             {(postloading) && (<Loading overlayMode={true} />)}
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md relative">
                     <h2 className="text-xl font-bold mb-4">Agregar Nuevo RQ</h2>
                     <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
@@ -147,11 +151,30 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
                                     <input
                                         {...register("codigoRQ")}
+                                        disabled={autogenRQ}
                                         className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     />
                                 </div>
                                 {errors.codigoRQ && (
                                     <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
+                                )}
+
+                                {/* Auto Gen RQ */}
+                                <div className="flex items-center">
+                                    <label className="w-1/3 text-sm font-medium text-gray-700">Autogenerar RQ:</label>
+                                    <input
+                                        {...register("autogenRQ")}
+                                        type="checkbox"
+                                        onChange={(e) => {
+                                            setAutogenRQ(e.target.checked);
+                                            setValue("codigoRQ", undefined);
+                                            clearErrors("codigoRQ");
+                                        }}
+                                        className="input-checkbox"
+                                    />
+                                </div>
+                                {errors.autogenRQ && (
+                                    <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.autogenRQ.message}</p>
                                 )}
 
                                 {/* Fecha de Solicitud */}
@@ -183,7 +206,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                 <div className="flex items-center">
                                     <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
                                     <select
-                                        {...register("idEstado")}
+                                        {...register("idEstado", { valueAsNumber: true })}
                                         className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                     >
                                         {estadoOptions.map((option) => (

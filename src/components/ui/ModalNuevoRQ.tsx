@@ -1,4 +1,4 @@
-import React, { FormEvent, ReactEventHandler, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
 import { SubmitHandler, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +38,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         clearErrors,
         control,
         trigger,
+        watch,
         formState: { errors },
     } = useForm<newRQSchemaType>({
         resolver: zodResolver(newRQSchema),
@@ -56,6 +57,33 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         control,
         name: "lstVacantes"
     });
+
+    const currentVacantes = watch("lstVacantes");
+
+    const getAvailableProfiles = (currentIndex: number) => {
+        const selectedProfiles = currentVacantes
+            .filter((_, index) => index !== currentIndex)
+            .map(v => v.idPerfil)
+            .filter(id => id !== 0);
+
+        return perfiles.filter(perfil =>
+            !selectedProfiles.includes(perfil.num1)
+        );
+    };
+
+    const handleProfileChange = (index: number, value: string) => {
+        setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+        clearErrors(`lstVacantes.${index}.idPerfil`);
+    };
+
+    const handleAddVacante = () => {
+        append({ idPerfil: 0, cantidad: 1 });
+        clearErrors("lstVacantes");
+    };
+
+    const handleRemoveVacante = (index: number) => {
+        remove(index);
+    };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -370,71 +398,86 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                 </td>
                                                             </tr>
                                                         ) : (
-                                                            fields.map((field, index) => (
-                                                                <tr key={field.id} className="table-row">
-                                                                    <td className="table-cell">
-                                                                        <select
-                                                                            {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
-                                                                            onChange={() => clearErrors(`lstVacantes.${index}.idPerfil`)}
-                                                                            className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                                                                            defaultValue={field.idPerfil}
-                                                                        >
-                                                                            <option value={0}>Seleccione un perfil</option>
-                                                                            {perfiles.map((perfil) => (
-                                                                                <option key={perfil.num1} value={perfil.num1}>
-                                                                                    {perfil.string1}
-                                                                                </option>
-                                                                            ))}
-                                                                        </select>
-                                                                        {errors.lstVacantes?.[index]?.idPerfil && (
-                                                                            <p className="text-red-500 text-xs mt-1">
-                                                                                {errors.lstVacantes[index]?.idPerfil?.message}
-                                                                            </p>
-                                                                        )}
-                                                                    </td>
-                                                                    <td className="table-cell">
-                                                                        <div className="flex">
-                                                                            <div className="flex flex-col gap-1 relative">
-                                                                                <NumberInput<newRQSchemaType>
-                                                                                    register={register}
-                                                                                    control={control}
-                                                                                    name={`lstVacantes.${index}.cantidad`}
-                                                                                    defaultValue={1}
-                                                                                    onChange={() => clearErrors(`lstVacantes.${index}.cantidad`)}
-                                                                                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                                                />
-                                                                                {errors.lstVacantes?.[index]?.cantidad && (
-                                                                                    <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
-                                                                                        {errors.lstVacantes[index]?.cantidad?.message}
-                                                                                    </p>
-                                                                                )}
-                                                                            </div>
-                                                                            <button
-                                                                                type="button"
-                                                                                className="ms-4 text-xl text-red-500 hover:text-red-700"
-                                                                                onClick={() => remove(index)}
+                                                            fields.map((field, index) => {
+                                                                const availableProfiles = getAvailableProfiles(index);
+                                                                const currentProfile = currentVacantes[index]?.idPerfil;
+                                                                const showCurrentProfile = currentProfile === 0 ||
+                                                                    availableProfiles.some(p => p.num1 === currentProfile) ||
+                                                                    !perfiles.some(p => p.num1 === currentProfile);
+
+                                                                const optionsToShow = showCurrentProfile
+                                                                    ? [...availableProfiles]
+                                                                    : [...availableProfiles, ...perfiles.filter(p => p.num1 === currentProfile)];
+
+                                                                return (
+                                                                    <tr key={field.id} className="table-row">
+                                                                        <td className="table-cell">
+                                                                            <select
+                                                                                {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
+                                                                                onChange={(e) => handleProfileChange(index, e.target.value)}
+                                                                                className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                                                                                value={currentProfile}
                                                                             >
-                                                                                ✕
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            ))
+                                                                                <option value={0}>Seleccione un perfil</option>
+                                                                                {optionsToShow.map((perfil) => (
+                                                                                    <option key={perfil.num1} value={perfil.num1}>
+                                                                                        {perfil.string1}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </select>
+                                                                            {errors.lstVacantes?.[index]?.idPerfil && (
+                                                                                <p className="text-red-500 text-xs mt-1">
+                                                                                    {errors.lstVacantes[index]?.idPerfil?.message}
+                                                                                </p>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="table-cell">
+                                                                            <div className="flex">
+                                                                                <div className="flex flex-col gap-1 relative">
+                                                                                    <NumberInput<newRQSchemaType>
+                                                                                        register={register}
+                                                                                        control={control}
+                                                                                        name={`lstVacantes.${index}.cantidad`}
+                                                                                        defaultValue={1}
+                                                                                        onChange={() => clearErrors(`lstVacantes.${index}.cantidad`)}
+                                                                                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                                                    />
+                                                                                    {errors.lstVacantes?.[index]?.cantidad && (
+                                                                                        <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                                                            {errors.lstVacantes[index]?.cantidad?.message}
+                                                                                        </p>
+                                                                                    )}
+                                                                                </div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="ms-4 text-xl text-red-500 hover:text-red-700"
+                                                                                    onClick={() => handleRemoveVacante(index)}
+                                                                                >
+                                                                                    ✕
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })
                                                         )}
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div className="my-3">
+                                            <div className="m-3">
                                                 <button
                                                     type="button"
                                                     className="btn btn-blue"
-                                                    onClick={() => {
-                                                        append({ idPerfil: 0, cantidad: 1 });
-                                                        clearErrors("lstVacantes");
-                                                    }}
+                                                    onClick={handleAddVacante}
+                                                    disabled={fields.length >= perfiles.length}
                                                 >
                                                     Agregar
                                                 </button>
+                                                {fields.length >= perfiles.length && (
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        No puedes agregar más vacantes que perfiles disponibles
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

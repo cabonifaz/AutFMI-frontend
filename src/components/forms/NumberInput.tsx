@@ -1,55 +1,74 @@
-import { useState } from "react";
-import { UseFormRegister, Path } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { UseFormRegister, Path, Control, useWatch } from "react-hook-form";
 
 type NumberType = "int" | "float";
 
 interface NumberInputProps<T extends Record<string, any>> {
     register: UseFormRegister<T>;
     name: Path<T>;
+    control: Control<T>; // Agregamos el control para useWatch
     type?: NumberType;
     className?: string;
     disabled?: boolean;
-    defaultValue?: string;
+    defaultValue?: number;
+    onChange?: () => void;
 }
 
 export const NumberInput = <T extends Record<string, any>>({
     register,
     name,
+    control,
     type = "int",
     className = "h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]",
     disabled = false,
-    defaultValue
+    defaultValue,
+    onChange
 }: NumberInputProps<T>) => {
-    const [value, setValue] = useState(defaultValue || "");
+    const currentValue = useWatch({
+        control,
+        name,
+    });
+
+    const [inputValue, setInputValue] = useState(String(currentValue || ""));
+
+    useEffect(() => {
+        setInputValue(String(currentValue || ""));
+    }, [currentValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let inputValue = e.target.value;
+        let newValue = e.target.value;
 
         if (type === "int") {
-            inputValue = inputValue.replace(/\D/g, "");
+            newValue = newValue.replace(/\D/g, "");
         } else {
-            inputValue = inputValue.replace(/[^0-9.]/g, "");
+            newValue = newValue.replace(/[^0-9.]/g, "");
 
-            const parts = inputValue.split(".");
+            const parts = newValue.split(".");
             if (parts.length > 2) {
-                inputValue = parts[0] + "." + parts.slice(1).join("");
+                newValue = parts[0] + "." + parts.slice(1).join("");
             }
 
             if (parts.length === 2) {
                 parts[1] = parts[1].slice(0, 2);
-                inputValue = parts.join(".");
+                newValue = parts.join(".");
             }
         }
 
-        setValue(inputValue);
+        setInputValue(newValue);
+
+        if (onChange) {
+            onChange();
+        }
     };
 
     return (
         <input
             type="text"
-            {...register(name, { valueAsNumber: true })}
-            value={value}
-            onChange={handleChange}
+            {...register(name, {
+                valueAsNumber: true,
+                onChange: handleChange
+            })}
+            value={inputValue}
             disabled={disabled}
             className={className}
         />

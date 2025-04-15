@@ -15,6 +15,7 @@ export const TIPO_HARDWARE = '21';
 export const ANEXO_HARDWARE = '22';
 export const TIPO_SOFTWARE = '23';
 export const ESTADO_RQ = '24';
+export const PERFIL = '14';
 
 
 // RQ TALENT STATE

@@ -1,5 +1,6 @@
 import { ReqArchivo } from "../type/ReqArchivo";
 import { ReqTalento } from "../type/ReqTalento";
+import { ReqVacante } from "../type/ReqVacante";
 
 export type RequirementResponse = {
     idTipoMensaje: number;
@@ -14,5 +15,6 @@ export type RequirementResponse = {
         vacantes: number;
         lstRqTalento: ReqTalento[];
         lstRqArchivo: ReqArchivo[];
+        lstRqVacantes: ReqVacante[];
     }
 }

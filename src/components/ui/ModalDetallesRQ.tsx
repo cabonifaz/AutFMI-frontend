@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
+import { newRQSchemaType } from "../../models/schema/NewRQSchema";
 import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "./Tabs";
 import { RequirementItem } from "../../models/type/RequirementItemType";
@@ -13,7 +13,7 @@ import { useDeleteHook } from "../../hooks/useDeleteHook";
 import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileSchema";
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { Loading } from "./Loading";
-import { NumberInput } from "../forms/NumberInput";
+import { UpdateBaseRQSchema, UpdateBaseRQSchemaType } from "../../models/schema/UpdateBaseRQSchema";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -44,14 +44,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         handleSubmit,
         setValue,
         formState: { errors },
-    } = useForm<newRQSchemaType>({
-        resolver: zodResolver(newRQSchema),
+    } = useForm<UpdateBaseRQSchemaType>({
+        resolver: zodResolver(UpdateBaseRQSchema),
         defaultValues: {
-            idCliente: "",
+            idCliente: 0,
             fechaSolicitud: "",
             descripcion: "",
             idEstado: 0,
-            vacantes: 0,
+            lstVacantes: [],
             lstArchivos: [],
         },
     });
@@ -68,12 +68,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
     useEffect(() => {
         if (requirement) {
-            setValue("idCliente", requirement.requerimiento.idCliente.toString());
+            setValue("idCliente", requirement.requerimiento.idCliente);
             setValue("codigoRQ", requirement.requerimiento.codigoRQ);
             setValue("fechaSolicitud", format(new Date(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
             setValue("descripcion", requirement.requerimiento.descripcion);
             setValue("idEstado", requirement.requerimiento.idEstado);
-            setValue("vacantes", requirement.requerimiento.vacantes);
             setClienteSeleccionado(requirement.requerimiento.cliente);
 
             const archivosFormateados = requirement.requerimiento.lstRqArchivo.map((archivo) => ({
@@ -118,7 +117,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     };
 
     const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedClienteId = event.target.value;
+        const selectedClienteId = Number(event.target.value);
         const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
         setClienteSeleccionado(selectedClienteText);
         setValue("idCliente", selectedClienteId);
@@ -155,11 +154,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         }
     };
 
-    const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
+    const onSubmit: SubmitHandler<UpdateBaseRQSchemaType> = async (data) => {
         try {
             const idCliente = Number(data.idCliente);
 
-            const { lstArchivos, ...cleanData } = data;
+            const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } = data;
 
             if (RQ) {
                 const payload = {
@@ -192,13 +191,20 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     };
 
     const newFiles = archivos.some((archivo) => archivo.idRequerimientoArchivo === 0);
+    const totalVacantes = requirement?.requerimiento.lstRqVacantes.reduce((total, vacante) => total + (vacante?.cantidad || 0), 0) || 0;
+
+    const circleClass = useMemo(() => {
+        if (totalVacantes > 99) return 'w-8 h-8 text-xs';
+        if (totalVacantes > 9) return 'w-7 h-7 text-sm';
+        return 'w-6 h-6 text-sm';
+    }, [totalVacantes]);
 
     return (
         <>
             {(postloading || deleteLoading) && <Loading overlayMode={true} />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
-                    <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>
+                    <button className="absolute top-4 right-4 w-6 h-6 cursor-pointer z-50" onClick={handleCancelClick}>
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" />
                     </button>
                     <Tabs
@@ -300,21 +306,6 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     {errors.idEstado && (
                                                         <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
                                                     )}
-
-                                                    {/* Vacantes */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
-                                                        <NumberInput<newRQSchemaType>
-                                                            register={register}
-                                                            name="vacantes"
-                                                            disabled={!isEditing}
-                                                            defaultValue={requirement?.requerimiento?.vacantes.toString()}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                        />
-                                                    </div>
-                                                    {errors.vacantes && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.vacantes.message}</p>
-                                                    )}
                                                 </div>
 
                                                 {/* Botones de acción */}
@@ -332,6 +323,51 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </div>
 
                                 ),
+                            },
+                            {
+                                label: (
+                                    <p className="flex items-center gap-2">
+                                        Vacantes
+                                        <span className={`inline-flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
+                                            {totalVacantes}
+                                        </span>
+                                    </p>
+                                ),
+                                children: (
+                                    <div className="p-1">
+                                        <div className="table-container">
+                                            <div className="table-wrapper">
+                                                <table className="table">
+                                                    <thead>
+                                                        <tr className="table-header">
+                                                            <th scope="col" className="table-header-cell">ID</th>
+                                                            <th scope="col" className="table-header-cell">Perfil profesional</th>
+                                                            <th scope="col" className="table-header-cell">Cantidad</th>
+                                                            <th scope="col" className="table-header-cell"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {requirement?.requerimiento.lstRqVacantes.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan={4} className="table-empty">
+                                                                    No hay vacantes disponibles.
+                                                                </td>
+                                                            </tr>
+                                                        ) : (
+                                                            requirement?.requerimiento.lstRqVacantes.map((vacante) => (
+                                                                <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                    <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                    <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                    <td className="table-cell">{vacante.cantidad}</td>
+                                                                </tr>
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
                             },
                             {
                                 label: "Archivos",

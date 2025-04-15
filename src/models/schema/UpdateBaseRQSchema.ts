@@ -5,14 +5,14 @@ const vacanteSchema = z.object({
     cantidad: z.number().min(1, "La cantidad debe ser al menos 1")
 });
 
-export const newRQSchema = z.object({
+export const UpdateBaseRQSchema = z.object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
     codigoRQ: z.string().optional(),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
     idEstado: z.number().min(1, "El estado es obligatorio"),
-    autogenRQ: z.boolean(),
-    lstVacantes: z.array(vacanteSchema).min(1, "Debe agregar al menos una vacante"),
+    autogenRQ: z.boolean().optional(),
+    lstVacantes: z.array(vacanteSchema).optional(),
     lstArchivos: z
         .array(
             z.object({
@@ -30,4 +30,4 @@ export const newRQSchema = z.object({
     }
 );
 
-export type newRQSchemaType = z.infer<typeof newRQSchema>;
+export type UpdateBaseRQSchemaType = z.infer<typeof UpdateBaseRQSchema>;

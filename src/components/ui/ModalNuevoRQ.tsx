@@ -113,15 +113,13 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 lstArchivos,
             };
 
-            console.log(payload);
-
             // 4. Enviar los datos al servidor
-            // const response = await postData("/fmi/requirement/save", payload);
+            const response = await postData("/fmi/requirement/save", payload);
 
-            // if (response.idTipoMensaje === 2) {
-            //     onClose();
-            //     updateRQData();
-            // }
+            if (response.idTipoMensaje === 2) {
+                onClose();
+                updateRQData();
+            }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -149,7 +147,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
 
     const getVacantesErrorMessage = (errors: any) => {
         if (errors.lstVacantes?.message) return errors.lstVacantes.message;
-        return "Hay errores en las vacantes. Revise los campos marcados.";
+        return "Revisa los campos de vacantes";
     };
 
     const allQuantities = useWatch({
@@ -377,6 +375,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                     <td className="table-cell">
                                                                         <select
                                                                             {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
+                                                                            onChange={() => clearErrors(`lstVacantes.${index}.idPerfil`)}
                                                                             className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
                                                                             defaultValue={field.idPerfil}
                                                                         >
@@ -401,6 +400,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                                     control={control}
                                                                                     name={`lstVacantes.${index}.cantidad`}
                                                                                     defaultValue={1}
+                                                                                    onChange={() => clearErrors(`lstVacantes.${index}.cantidad`)}
                                                                                     className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                                                 />
                                                                                 {errors.lstVacantes?.[index]?.cantidad && (
@@ -428,7 +428,10 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                 <button
                                                     type="button"
                                                     className="btn btn-blue"
-                                                    onClick={() => append({ idPerfil: 0, cantidad: 1 })}
+                                                    onClick={() => {
+                                                        append({ idPerfil: 0, cantidad: 1 });
+                                                        clearErrors("lstVacantes");
+                                                    }}
                                                 >
                                                     Agregar
                                                 </button>

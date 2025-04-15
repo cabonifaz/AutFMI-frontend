@@ -4,7 +4,7 @@ import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
-import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
+import { ESTADO_ATENDIDO, ESTADO_RQ, PERFIL } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
@@ -35,9 +35,10 @@ export const PantallaRequerimientos = () => {
 
     const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
     const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
-    const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ},${PERFIL}`);
 
     const options = paramsByMaestro[ESTADO_RQ] || [];
+    const perfiles = paramsByMaestro[PERFIL] || [];
     const paramOptions: BaseOption[] = options.map((param) => ({
         value: param.num1.toString(),
         label: param.string1,
@@ -240,8 +241,24 @@ export const PantallaRequerimientos = () => {
                     </div>
                 </div>
             </PantallaWrapper>
-            {isNuevoRQModalOpen && <AgregarRQModal onClose={() => setIsNuevoRQModalOpen(false)} updateRQData={updateRQData} estadoOptions={options} clientes={clientes} />}
-            {isDetallesRQModalOpen && <ModalDetallesRQ onClose={() => setIsDetallesRQModalOpen(false)} estadoOptions={options} RQ={selectedRQ} clientes={clientes} updateRQData={updateRQData} />}
+            {isNuevoRQModalOpen &&
+                <AgregarRQModal
+                    onClose={() => setIsNuevoRQModalOpen(false)}
+                    updateRQData={updateRQData}
+                    estadoOptions={options}
+                    clientes={clientes}
+                    perfiles={perfiles}
+                />
+            }
+            {isDetallesRQModalOpen &&
+                <ModalDetallesRQ
+                    onClose={() => setIsDetallesRQModalOpen(false)}
+                    estadoOptions={options}
+                    RQ={selectedRQ}
+                    clientes={clientes}
+                    updateRQData={updateRQData}
+                />
+            }
         </>
     );
 };

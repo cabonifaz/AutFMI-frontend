@@ -107,7 +107,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
             const payload = {
                 ...data,
                 idCliente: idCliente,
-                codigoRQ: autogenRQ ? null : data.codigoRQ,
+                codigoRQ: data.codigoRQ,
                 cliente: clienteSeleccionado,
                 estado: data.idEstado,
                 lstArchivos,
@@ -147,7 +147,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
 
     const getVacantesErrorMessage = (errors: any) => {
         if (errors.lstVacantes?.message) return errors.lstVacantes.message;
-        return "Revisa los campos de vacantes";
+        return "Revisa los campos de vacantes.";
     };
 
     const allQuantities = useWatch({

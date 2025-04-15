@@ -116,12 +116,12 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
             console.log(payload);
 
             // 4. Enviar los datos al servidor
-            const response = await postData("/fmi/requirement/save", payload);
+            // const response = await postData("/fmi/requirement/save", payload);
 
-            if (response.idTipoMensaje === 2) {
-                onClose();
-                updateRQData();
-            }
+            // if (response.idTipoMensaje === 2) {
+            //     onClose();
+            //     updateRQData();
+            // }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -213,7 +213,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                 <input
                                                     {...register("codigoRQ")}
                                                     disabled={autogenRQ}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                    className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
                                                 />
                                             </div>
                                             {errors.codigoRQ && (
@@ -228,7 +228,6 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                     type="checkbox"
                                                     onChange={(e) => {
                                                         setAutogenRQ(e.target.checked);
-                                                        setValue("codigoRQ", undefined);
                                                         clearErrors("codigoRQ");
                                                     }}
                                                     className="input-checkbox"
@@ -351,7 +350,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                 ),
                                 hasError: hasVacantesErrors(errors) || fields.length === 0,
                                 errorMessage: fields.length === 0
-                                    ? "Debe agregar al menos una vacante"
+                                    ? "Debe agregar 1 vacante como mínimo"
                                     : getVacantesErrorMessage(errors),
                                 children: (
                                     <div className="p-1">

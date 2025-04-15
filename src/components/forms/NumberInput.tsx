@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { UseFormRegister, Path, Control, useWatch } from "react-hook-form";
+import { UseFormRegister, Path, Control, useWatch, set } from "react-hook-form";
 
 type NumberType = "int" | "float";
 
 interface NumberInputProps<T extends Record<string, any>> {
     register: UseFormRegister<T>;
     name: Path<T>;
-    control: Control<T>; // Agregamos el control para useWatch
+    control: Control<T>;
     type?: NumberType;
     className?: string;
     disabled?: boolean;
@@ -29,10 +29,14 @@ export const NumberInput = <T extends Record<string, any>>({
         name,
     });
 
-    const [inputValue, setInputValue] = useState(String(currentValue || ""));
+    const [inputValue, setInputValue] = useState(
+        String(currentValue || (type === "int" ? (defaultValue || 0) : defaultValue || ""))
+    );
 
     useEffect(() => {
-        setInputValue(String(currentValue || ""));
+        if (currentValue !== undefined && currentValue !== null) {
+            setInputValue(String(currentValue));
+        }
     }, [currentValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +59,8 @@ export const NumberInput = <T extends Record<string, any>>({
         }
 
         setInputValue(newValue);
+        console.log(newValue);
+
 
         if (onChange) {
             onChange();
@@ -63,12 +69,13 @@ export const NumberInput = <T extends Record<string, any>>({
 
     return (
         <input
-            type="text"
+            type="number"
             {...register(name, {
                 valueAsNumber: true,
-                onChange: handleChange
+                onChange: handleChange,
             })}
             value={inputValue}
+            onWheel={(e) => e.currentTarget.blur()}
             disabled={disabled}
             className={className}
         />

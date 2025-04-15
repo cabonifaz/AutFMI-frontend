@@ -2,7 +2,9 @@ import { z } from "zod";
 
 const vacanteSchema = z.object({
     idPerfil: z.number().min(1, "Debe seleccionar un perfil"),
-    cantidad: z.number().min(1, "La cantidad debe ser al menos 1")
+    cantidad: z.number({
+        invalid_type_error: "La cantidad debe ser al menos 1"
+    }).min(1, "La cantidad debe ser al menos 1")
 });
 
 export const newRQSchema = z.object({

@@ -20,7 +20,9 @@ export const PERFIL = '14';
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
-export const ESTADO_ACEPTADO = 2;
+export const ESTADO_DATOS_COMPLETOS = 2;
+export const ESTADO_EN_ENTREVISTA = 3;
+export const ESTADO_CONFIRMADO = 4;
 
 // RQ STATE
 export const ESTADO_ASIGNADO = 1;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiClientWithToken } from '../utils/apiClient';
-import { ESTADO_ATENDIDO } from '../utils/config';
+import { ESTADO_ATENDIDO, ESTADO_CONFIRMADO, ESTADO_DATOS_COMPLETOS, ESTADO_OBSERVADO } from '../utils/config';
 import { Loading } from '../components/ui/Loading';
 import BackButton from '../components/ui/BackButton';
 import Toast from '../components/ui/Toast';
@@ -71,7 +71,7 @@ const TableRow: React.FC<TableRowProps> = ({
   disabled
 }) => {
   const isConfirmedFromAPI = talento.isFromAPI && talento.confirmado;
-  const isAceptado = talento.estado?.toUpperCase() === 'ACEPTADO' || talento.idEstado === 2;
+  const isAceptado = talento.estado?.toUpperCase() === 'DATOS COMPLETOS' || talento.idEstado === 2;
   const isObservado = talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 1;
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +106,7 @@ const TableRow: React.FC<TableRowProps> = ({
           isObservado ? 'bg-yellow-100 text-yellow-800' :
             'bg-gray-100 text-gray-800'
           }`}>
-          {(talento.estado || (talento.idEstado === 2 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
+          {(talento.estado || (talento.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
         </span>
       </td>
       <td className="py-3 px-4 whitespace-nowrap text-center">
@@ -438,7 +438,7 @@ const TalentTable: React.FC = () => {
           telefono: talentDetails.celular || '',
           email: talentDetails.email || '',
           estado: talentDetails.estado || 'OBSERVADO',
-          idEstado: talentDetails.idEstado || 2,
+          idEstado: talentDetails.idEstado || 1,
           situacion: talentDetails.situacion || 'LIBRE',
           idSituacion: talentDetails.idSituacion || 1,
           confirmado: talentDetails.confirmado || false
@@ -468,7 +468,7 @@ const TalentTable: React.FC = () => {
       telefono: talent.telefono || talent.celular || '',
       celular: talent.telefono || talent.celular || '',
       email: talent.email || '',
-      estado: talent.estado?.toUpperCase() || (talent.idEstado === 2 ? 'ACEPTADO' : 'OBSERVADO'),
+      estado: talent.estado?.toUpperCase() || (talent.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO'),
       situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
       idEstado: talent.idEstado || 1,
       idSituacion: talent.idSituacion || 1,
@@ -513,11 +513,11 @@ const TalentTable: React.FC = () => {
   // Verificar confirmación
   const handleConfirmOpen = () => {
     const acceptedTalents = localTalents.filter(
-      talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2
+      talent => talent.estado?.toUpperCase() === 'DATOS COMPLETOS' || talent.idEstado === 2
     );
 
     if (acceptedTalents.length === 0) {
-      showToast('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.', 'error');
+      showToast('Debe seleccionar al menos un talento con estado DATOS COMPLETOS para finalizar.', 'error');
       return;
     }
 
@@ -536,7 +536,7 @@ const TalentTable: React.FC = () => {
         dni: talent.dni,
         celular: talent.telefono || talent.celular || '',
         email: talent.email,
-        idEstado: talent.idEstado || (talent.estado === 'ACEPTADO' ? 2 : 1),
+        idEstado: !talent.confirmado ? talent.idEstado || (talent.estado === 'DATOS COMPLETOS' ? ESTADO_DATOS_COMPLETOS : ESTADO_OBSERVADO) : ESTADO_CONFIRMADO,
         idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2),
         confirmado: talent.confirmado || false
       }));

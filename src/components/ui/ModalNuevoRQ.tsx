@@ -33,7 +33,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [autogenRQ, setAutogenRQ] = useState(false);
     const [showValidationErrors, setShowValidationErrors] = useState(false);
     const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
-    const [selectedContacts, setSelectedContacts] = useState<ClientContact[]>([]);
+    const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
 
     const {
         register,
@@ -118,11 +118,11 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         fetchContacts(selectedClienteId);
     };
 
-    const handleContactToggle = (contact: ClientContact) => {
+    const handleContactToggle = (contactId: number) => {
         setSelectedContacts(prev =>
-            prev.some(c => c.idClienteContacto === contact.idClienteContacto)
-                ? prev.filter(c => c.idClienteContacto !== contact.idClienteContacto)
-                : [...prev, contact]
+            prev.includes(contactId)
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
         );
     };
 
@@ -153,19 +153,17 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 codigoRQ: data.codigoRQ,
                 cliente: clienteSeleccionado,
                 estado: data.idEstado,
-                lstContactos: selectedContacts,
+                lstContactos: selectedContacts.join(","),
                 lstArchivos,
             };
 
-            console.log(payload);
-
             // 4. Enviar los datos al servidor
-            // const response = await postData("/fmi/requirement/save", payload);
+            const response = await postData("/fmi/requirement/save", payload);
 
-            // if (response.idTipoMensaje === 2) {
-            //     onClose();
-            //     updateRQData();
-            // }
+            if (response.idTipoMensaje === 2) {
+                onClose();
+                updateRQData();
+            }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -426,8 +424,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                             className="input-checkbox"
                                                                             name={`contact-${contacto.idClienteContacto}`}
                                                                             id={`contact-${contacto.idClienteContacto}`}
-                                                                            checked={selectedContacts.some(c => c.idClienteContacto === contacto.idClienteContacto)}
-                                                                            onChange={() => handleContactToggle(contacto)}
+                                                                            checked={selectedContacts.includes(contacto.idClienteContacto)}
+                                                                            onChange={() => handleContactToggle(contacto.idClienteContacto)}
                                                                         />
                                                                     </td>
                                                                 </tr>

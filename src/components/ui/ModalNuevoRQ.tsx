@@ -388,6 +388,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                             <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
                                         )}
 
+                                        <h2 className="text-sm font-medium text-gray-700 my-4">Lista de Contactos</h2>
+
                                         <div className="my-4">
                                             <div className="table-container">
                                                 <div className="table-wrapper">

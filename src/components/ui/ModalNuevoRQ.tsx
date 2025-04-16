@@ -9,6 +9,8 @@ import { ClientType } from "../../models/type/ClientType";
 import { Loading } from "./Loading";
 import { NumberInput } from "../forms/NumberInput";
 import { Tabs } from "./Tabs";
+import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
+import { ClientContact } from "../../models/type/ClientContact";
 
 interface Archivo {
     name: string;
@@ -30,6 +32,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
     const [autogenRQ, setAutogenRQ] = useState(false);
     const [showValidationErrors, setShowValidationErrors] = useState(false);
+    const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
+    const [selectedContacts, setSelectedContacts] = useState<ClientContact[]>([]);
 
     const {
         register,
@@ -108,7 +112,18 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
         setClienteSeleccionado(selectedClienteText);
         setValue("idCliente", selectedClienteId);
-        clearErrors("idCliente");
+        clearErrors();
+
+        setSelectedContacts([]);
+        fetchContacts(selectedClienteId);
+    };
+
+    const handleContactToggle = (contact: ClientContact) => {
+        setSelectedContacts(prev =>
+            prev.some(c => c.idClienteContacto === contact.idClienteContacto)
+                ? prev.filter(c => c.idClienteContacto !== contact.idClienteContacto)
+                : [...prev, contact]
+        );
     };
 
     const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
@@ -138,16 +153,19 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 codigoRQ: data.codigoRQ,
                 cliente: clienteSeleccionado,
                 estado: data.idEstado,
+                lstContactos: selectedContacts,
                 lstArchivos,
             };
 
-            // 4. Enviar los datos al servidor
-            const response = await postData("/fmi/requirement/save", payload);
+            console.log(payload);
 
-            if (response.idTipoMensaje === 2) {
-                onClose();
-                updateRQData();
-            }
+            // 4. Enviar los datos al servidor
+            // const response = await postData("/fmi/requirement/save", payload);
+
+            // if (response.idTipoMensaje === 2) {
+            //     onClose();
+            //     updateRQData();
+            // }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -208,31 +226,13 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                     </button>
                     <Tabs
                         showErrors={showValidationErrors}
+                        isDataLoading={loadingContacts}
                         tabs={[
                             {
                                 label: "Datos RQ",
-                                children: <form onSubmit={handleFormSubmit} className="space-y-4">
+                                children: <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
                                     <div className="max-h-[42vh] overflow-y-auto pr-2">
                                         <div className="space-y-4 flex-1">
-                                            {/* Cliente */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
-                                                <select
-                                                    {...register("idCliente", { valueAsNumber: true })}
-                                                    onChange={handleClienteChange}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                >
-                                                    {clientes.map((cliente) => (
-                                                        <option key={cliente.idCliente} value={cliente.idCliente}>
-                                                            {cliente.razonSocial}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            {errors.idCliente && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
-                                            )}
-
                                             {/* Código RQ */}
                                             <div className="flex items-center">
                                                 <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
@@ -355,7 +355,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                     </div>
 
                                     {/* Botones de acción */}
-                                    <div className="flex justify-end space-x-4 mt-6">
+                                    <div className="flex justify-end space-x-4 mt-6 me-1">
                                         <button
                                             type="submit"
                                             className="btn btn-primary"
@@ -366,18 +366,92 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                 </form>
                             },
                             {
+                                label: "Cliente",
+                                hasError: errors.idCliente?.message !== undefined,
+                                errorMessage: errors.idCliente?.message,
+                                children: (
+                                    <>
+                                        {/* Cliente */}
+                                        <div className="flex items-center">
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
+                                            <select
+                                                {...register("idCliente", { valueAsNumber: true })}
+                                                onChange={handleClienteChange}
+                                                className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                            >
+                                                {clientes.map((cliente) => (
+                                                    <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                        {cliente.razonSocial}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {errors.idCliente && (
+                                            <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                        )}
+
+                                        <div className="my-4">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th scope="col" className="table-header-cell">ID</th>
+                                                                <th scope="col" className="table-header-cell">Nombres</th>
+                                                                <th scope="col" className="table-header-cell">Apellidos</th>
+                                                                <th scope="col" className="table-header-cell">Celular</th>
+                                                                <th scope="col" className="table-header-cell">Correo</th>
+                                                                <th scope="col" className="table-header-cell">Cargo</th>
+                                                                <th scope="col" className="table-header-cell"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {contactos.length <= 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={7} className="table-empty">
+                                                                        No hay contactos disponibles.
+                                                                    </td>
+                                                                </tr>
+                                                            ) : (contactos?.map((contacto) => (
+                                                                <tr key={contacto.idClienteContacto} className="table-row">
+                                                                    <td className="table-cell">{contacto.idClienteContacto}</td>
+                                                                    <td className="table-cell">{contacto.nombre}</td>
+                                                                    <td className="table-cell">{contacto.apellidoPaterno + ' ' + contacto.apellidoMaterno}</td>
+                                                                    <td className="table-cell">{contacto.telefono}</td>
+                                                                    <td className="table-cell">{contacto.correo}</td>
+                                                                    <td className="table-cell">{contacto.cargo}</td>
+                                                                    <td className="table-cell">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="input-checkbox"
+                                                                            name={`contact-${contacto.idClienteContacto}`}
+                                                                            id={`contact-${contacto.idClienteContacto}`}
+                                                                            checked={selectedContacts.some(c => c.idClienteContacto === contacto.idClienteContacto)}
+                                                                            onChange={() => handleContactToggle(contacto)}
+                                                                        />
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )
+                            },
+                            {
                                 label: (
-                                    <p className="flex items-center gap-2">
+                                    <p className="flex gap-2">
                                         Vacantes
                                         <span className={`inline-flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
                                             {totalVacantes}
                                         </span>
                                     </p>
                                 ),
-                                hasError: hasVacantesErrors(errors) || fields.length === 0,
-                                errorMessage: fields.length === 0
-                                    ? "Debe agregar 1 vacante como mínimo"
-                                    : getVacantesErrorMessage(errors),
+                                hasError: hasVacantesErrors(errors) && errors.idCliente?.message === undefined,
+                                errorMessage: getVacantesErrorMessage(errors),
                                 children: (
                                     <div className="p-1">
                                         <div className="table-container">

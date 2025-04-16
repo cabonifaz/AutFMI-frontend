@@ -10,9 +10,10 @@ interface TabProps {
 interface TabsProps {
     tabs: TabProps[];
     showErrors?: boolean;
+    isDataLoading?: boolean;
 }
 
-export const Tabs = ({ tabs, showErrors = false }: TabsProps) => {
+export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsProps) => {
     const [activeTab, setActiveTab] = useState(0);
 
     return (
@@ -40,7 +41,16 @@ export const Tabs = ({ tabs, showErrors = false }: TabsProps) => {
                 ))}
             </div>
 
-            <div className="mt-1">{tabs[activeTab].children}</div>
+            <div className="mt-1">
+                {tabs[activeTab].children}
+                {isDataLoading && (
+                    <div className="absolute inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-4 rounded-lg shadow-sm">
+                            <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

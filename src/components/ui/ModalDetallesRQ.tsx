@@ -14,6 +14,9 @@ import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileS
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { Loading } from "./Loading";
 import { UpdateBaseRQSchema, UpdateBaseRQSchemaType } from "../../models/schema/UpdateBaseRQSchema";
+import { ClientContact } from "../../models/type/ClientContact";
+import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
+import { ModalRQContact } from "./ModalRQContact";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -39,10 +42,16 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const { requirement, loading: reqLoading, fetchRequirement } = useFetchRequirement(RQ?.idRequerimiento || null);
     const { deleteData, deleteLoading } = useDeleteHook();
 
+    const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
+    const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
+    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+    const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
+
     const {
         register,
         handleSubmit,
         setValue,
+        getValues,
         formState: { errors },
     } = useForm<UpdateBaseRQSchemaType>({
         resolver: zodResolver(UpdateBaseRQSchema),
@@ -84,7 +93,12 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
             setArchivos(archivosFormateados);
             setValueFiles("lstArchivos", archivosFormateados);
+
+            if (requirement.requerimiento.idCliente !== 0 && requirement.requerimiento.idCliente !== null) {
+                fetchContacts(getValues("idCliente"));
+            }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [requirement, setValue, setValueFiles]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +135,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
         setClienteSeleccionado(selectedClienteText);
         setValue("idCliente", selectedClienteId);
+        fetchContacts(getValues("idCliente"));
     };
 
     const onSubmitAddFiles: SubmitHandler<AddFilesSchemaType> = async (data) => {
@@ -199,6 +214,32 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         return 'w-6 h-6 text-sm';
     }, [totalVacantes]);
 
+    const handleContactAdded = () => {
+        fetchContacts(getValues("idCliente"));
+        setIsModalRQContactOPen(false);
+        setContactToEdit(null);
+        setModalMode("add");
+    }
+
+    const handleContactUpdated = () => {
+        fetchContacts(getValues("idCliente"));
+        setIsModalRQContactOPen(false);
+        setContactToEdit(null);
+        setModalMode("add");
+    }
+
+    const handleAddContact = () => {
+        setModalMode("add");
+        setContactToEdit(null);
+        setIsModalRQContactOPen(true);
+    }
+
+    const handleEditContact = (contact: ClientContact) => {
+        setModalMode("edit");
+        setContactToEdit(contact);
+        setIsModalRQContactOPen(true);
+    }
+
     return (
         <>
             {(postloading || deleteLoading) && <Loading overlayMode={true} />}
@@ -209,6 +250,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
                     </button>
                     <Tabs
+                        isDataLoading={reqLoading || loadingContacts}
                         tabs={[
                             {
                                 label: "Datos RQ",
@@ -228,27 +270,6 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
                                                 {/* Campos del formulario */}
                                                 <div className="space-y-4 flex-1">
-                                                    {/* Cliente */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
-                                                        <select
-                                                            {...register("idCliente")}
-                                                            disabled={!isEditing}
-                                                            onChange={handleClienteChange}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                        >
-                                                            <option value="">Elige un cliente</option>
-                                                            {clientes.map((cliente) => (
-                                                                <option key={cliente.idCliente} value={cliente.idCliente}>
-                                                                    {cliente.razonSocial}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    {errors.idCliente && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
-                                                    )}
-
                                                     {/* Código RQ */}
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
@@ -324,6 +345,92 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </div>
 
                                 ),
+                            },
+                            {
+                                label: "Cliente",
+                                children: (
+                                    <>
+                                        {/* Cliente */}
+                                        <div className="flex items-center">
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
+                                            <select
+                                                {...register("idCliente", { valueAsNumber: true })}
+                                                onChange={handleClienteChange}
+                                                className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                            >
+                                                {clientes.map((cliente) => (
+                                                    <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                        {cliente.razonSocial}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {errors.idCliente && (
+                                            <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                        )}
+
+                                        <div className="flex items-center justify-between my-4">
+                                            <h2 className="text-sm font-medium text-gray-700">Lista de contactos confirmados</h2>
+                                            <button
+                                                type="button"
+                                                onClick={handleAddContact}
+                                                disabled={getValues("idCliente") === 0}
+                                                className={`btn text-sm font-medium ${getValues("idCliente") === 0 ? "btn-disabled" : "btn-blue"}`}>
+                                                Añadir contacto
+                                            </button>
+                                        </div>
+
+
+                                        <div className="my-4">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th scope="col" className="table-header-cell">ID</th>
+                                                                <th scope="col" className="table-header-cell">Nombres</th>
+                                                                <th scope="col" className="table-header-cell">Apellidos</th>
+                                                                <th scope="col" className="table-header-cell">Celular</th>
+                                                                <th scope="col" className="table-header-cell">Correo</th>
+                                                                <th scope="col" className="table-header-cell">Cargo</th>
+                                                                <th scope="col" className="table-header-cell"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {contactos.length <= 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={7} className="table-empty">
+                                                                        No hay contactos disponibles.
+                                                                    </td>
+                                                                </tr>
+                                                            ) : (contactos?.map((contacto) => (
+                                                                <tr key={contacto.idClienteContacto} className="table-row">
+                                                                    <td className="table-cell">{contacto.idClienteContacto}</td>
+                                                                    <td className="table-cell">{contacto.nombre}</td>
+                                                                    <td className="table-cell">{contacto.apellidoPaterno + ' ' + contacto.apellidoMaterno}</td>
+                                                                    <td className="table-cell">{contacto.telefono}</td>
+                                                                    <td className="table-cell">{contacto.correo}</td>
+                                                                    <td className="table-cell">{contacto.cargo}</td>
+                                                                    <td className="table-cell">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleEditContact(contacto)}
+                                                                                className="w-7 h-7">
+                                                                                <img src="/assets/ic_edit.svg" alt="edit icon" />
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )
                             },
                             {
                                 label: (
@@ -521,6 +628,21 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                     />
                 </div>
             </div>
+
+            {
+                isModalRQContactOPen && (
+                    <ModalRQContact
+                        onClose={() => setIsModalRQContactOPen(false)}
+                        RQState="existing"
+                        onContactAdded={handleContactAdded}
+                        onContactUpdated={handleContactUpdated}
+                        modalMode={modalMode}
+                        contact={contactToEdit}
+                        idRQ={RQ?.idRequerimiento}
+                        idCliente={getValues("idCliente")}
+                    />
+                )
+            }
         </>
     );
 };

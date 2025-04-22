@@ -1,0 +1,141 @@
+import { useState } from "react";
+import { ClientContact } from "../../models/type/ClientContact";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { AddRQContactSchemaType, AddRQContactSchema } from "../../models/schema/AddRQContactSchema";
+import { usePostHook } from "../../hooks/usePostHook";
+import { enqueueSnackbar } from "notistack";
+
+interface Props {
+    onClose: () => void;
+    onContactAdded?: () => void;
+    onContactUpdated?: () => void;
+    contact?: ClientContact | null;
+    RQState: "new" | "existing";
+    modalMode: "add" | "edit";
+    idCliente: number;
+    idRQ?: number;
+}
+
+export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpdated, modalMode, RQState, idCliente, idRQ }: Props) => {
+    const { postData, postloading } = usePostHook();
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<AddRQContactSchemaType>({
+        resolver: zodResolver(AddRQContactSchema),
+        reValidateMode: 'onChange',
+        defaultValues: {
+            nombres: contact?.nombre || "",
+            apellidoPaterno: contact?.apellidoPaterno || "",
+            apellidoMaterno: contact?.apellidoMaterno || "",
+            telefono: contact?.telefono || "",
+            correo: contact?.correo || "",
+            cargo: contact?.cargo || "",
+        },
+    });
+
+    const submitData: SubmitHandler<AddRQContactSchemaType> = async (data) => {
+        let addContactData;
+
+        // Check if it's over an existing RQ or a new one
+        if (RQState === "new") {
+            addContactData = { idCliente: idCliente, flagConfirmar: 0, ...data }
+        } else {
+            addContactData = { idCliente: idCliente, idRQ: idRQ, flagConfirmar: 1, ...data }
+        }
+
+        const updateContactData = { idClienteContacto: contact?.idClienteContacto, ...data }
+
+        switch (modalMode) {
+            case "add":
+                const responseAdd = await postData("/fmi/client/saveContact", addContactData);
+                if (responseAdd.idTipoMensaje === 2) {
+                    onContactAdded?.();
+                    onClose();
+                    reset();
+                }
+                break;
+            case "edit":
+                const responseUpdate = await postData("/fmi/client/updateContact", updateContactData);
+                if (responseUpdate.idTipoMensaje === 2) {
+                    onContactUpdated?.();
+                    onClose();
+                    reset();
+                }
+                break;
+            default:
+                enqueueSnackbar("Invalid modal mode", { variant: 'warning' });
+                return;
+        }
+    }
+
+    return (
+        <>
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+                <div className="bg-white rounded-lg shadow-lg p-4 min-w-fit relative">
+                    {postloading && (
+                        <div className="absolute rounded-lg inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-4 rounded-lg shadow-sm">
+                                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        </div>
+                    )}
+                    <h2 className="text-lg font-bold mb-2">{modalMode === 'add' ? "Nuevo Contacto" : "Editar Contacto"}</h2>
+                    <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
+                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
+                    </button>
+
+                    <form className="space-y-4" onSubmit={handleSubmit(submitData)}>
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Nombres</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-name" className="input" {...register("nombres")} />
+                                {errors.nombres && <span className="text-red-500 text-xs mt-1">{errors.nombres.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Apellido paterno</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-lastname-1" className="input" {...register("apellidoPaterno")} />
+                                {errors.apellidoPaterno && <span className="text-red-500 text-xs mt-1">{errors.apellidoPaterno.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Apellido materno</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-lastname-2" className="input" {...register("apellidoMaterno")} />
+                                {errors.apellidoMaterno && <span className="text-red-500 text-xs mt-1">{errors.apellidoMaterno.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Celular</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-telefono" className="input" {...register("telefono")} />
+                                {errors.telefono && <span className="text-red-500 text-xs mt-1">{errors.telefono.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Correo</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-correo" className="input" {...register("correo")} />
+                                {errors.correo && <span className="text-red-500 text-xs mt-1">{errors.correo.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center">
+                            <label htmlFor="c-name" className="input-label w-1/2">Cargo</label>
+                            <div className="flex flex-col">
+                                <input type="text" id="c-cargo" className="input" {...register("cargo")} />
+                                {errors.cargo && <span className="text-red-500 text-xs mt-1">{errors.cargo.message}</span>}
+                            </div>
+                        </div>
+
+                        <button type="submit" className="btn btn-blue w-full">{modalMode === 'add' ? "Agregar Contacto" : "Actualizar Contacto"}</button>
+                    </form>
+                </div>
+            </div>
+        </>
+    );
+}

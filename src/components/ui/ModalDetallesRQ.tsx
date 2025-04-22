@@ -204,13 +204,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             {(postloading || deleteLoading) && <Loading overlayMode={true} />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
-                    <button className="absolute top-4 right-4 w-6 h-6 cursor-pointer z-50" onClick={handleCancelClick}>
-                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" />
+                    <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
+                    <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
+                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
                     </button>
                     <Tabs
                         tabs={[
                             {
-                                label: "Detalles RQ",
+                                label: "Datos RQ",
                                 children: (
                                     <div>
                                         {reqLoading ? (<p className="text-gray-500 text-center">Cargando Requerimiento...</p>) : (

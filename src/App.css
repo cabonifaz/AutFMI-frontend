@@ -70,7 +70,7 @@
 }
 
 .tab {
-  @apply px-4 py-2 text-sm font-medium;
+  @apply px-4 py-2 text-sm font-medium text-nowrap;
 }
 
 .tab-active {

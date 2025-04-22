@@ -11,6 +11,7 @@ import { NumberInput } from "../forms/NumberInput";
 import { Tabs } from "./Tabs";
 import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
 import { ClientContact } from "../../models/type/ClientContact";
+import { ModalRQContact } from "./ModalRQContact";
 
 interface Archivo {
     name: string;
@@ -34,6 +35,9 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [showValidationErrors, setShowValidationErrors] = useState(false);
     const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
     const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
+    const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
+    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+    const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
 
     const {
         register,
@@ -43,6 +47,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         control,
         trigger,
         watch,
+        getValues,
         formState: { errors },
     } = useForm<newRQSchemaType>({
         resolver: zodResolver(newRQSchema),
@@ -157,15 +162,13 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 lstArchivos,
             };
 
-            console.log(payload);
-
             // 4. Enviar los datos al servidor
-            // const response = await postData("/fmi/requirement/save", payload);
+            const response = await postData("/fmi/requirement/save", payload);
 
-            // if (response.idTipoMensaje === 2) {
-            //     onClose();
-            //     updateRQData();
-            // }
+            if (response.idTipoMensaje === 2) {
+                onClose();
+                updateRQData();
+            }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -218,6 +221,34 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         if (totalVacantes > 9) return 'w-7 h-7 text-sm';
         return 'w-6 h-6 text-sm';
     }, [totalVacantes]);
+
+    const handleContactAdded = () => {
+        fetchContacts(getValues("idCliente"));
+        setIsModalRQContactOPen(false);
+        setContactToEdit(null);
+        setModalMode("add");
+        setSelectedContacts([]);
+    }
+
+    const handleContactUpdated = () => {
+        fetchContacts(getValues("idCliente"));
+        setIsModalRQContactOPen(false);
+        setContactToEdit(null);
+        setModalMode("add");
+        setSelectedContacts([]);
+    }
+
+    const handleAddContact = () => {
+        setModalMode("add");
+        setContactToEdit(null);
+        setIsModalRQContactOPen(true);
+    }
+
+    const handleEditContact = (contact: ClientContact) => {
+        setModalMode("edit");
+        setContactToEdit(contact);
+        setIsModalRQContactOPen(true);
+    }
 
     return (
         <>
@@ -394,7 +425,18 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                             <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
                                         )}
 
-                                        <h2 className="text-sm font-medium text-gray-700 my-4">Lista de Contactos</h2>
+
+                                        <div className="flex items-center justify-between my-4">
+                                            <h2 className="text-sm font-medium text-gray-700">Lista de Contactos</h2>
+                                            <button
+                                                type="button"
+                                                onClick={handleAddContact}
+                                                disabled={getValues("idCliente") === 0}
+                                                className={`btn text-sm font-medium ${getValues("idCliente") === 0 ? "btn-disabled" : "btn-blue"}`}>
+                                                Añadir contacto
+                                            </button>
+                                        </div>
+
 
                                         <div className="my-4">
                                             <div className="table-container">
@@ -427,14 +469,22 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                     <td className="table-cell">{contacto.correo}</td>
                                                                     <td className="table-cell">{contacto.cargo}</td>
                                                                     <td className="table-cell">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="input-checkbox"
-                                                                            name={`contact-${contacto.idClienteContacto}`}
-                                                                            id={`contact-${contacto.idClienteContacto}`}
-                                                                            checked={selectedContacts.includes(contacto.idClienteContacto)}
-                                                                            onChange={() => handleContactToggle(contacto.idClienteContacto)}
-                                                                        />
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleEditContact(contacto)}
+                                                                                className="w-7 h-7">
+                                                                                <img src="/assets/ic_edit.svg" alt="edit icon" />
+                                                                            </button>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                className="input-checkbox"
+                                                                                name={`contact-${contacto.idClienteContacto}`}
+                                                                                id={`contact-${contacto.idClienteContacto}`}
+                                                                                checked={selectedContacts.includes(contacto.idClienteContacto)}
+                                                                                onChange={() => handleContactToggle(contacto.idClienteContacto)}
+                                                                            />
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             ))
@@ -567,6 +617,20 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                     />
                 </div>
             </div>
+
+            {
+                isModalRQContactOPen && (
+                    <ModalRQContact
+                        onClose={() => setIsModalRQContactOPen(false)}
+                        RQState="new"
+                        onContactAdded={handleContactAdded}
+                        onContactUpdated={handleContactUpdated}
+                        modalMode={modalMode}
+                        contact={contactToEdit}
+                        idCliente={getValues("idCliente")}
+                    />
+                )
+            }
         </>
     );
 };

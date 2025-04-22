@@ -19,27 +19,29 @@ export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsPr
     return (
         <div className="flex flex-col">
             {/* Pestañas */}
-            <div className="flex border-b border-gray-200 relative overflow-x-auto">
-                {tabs.map((tab, index) => (
-                    <div key={index} className="relative">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab(index)}
-                            className={`tab ${activeTab === index ? "tab-active" : "tab-inactive"}
+            <div className="relative">
+                <div className="flex border-b border-gray-200 overflow-x-auto">
+                    {tabs.map((tab, index) => (
+                        <div key={index}>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab(index)}
+                                className={`tab ${activeTab === index ? "tab-active" : "tab-inactive"}
                             ${tab.hasError && showErrors ? "text-red-600" : ""}`}
-                        >
-                            {tab.label}
-                        </button>
+                            >
+                                {tab.label}
+                            </button>
 
-                        {/* Mensaje de error fijo (sin hover) */}
-                        {tab.hasError && showErrors && tab.errorMessage && (
-                            <div className="absolute z-10 px-3 py-2 w-60 text-sm font-medium text-white bg-red-600 rounded-md shadow-lg left-0 top-full mt-1">
-                                {tab.errorMessage}
-                            </div>
-                        )}
-                    </div>
-                ))}
+                            {tab.hasError && showErrors && tab.errorMessage && (
+                                <div className="absolute z-10 px-3 py-2 text-sm text-nowrap font-medium text-white bg-red-600 rounded-md shadow-lg left-0 -bottom-10 mt-1">
+                                    {tab.errorMessage}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
+
 
             <div className="mt-1">
                 {tabs[activeTab].children}

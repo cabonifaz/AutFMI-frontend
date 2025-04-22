@@ -157,13 +157,15 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 lstArchivos,
             };
 
-            // 4. Enviar los datos al servidor
-            const response = await postData("/fmi/requirement/save", payload);
+            console.log(payload);
 
-            if (response.idTipoMensaje === 2) {
-                onClose();
-                updateRQData();
-            }
+            // 4. Enviar los datos al servidor
+            // const response = await postData("/fmi/requirement/save", payload);
+
+            // if (response.idTipoMensaje === 2) {
+            //     onClose();
+            //     updateRQData();
+            // }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
         }
@@ -181,6 +183,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
 
     const hasVacantesErrors = (errors: any) => {
         if (errors.lstVacantes?.message) return true;
+        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return true;
+        if (currentVacantes.length <= 0) return true;
 
         if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
             return errors.lstVacantes.some((vacanteError: any) => vacanteError);
@@ -191,6 +195,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
 
     const getVacantesErrorMessage = (errors: any) => {
         if (errors.lstVacantes?.message) return errors.lstVacantes.message;
+        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return "Agrega al menos una vacante.";
+        if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
         return "Revisa los campos de vacantes.";
     };
 

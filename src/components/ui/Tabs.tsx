@@ -19,7 +19,7 @@ export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsPr
     return (
         <div className="flex flex-col">
             {/* Pestañas */}
-            <div className="flex border-b border-gray-200 relative">
+            <div className="flex border-b border-gray-200 relative overflow-x-auto">
                 {tabs.map((tab, index) => (
                     <div key={index} className="relative">
                         <button

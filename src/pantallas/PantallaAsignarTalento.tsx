@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiClientWithToken } from '../utils/apiClient';
 import { ESTADO_ATENDIDO, ESTADO_CONFIRMADO, ESTADO_DATOS_COMPLETOS, ESTADO_OBSERVADO } from '../utils/config';
 import { Loading } from '../components/ui/Loading';
 import BackButton from '../components/ui/BackButton';
 import Toast from '../components/ui/Toast';
+import { ReqVacante } from '../models/type/ReqVacante';
 
 // Types
 type TalentoType = {
@@ -21,6 +22,8 @@ type TalentoType = {
   idEstado?: number;
   situacion?: string;
   idSituacion?: number;
+  perfil?: string;
+  idPerfil?: number;
   confirmado?: boolean;
   isFromAPI?: boolean;
 };
@@ -35,6 +38,7 @@ type RequerimientoType = {
   vacantes: number;
   idRequerimiento?: number;
   lstRqTalento?: any[];
+  lstRqVacantes?: ReqVacante[];
 };
 
 // Componentes
@@ -49,6 +53,7 @@ const TableHeader = () => (
       <th className="py-3 px-4 text-left font-semibold">Email</th>
       <th className="py-3 px-4 text-left font-semibold">Situación</th>
       <th className="py-3 px-4 text-left font-semibold">Estado</th>
+      <th className="py-3 px-4 text-left font-semibold">Perfil</th>
       <th className="py-3 px-4 text-left font-semibold">Confirmado</th>
       <th className="py-3 px-4 text-left font-semibold">Acciones</th>
     </tr>
@@ -109,6 +114,9 @@ const TableRow: React.FC<TableRowProps> = ({
           {(talento.estado || (talento.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
         </span>
       </td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        {talento?.perfil}
+      </td>
       <td className="py-3 px-4 whitespace-nowrap text-center">
         <input
           type="checkbox"
@@ -140,19 +148,24 @@ const TableRow: React.FC<TableRowProps> = ({
 
 interface TalentoSelectionProps {
   talent: TalentoType;
-  onSelect: (talent: TalentoType) => void;
+  perfil: string;
+  idPerfil: number;
+  onSelect: (talent: TalentoType, perfil: string, idPerfil: number) => void;
+  isPerfilSet: boolean;
   isSelected: boolean;
 }
 
-const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, isSelected }) => (
+const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, isSelected, perfil, idPerfil, isPerfilSet }) => (
   <div className="flex items-center justify-between p-4 border-b">
     <div>
       <p className="font-medium">{talent.nombres} {talent.apellidoPaterno} {talent.apellidoMaterno}</p>
     </div>
     <button
-      onClick={() => onSelect(talent)}
-      disabled={isSelected}
-      className={`btn ${isSelected ? 'btn-disabled' : 'btn-blue'}`}
+      onClick={() => {
+        onSelect(talent, perfil, idPerfil);
+      }}
+      disabled={isSelected || !isPerfilSet}
+      className={`btn ${isSelected || !isPerfilSet ? 'btn-disabled' : 'btn-blue'}`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
     </button>
@@ -164,11 +177,12 @@ interface SelectionModalProps {
   onClose: () => void;
   availableTalents: TalentoType[];
   selectedTalents: TalentoType[];
-  onSelectTalent: (talent: TalentoType) => void;
+  onSelectTalent: (talent: TalentoType, perfil: string, idPerfil: number) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   isLoading: boolean;
+  lstRqVacantes: ReqVacante[];
 }
 
 const SelectionModal: React.FC<SelectionModalProps> = ({
@@ -180,8 +194,19 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
   onSearch,
   searchTerm,
   setSearchTerm,
-  isLoading
+  isLoading,
+  lstRqVacantes
 }) => {
+  const [idPerfil, setIdPerfil] = useState<number>(0);
+  const [perfil, setPerfil] = useState<string>('');
+
+  useEffect(() => {
+    if (lstRqVacantes.length === 1) {
+      setIdPerfil(lstRqVacantes[0].idPerfil);
+      setPerfil(lstRqVacantes[0].perfilProfesional);
+    }
+  }, [lstRqVacantes]);
+
   const handleClearSearch = () => {
     setSearchTerm('');
     onSearch('');
@@ -205,7 +230,27 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
           </button>
         </div>
 
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex flex-col">
+          <div className="flex items-center pb-4">
+            <label htmlFor="t-perfil" className="dropdown-label w-1/2">Perfil</label>
+            <select
+              id="t-perfil"
+              className="dropdown text-sm"
+              onChange={(e) => {
+                setIdPerfil(Number(e.target.value));
+                setPerfil(e.target.options[e.target.selectedIndex].text);
+              }}
+              defaultValue={idPerfil}>
+              <option value={0}>
+                Seleccione un perfil
+              </option>
+              {lstRqVacantes.map((vacante) => (
+                <option key={vacante.idPerfil} value={vacante.idPerfil}>
+                  {vacante.perfilProfesional}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center">
             <div className="relative flex-grow">
               <input
@@ -245,6 +290,9 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
               <TalentoSelection
                 key={talent.idTalento}
                 talent={talent}
+                perfil={perfil}
+                idPerfil={idPerfil}
+                isPerfilSet={idPerfil !== 0}
                 onSelect={onSelectTalent}
                 isSelected={selectedTalents.some(t => t.idTalento === talent.idTalento)}
               />
@@ -342,7 +390,7 @@ const TalentTable: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=false`
+        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=true`
       );
 
       if (response.data.idTipoMensaje === 2) {
@@ -369,6 +417,8 @@ const TalentTable: React.FC = () => {
             situacion: talent.situacion,
             idSituacion: talent.idSituacion,
             confirmado: talent.confirmado,
+            idPerfil: talent.idPerfil,
+            perfil: talent.perfil,
             isFromAPI: true,
           }));
 
@@ -405,6 +455,8 @@ const TalentTable: React.FC = () => {
           email: talent.email || '',
           idEstado: 1,
           idSituacion: 1,
+          idPerfil: talent.idPerfil || 0,
+          perfil: talent.perfil || '',
         }));
 
         setSearchResults(formattedTalents);
@@ -418,7 +470,7 @@ const TalentTable: React.FC = () => {
   };
 
   // Seleccionar talento
-  const handleSelectTalent = async (talent: TalentoType) => {
+  const handleSelectTalent = async (talent: TalentoType, perfil: string, idPerfil: number) => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
@@ -441,7 +493,9 @@ const TalentTable: React.FC = () => {
           idEstado: talentDetails.idEstado || 1,
           situacion: talentDetails.situacion || 'LIBRE',
           idSituacion: talentDetails.idSituacion || 1,
-          confirmado: talentDetails.confirmado || false
+          confirmado: talentDetails.confirmado || false,
+          idPerfil: idPerfil,
+          perfil: perfil,
         };
       } else {
         formattedTalent = formatTalentFromBasicData(talent);
@@ -472,6 +526,8 @@ const TalentTable: React.FC = () => {
       situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
       idEstado: talent.idEstado || 1,
       idSituacion: talent.idSituacion || 1,
+      idPerfil: talent.idPerfil || 0,
+      perfil: talent.perfil || '',
       confirmado: talent.confirmado || false
     };
   };
@@ -538,6 +594,7 @@ const TalentTable: React.FC = () => {
         email: talent.email,
         idEstado: !talent.confirmado ? talent.idEstado || (talent.estado === 'DATOS COMPLETOS' ? ESTADO_DATOS_COMPLETOS : ESTADO_OBSERVADO) : ESTADO_CONFIRMADO,
         idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2),
+        idPerfil: talent.idPerfil || 0,
         confirmado: talent.confirmado || false
       }));
 
@@ -658,6 +715,7 @@ const TalentTable: React.FC = () => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           isLoading={isLoading}
+          lstRqVacantes={requerimiento?.lstRqVacantes || []}
         />
 
         <ConfirmationModal

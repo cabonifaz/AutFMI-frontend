@@ -9,4 +9,6 @@ export type ReqTalento = {
     situacion: string;
     idEstado: number;
     estado: string;
+    idPerfil: number;
+    perfil: string;
 }

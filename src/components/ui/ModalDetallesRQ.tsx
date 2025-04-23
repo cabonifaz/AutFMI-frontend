@@ -554,6 +554,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             <th scope="col" className="table-header-cell">Email</th>
                                                             <th scope="col" className="table-header-cell">Situación</th>
                                                             <th scope="col" className="table-header-cell">Estado</th>
+                                                            <th scope="col" className="table-header-cell">Perfil</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -580,6 +581,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                             {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
                                                                         </span>
                                                                     </td>
+                                                                    <td className="table-cell">{talento.perfil}</td>
                                                                 </tr>
                                                             ))
                                                         )}

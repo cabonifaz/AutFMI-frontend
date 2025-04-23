@@ -289,6 +289,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                     type="checkbox"
                                                     onChange={(e) => {
                                                         setAutogenRQ(e.target.checked);
+                                                        setValue("codigoRQ", e.target.checked ? "" : getValues("codigoRQ"));
                                                         clearErrors("codigoRQ");
                                                     }}
                                                     className="input-checkbox"

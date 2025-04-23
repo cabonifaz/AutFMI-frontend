@@ -438,7 +438,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                         </div>
 
 
-                                        <div className="my-4">
+                                        <div className="my-4 max-h-[35vh] overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">

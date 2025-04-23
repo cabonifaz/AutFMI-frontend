@@ -352,11 +352,12 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     <>
                                         {/* Cliente */}
                                         <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
+                                            <label className="text-sm font-medium text-gray-700">Cliente:</label>
                                             <select
                                                 {...register("idCliente", { valueAsNumber: true })}
-                                                onChange={handleClienteChange}
-                                                className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                disabled={true}
+                                                aria-readonly={true}
+                                                className="px-3 py-2 border-none outline-none appearance-none"
                                             >
                                                 {clientes.map((cliente) => (
                                                     <option key={cliente.idCliente} value={cliente.idCliente}>
@@ -369,7 +370,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
                                         )}
 
-                                        <div className="flex items-center justify-between my-4">
+                                        <div className="flex items-center justify-between">
                                             <h2 className="text-sm font-medium text-gray-700">Lista de contactos confirmados</h2>
                                             <button
                                                 type="button"
@@ -380,8 +381,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             </button>
                                         </div>
 
-
-                                        <div className="my-4">
+                                        <div className="mt-4 max-h-[30vh] overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">

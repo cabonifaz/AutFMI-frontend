@@ -1,4 +1,4 @@
-import { Control, Controller, FieldError } from "react-hook-form";
+import { Control, Controller, FieldError, UseFormClearErrors } from "react-hook-form";
 
 interface Props {
     name: string;
@@ -6,12 +6,14 @@ interface Props {
     label?: string;
     options: { label: string; value: number }[];
     error?: FieldError;
+    clearErrors?: UseFormClearErrors<any>;
     word_wrap?: boolean;
     flex?: boolean;
     required: boolean;
+    disabled?: boolean;
 }
 
-const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, required }: Props) => {
+const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, disabled = false, required, clearErrors }: Props) => {
     return (
         <>
             <div className={`${flex ? "flex-1" : "flex flex-1 gap-4"}`}>
@@ -24,7 +26,13 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                             <select
                                 id={name}
                                 {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                onChange={(e) => {
+                                    field.onChange(Number(e.target.value));
+                                    if (clearErrors) {
+                                        clearErrors(name);
+                                    }
+                                }}
+                                disabled={disabled}
                                 className="input w-full h-12"
                             >
                                 <option value={0}>Elige una opción</option>

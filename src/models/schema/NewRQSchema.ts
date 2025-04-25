@@ -2,9 +2,13 @@ import { z } from "zod";
 
 const vacanteSchema = z.object({
     idPerfil: z.number().min(1, "Debe seleccionar un perfil"),
-    cantidad: z.number({
-        invalid_type_error: "La cantidad debe ser al menos 1"
-    }).min(1, "La cantidad debe ser al menos 1")
+    cantidad: z.string()
+        .refine((val) => val.trim() !== "", {
+            message: "La cantidad es obligatoria"
+        })
+        .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+            message: "La cantidad debe ser mayor a 0"
+        }),
 });
 
 export const newRQSchema = z.object({
@@ -16,6 +20,22 @@ export const newRQSchema = z.object({
     descripcion: z.string().min(1, "La descripción es obligatoria"),
     idEstado: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean(),
+    fechaVencimiento: z.string().min(1, "La fecha de vencimiento es obligatoria"),
+    duracion: z.string()
+        .refine((val) => val.trim() !== "", {
+            message: "La duración es obligatoria"
+        })
+        .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+            message: "La duración debe ser mayor a 0"
+        }),
+    idDuracion: z.number({
+        required_error: "Elija una duración",
+        invalid_type_error: "Elija una duración"
+    }).min(1, "elige una duración"),
+    idModalidad: z.number({
+        required_error: "Elija una modalidad",
+        invalid_type_error: "Elija una modalidad"
+    }).min(1, "Elija una modalidad"),
     lstVacantes: z.array(vacanteSchema).min(1, "Debe agregar 1 vacante como mínimo"),
     lstArchivos: z
         .array(

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UseFormRegister, Path, Control, useWatch, set } from "react-hook-form";
+import { UseFormRegister, Path, Control, useController, PathValue } from "react-hook-form";
 
 type NumberType = "int" | "float";
 
@@ -11,7 +11,8 @@ interface NumberInputProps<T extends Record<string, any>> {
     className?: string;
     disabled?: boolean;
     defaultValue?: number;
-    onChange?: () => void;
+    onChange?: (value: string) => void;
+    decimalPlaces?: number;
 }
 
 export const NumberInput = <T extends Record<string, any>>({
@@ -21,23 +22,35 @@ export const NumberInput = <T extends Record<string, any>>({
     type = "int",
     className = "h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]",
     disabled = false,
-    defaultValue,
-    onChange
+    defaultValue = 0,
+    onChange,
+    decimalPlaces = 2
 }: NumberInputProps<T>) => {
-    const currentValue = useWatch({
-        control,
+    const { field } = useController({
         name,
+        control,
+        defaultValue: defaultValue as unknown as PathValue<T, Path<T>>
     });
 
-    const [inputValue, setInputValue] = useState(
-        String(currentValue || (type === "int" ? (defaultValue || 0) : defaultValue || ""))
-    );
+    const [inputValue, setInputValue] = useState(() => {
+        const initialValue = field.value;
+
+        if (initialValue === undefined || initialValue === null || initialValue === "") {
+            return String(defaultValue);
+        }
+
+        return String(initialValue);
+    });
 
     useEffect(() => {
-        if (currentValue !== undefined && currentValue !== null) {
-            setInputValue(String(currentValue));
+        if (field.value !== undefined && field.value !== null) {
+            const newValue = String(field.value);
+
+            if (newValue !== inputValue) {
+                setInputValue(newValue);
+            }
         }
-    }, [currentValue]);
+    }, [field.value, inputValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let newValue = e.target.value;
@@ -49,33 +62,42 @@ export const NumberInput = <T extends Record<string, any>>({
 
             const parts = newValue.split(".");
             if (parts.length > 2) {
+                // Elimina puntos extra
                 newValue = parts[0] + "." + parts.slice(1).join("");
-            }
-
-            if (parts.length === 2) {
-                parts[1] = parts[1].slice(0, 2);
-                newValue = parts.join(".");
+            } else if (parts.length === 2) {
+                const [integerPart, decimalPart] = parts;
+                const trimmedDecimal = decimalPart.slice(0, decimalPlaces);
+                newValue = integerPart + "." + trimmedDecimal;
             }
         }
 
         setInputValue(newValue);
-        console.log(newValue);
-
+        field.onChange(newValue as unknown as PathValue<T, Path<T>>);
 
         if (onChange) {
-            onChange();
+            onChange(newValue);
         }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        let value = e.target.value;
+
+        if (value === "") {
+            value = "0";
+            setInputValue(value);
+            field.onChange(0 as unknown as PathValue<T, Path<T>>);
+        }
+
+        field.onBlur();
     };
 
     return (
         <input
-            type="number"
-            {...register(name, {
-                valueAsNumber: true,
-                onChange: handleChange,
-            })}
+            type="text"
+            ref={field.ref}
             value={inputValue}
-            onWheel={(e) => e.currentTarget.blur()}
+            onChange={handleChange}
+            onBlur={handleBlur}
             disabled={disabled}
             className={className}
         />

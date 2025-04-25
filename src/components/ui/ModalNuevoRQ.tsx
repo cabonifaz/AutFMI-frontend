@@ -1,4 +1,4 @@
-import React, { FormEvent, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
 import { SubmitHandler, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,9 @@ import { Tabs } from "./Tabs";
 import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
 import { ClientContact } from "../../models/type/ClientContact";
 import { ModalRQContact } from "./ModalRQContact";
+import { DropdownForm } from "../forms";
+import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
+import { useParams } from "../../context/ParamsContext";
 
 interface Archivo {
     name: string;
@@ -38,6 +41,10 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+
+    const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
+    const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
 
     const {
         register,
@@ -86,12 +93,14 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     };
 
     const handleAddVacante = () => {
-        append({ idPerfil: 0, cantidad: 1 });
+        append({ idPerfil: 0, cantidad: '1' });
+        setCantidadesVacantes(prev => [...prev, '1']);
         clearErrors("lstVacantes");
     };
 
     const handleRemoveVacante = (index: number) => {
         remove(index);
+        setCantidadesVacantes(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +167,11 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                 codigoRQ: data.codigoRQ,
                 cliente: clienteSeleccionado,
                 estado: data.idEstado,
+                duracion: Number(data.duracion),
+                lstVacantes: data.lstVacantes.map((vacante) => ({
+                    idPerfil: Number(vacante.idPerfil),
+                    cantidad: Number(vacante.cantidad),
+                })),
                 lstContactos: selectedContacts.join(","),
                 lstArchivos,
             };
@@ -203,18 +217,12 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         return "Revisa los campos de vacantes.";
     };
 
-    const allQuantities = useWatch({
-        control,
-        name: 'lstVacantes',
-        defaultValue: []
-    });
+    const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
+    const [totalVacantes, setTotalVacantes] = useState(0);
 
-    const totalVacantes = useMemo(() => {
-        return (allQuantities || []).reduce(
-            (total, vacante) => total + (vacante?.cantidad || 0),
-            0
-        );
-    }, [allQuantities]);
+    useEffect(() => {
+        setTotalVacantes(cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0));
+    }, [cantidadesVacantes]);
 
     const circleClass = useMemo(() => {
         if (totalVacantes > 99) return 'w-8 h-8 text-xs';
@@ -249,6 +257,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         setContactToEdit(contact);
         setIsModalRQContactOPen(true);
     }
+
+    const hasGestionErrors = errors.duracion?.message !== undefined || errors.idModalidad?.message !== undefined || errors.idDuracion?.message !== undefined;
 
     return (
         <>
@@ -341,53 +351,16 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                             {errors.idEstado && (
                                                 <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
                                             )}
-                                        </div>
-                                    </div>
 
-                                    {/* Archivos */}
-                                    <div className="mt-4">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
-                                            <button
-                                                type="button"
-                                                onClick={() => document.getElementById("fileInput")?.click()}
-                                                className="btn btn-text"
-                                            >
-                                                Elegir archivos
-                                            </button>
+                                            {/* Fecha Vencimiento */}
+                                            <div className="flex items-center">
+                                                <label className="w-1/3 text-sm font-medium text-gray-700">Fecha Vencimiento:</label>
+                                                <input type="date" {...register("fechaVencimiento")} id="fechaVencimiento" className="input w-2/3" />
+                                            </div>
+                                            {errors.fechaVencimiento && (
+                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
+                                            )}
                                         </div>
-
-                                        <input
-                                            type="file"
-                                            multiple
-                                            onChange={handleFileChange}
-                                            className="hidden"
-                                            id="fileInput"
-                                            accept=".pdf,.doc,.docx,.xls,.xlsx"
-                                        />
-
-                                        <div className="mt-2 max-h-20 overflow-y-auto">
-                                            {archivos.map((archivo, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
-                                                >
-                                                    <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                                                        {archivo.name}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveFile(index)}
-                                                        className="text-red-500 hover:text-red-600 focus:outline-none"
-                                                    >
-                                                        <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {errors.lstArchivos && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.lstArchivos.message}</p>
-                                        )}
                                     </div>
 
                                     {/* Botones de acción */}
@@ -570,7 +543,15 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                                         control={control}
                                                                                         name={`lstVacantes.${index}.cantidad`}
                                                                                         defaultValue={1}
-                                                                                        onChange={() => clearErrors(`lstVacantes.${index}.cantidad`)}
+                                                                                        onChange={(value) => {
+                                                                                            const numValue = Number(value) || 0;
+                                                                                            setCantidadesVacantes(prev => {
+                                                                                                const newCantidades = [...prev];
+                                                                                                newCantidades[index] = String(numValue);
+                                                                                                return newCantidades;
+                                                                                            });
+                                                                                            clearErrors(`lstVacantes.${index}.cantidad`);
+                                                                                        }}
                                                                                         className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                                                     />
                                                                                     {errors.lstVacantes?.[index]?.cantidad && (
@@ -610,6 +591,118 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                     </p>
                                                 )}
                                             </div>
+                                        </div>
+                                    </div>
+                                )
+                            },
+                            {
+                                label: "Archivos",
+                                children: (
+                                    <>
+                                        {/* Archivos */}
+                                        <div className="mx-4">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => document.getElementById("fileInput")?.click()}
+                                                    className="btn btn-text"
+                                                >
+                                                    Elegir archivos
+                                                </button>
+                                            </div>
+
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                id="fileInput"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                            />
+
+                                            <div className="mt-2 max-h-[40vh] overflow-y-auto">
+                                                {archivos.map((archivo, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
+                                                    >
+                                                        <span className="text-sm text-gray-700 truncate flex-1 mr-2">
+                                                            {archivo.name}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFile(index)}
+                                                            className="text-red-500 hover:text-red-600 focus:outline-none"
+                                                        >
+                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {errors.lstArchivos && (
+                                                <p className="text-red-500 text-sm mt-1">{errors.lstArchivos.message}</p>
+                                            )}
+                                        </div>
+                                    </>
+                                )
+                            },
+                            {
+                                label: "Gestión",
+                                hasError: hasGestionErrors,
+                                errorMessage: "Completa los campos de gestión",
+                                children: (
+                                    <div className="p-4 space-y-4">
+                                        {/* <div className="flex items-center">
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">PPto:</label>
+                                            <input
+                                                type="text"
+                                                placeholder="PPto"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                disabled
+                                            />
+                                        </div> */}
+                                        <div className="flex items-center">
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">Duración:</label>
+                                            <div className="flex gap-4 w-2/3">
+                                                <div className="flex flex-col gap-1">
+                                                    <NumberInput<newRQSchemaType>
+                                                        register={register}
+                                                        control={control}
+                                                        name="duracion"
+                                                        type="float"
+                                                        defaultValue={1}
+                                                        decimalPlaces={1}
+                                                        onChange={() => clearErrors(`duracion`)}
+                                                        className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                    />
+                                                    {errors.duracion && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.duracion.message}</p>
+                                                    )}
+                                                </div>
+                                                <DropdownForm
+                                                    name="idDuracion"
+                                                    control={control}
+                                                    error={errors.idDuracion}
+                                                    required={false}
+                                                    flex={true}
+                                                    clearErrors={clearErrors}
+                                                    options={duracionRQ.map((duracion) => ({ value: duracion.num1, label: duracion.string1 }))}
+                                                />
+                                            </div>
+
+                                        </div>
+                                        <div className="flex items-center">
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">Modalidad:</label>
+                                            <DropdownForm
+                                                name="idModalidad"
+                                                control={control}
+                                                error={errors.idModalidad}
+                                                required={false}
+                                                flex={true}
+                                                clearErrors={clearErrors}
+                                                options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
+                                            />
                                         </div>
                                     </div>
                                 )

@@ -17,6 +17,10 @@ import { UpdateBaseRQSchema, UpdateBaseRQSchemaType } from "../../models/schema/
 import { ClientContact } from "../../models/type/ClientContact";
 import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
 import { ModalRQContact } from "./ModalRQContact";
+import { DropdownForm } from "../forms";
+import { NumberInput } from "../forms/NumberInput";
+import { useParams } from "../../context/ParamsContext";
+import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -35,7 +39,8 @@ interface Props {
 
 export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditingRQData, setIsEditingRQData] = useState(false);
+    const [isEditingGestionData, setIsEditingGestionData] = useState(false);
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
     const { postData, postloading } = usePostHook();
@@ -47,11 +52,18 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
 
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+
+    const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
+    const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
+
     const {
         register,
         handleSubmit,
         setValue,
         getValues,
+        clearErrors,
+        control,
         formState: { errors },
     } = useForm<UpdateBaseRQSchemaType>({
         resolver: zodResolver(UpdateBaseRQSchema),
@@ -80,6 +92,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue("idCliente", requirement.requerimiento.idCliente);
             setValue("codigoRQ", requirement.requerimiento.codigoRQ);
             setValue("fechaSolicitud", format(new Date(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
+            setValue("fechaVencimiento", format(new Date(requirement.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
+            setValue("duracion", String(requirement.requerimiento.duracion));
+            setValue("idDuracion", requirement.requerimiento.idDuracion);
+            setValue("idModalidad", requirement.requerimiento.idModalidad);
             setValue("descripcion", requirement.requerimiento.descripcion);
             setValue("idEstado", requirement.requerimiento.idEstado);
             setClienteSeleccionado(requirement.requerimiento.cliente);
@@ -182,6 +198,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                     idCliente: idCliente,
                     cliente: clienteSeleccionado,
                     estado: data.idEstado,
+                    duracion: Number(data.duracion),
                 };
 
                 const response = await postData("/fmi/requirement/update", payload);
@@ -197,11 +214,15 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     };
 
     const handleEditClick = () => {
-        setIsEditing((prev) => !prev);
+        setIsEditingRQData((prev) => !prev);
     };
 
+    const handleEditGestionClick = () => {
+        setIsEditingGestionData((prev) => !prev);
+    }
+
     const handleCancelClick = () => {
-        setIsEditing(false);
+        setIsEditingRQData(false);
         onClose();
     };
 
@@ -275,7 +296,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
                                                         <input
                                                             {...register("codigoRQ")}
-                                                            disabled={!isEditing}
+                                                            disabled={!isEditingRQData}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         />
                                                     </div>
@@ -289,7 +310,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <input
                                                             type="date"
                                                             {...register("fechaSolicitud")}
-                                                            disabled={!isEditing}
+                                                            disabled={!isEditingRQData}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         />
                                                     </div>
@@ -302,7 +323,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
                                                         <textarea
                                                             {...register("descripcion")}
-                                                            disabled={!isEditing}
+                                                            disabled={!isEditingRQData}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
                                                         />
                                                     </div>
@@ -315,7 +336,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
                                                         <select
                                                             {...register("idEstado")}
-                                                            disabled={!isEditing}
+                                                            disabled={!isEditingRQData}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         >
                                                             {estadoOptions.map((option) => (
@@ -328,14 +349,29 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     {errors.idEstado && (
                                                         <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
                                                     )}
+
+                                                    {/* Fecha Vencimiento */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha Vencimiento:</label>
+                                                        <input
+                                                            type="date"
+                                                            {...register("fechaVencimiento")}
+                                                            id="fechaVencimiento"
+                                                            className="input w-2/3"
+                                                            disabled={!isEditingRQData}
+                                                        />
+                                                    </div>
+                                                    {errors.fechaVencimiento && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
+                                                    )}
                                                 </div>
 
                                                 {/* Botones de acción */}
                                                 <div className="flex justify-end space-x-4 mt-4">
                                                     <button
                                                         type="submit"
-                                                        disabled={!isEditing}
-                                                        className={`btn ${isEditing ? "btn-primary" : "btn-disabled"}`}
+                                                        disabled={!isEditingRQData && !isEditingGestionData}
+                                                        className={`btn ${isEditingRQData || isEditingGestionData ? "btn-primary" : "btn-disabled"}`}
                                                     >
                                                         Actualizar
                                                     </button>
@@ -593,10 +629,19 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 ),
                             },
                             {
-                                label: "Otros",
+                                label: "Gestión",
                                 children: (
-                                    <div className="p-4 space-y-4">
-                                        <div className="flex items-center">
+                                    <div className="px-4">
+                                        <div className="flex justify-end mb-1">
+                                            <button
+                                                type="button"
+                                                onClick={handleEditGestionClick}
+                                                className="focus:outline-none"
+                                            >
+                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
+                                            </button>
+                                        </div>
+                                        {/* <div className="flex items-center">
                                             <label className="w-1/3 text-sm font-medium text-gray-700">PPto:</label>
                                             <input
                                                 type="text"
@@ -604,27 +649,52 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                 disabled
                                             />
-                                        </div>
-                                        <div className="flex items-center">
+                                        </div> */}
+                                        <div className="flex items-center mb-6">
                                             <label className="w-1/3 text-sm font-medium text-gray-700">Duración:</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Duración"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                disabled
-                                            />
+                                            <div className="flex gap-4 w-2/3">
+                                                <div className="flex flex-col gap-1">
+                                                    <NumberInput<UpdateBaseRQSchemaType>
+                                                        register={register}
+                                                        control={control}
+                                                        name="duracion"
+                                                        type="float"
+                                                        defaultValue={1}
+                                                        decimalPlaces={1}
+                                                        disabled={!isEditingGestionData}
+                                                        onChange={() => clearErrors(`duracion`)}
+                                                        className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                    />
+                                                    {errors.duracion && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.duracion.message}</p>
+                                                    )}
+                                                </div>
+                                                <DropdownForm
+                                                    name="idDuracion"
+                                                    control={control}
+                                                    error={errors.idDuracion}
+                                                    required={false}
+                                                    flex={true}
+                                                    disabled={!isEditingGestionData}
+                                                    options={duracionRQ.map((duracion) => ({ value: duracion.num1, label: duracion.string1 }))}
+                                                />
+                                            </div>
+
                                         </div>
                                         <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Moneda:</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Moneda"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                disabled
+                                            <label className="w-1/3 text-sm font-medium text-gray-700">Modalidad:</label>
+                                            <DropdownForm
+                                                name="idModalidad"
+                                                control={control}
+                                                error={errors.idModalidad}
+                                                required={false}
+                                                flex={true}
+                                                disabled={!isEditingGestionData}
+                                                options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
                                             />
                                         </div>
                                     </div>
-                                ),
+                                )
                             },
                         ]}
                     />

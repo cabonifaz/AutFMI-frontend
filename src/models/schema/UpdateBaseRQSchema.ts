@@ -12,6 +12,22 @@ export const UpdateBaseRQSchema = z.object({
     descripcion: z.string().min(1, "La descripción es obligatoria"),
     idEstado: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
+    duracion: z.string()
+        .refine((val) => val.trim() !== "", {
+            message: "La duración es obligatoria"
+        })
+        .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+            message: "La duración debe ser mayor a 0"
+        }),
+    idDuracion: z.number({
+        required_error: "Elija una duración",
+        invalid_type_error: "Elija una duración"
+    }).min(1, "Elija una duración"),
+    idModalidad: z.number({
+        required_error: "Elija una modalidad",
+        invalid_type_error: "Elija una modalidad"
+    }).min(1, "Elija una modalidad"),
+    fechaVencimiento: z.string().min(1, "La fecha de vencimiento es obligatoria"),
     lstVacantes: z.array(vacanteSchema).optional(),
     lstArchivos: z
         .array(

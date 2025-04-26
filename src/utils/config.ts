@@ -17,6 +17,7 @@ export const TIPO_SOFTWARE = '23';
 export const ESTADO_RQ = '24';
 export const PERFIL = '14';
 export const DURACION_RQ = '28';
+export const LIMITE_ALERTA_RQ = '30';
 export const MODALIDAD_RQ = '31';
 
 

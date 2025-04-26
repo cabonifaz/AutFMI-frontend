@@ -4,7 +4,7 @@ import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
-import { ESTADO_ATENDIDO, ESTADO_RQ, PERFIL } from "../utils/config";
+import { ESTADO_ATENDIDO, ESTADO_RQ, LIMITE_ALERTA_RQ, PERFIL } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
@@ -81,14 +81,17 @@ export const PantallaRequerimientos = () => {
     };
 
     const handleDateSelected = (date: Date | null) => {
+        let searchDate = null;
+
         if (date !== null) {
-            const searchDate = format(new Date(date), 'yyyy/MM/dd')
-            setSelectedDate(searchDate);
-            executeSearch({
-                estado: selectedEstado,
-                fechaSolicitud: date ? searchDate : null,
-            });
+            searchDate = format(new Date(date), 'yyyy/MM/dd')
         }
+
+        setSelectedDate(searchDate);
+        executeSearch({
+            estado: selectedEstado,
+            fechaSolicitud: date ? searchDate : null,
+        });
     };
 
     const executeSearch = (overrides: { estado?: number | null; fechaSolicitud?: string | null; idCliente?: number | null } = {}) => {
@@ -120,6 +123,19 @@ export const PantallaRequerimientos = () => {
         navigate('/tableAsignarTalento', { state: { idRequerimiento } });
     };
 
+    const getAlertIconPath = (idAlerta: number): string => {
+        switch (idAlerta) {
+            case 1:
+                return "/assets/ic_success.svg"; // Alerta baja
+            case 2:
+                return "/assets/ic_warning.svg"; // Alerta media
+            case 3:
+                return "/assets/ic_error.svg"; // Alerta alta
+            default:
+                return "/assets/ic_success.svg";
+        }
+    }
+
     return (
         <>
             {(loading || paramLoading || clientsLoading) && (<Loading overlayMode={true} />)}
@@ -145,7 +161,7 @@ export const PantallaRequerimientos = () => {
                                 className="input"
                             />
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 justify-evenly sm:justify-start flex-wrap">
                             <FilterDropDown
                                 name="cliente"
                                 label="Cliente"
@@ -170,7 +186,7 @@ export const PantallaRequerimientos = () => {
                                 selectedValues={selectedEstado ? [selectedEstado.toString()] : []}
                                 onChange={handleEstadoChangeFilter}
                             />
-                            <DateFilter label="Seleccionar fecha" onDateSelected={handleDateSelected} />
+                            <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
                         </div>
                         <div className="flex justify-between">
                             <button
@@ -202,12 +218,13 @@ export const PantallaRequerimientos = () => {
                                     <th className="table-header-cell">Estado</th>
                                     <th className="table-header-cell">Vacantes</th>
                                     <th className="table-header-cell">Acciones</th>
+                                    <th className="table-header-cell"></th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {emptyList ? (
                                     <tr>
-                                        <td colSpan={7} className="table-empty">
+                                        <td colSpan={8} className="table-empty">
                                             No hay requerimientos disponibles.
                                         </td>
                                     </tr>
@@ -232,6 +249,19 @@ export const PantallaRequerimientos = () => {
                                                     className="btn btn-actions btn-primary">
                                                     Detalles
                                                 </button>
+                                            </td>
+                                            <td className="table-cell">
+                                                <div className="relative inline-block group">
+                                                    <img
+                                                        src={getAlertIconPath(req.idAlerta)}
+                                                        alt="icon estado alerta RQ"
+                                                        className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                                    />
+                                                    <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                        Vence: {req.fechaVencimiento}
+                                                        <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

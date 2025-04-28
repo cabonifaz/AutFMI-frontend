@@ -5,6 +5,8 @@ export interface ClientContact {
     apellidoMaterno: string;
     cargo: string;
     telefono: string;
+    telefono2: string;
     correo: string;
+    correo2: string;
     idEstadoContacto: number;
 }

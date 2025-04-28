@@ -27,7 +27,9 @@ export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpda
             apellidoPaterno: contact?.apellidoPaterno || "",
             apellidoMaterno: contact?.apellidoMaterno || "",
             telefono: contact?.telefono || "",
+            telefono2: contact?.telefono2 || "",
             correo: contact?.correo || "",
+            correo2: contact?.correo2 || "",
             cargo: contact?.cargo || "",
         },
     });
@@ -70,7 +72,7 @@ export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpda
     return (
         <>
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 min-w-fit relative">
+                <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 relative w-full md:w-[90%] lg:w-[500px] min-h-[570px]">
                     {postloading && (
                         <div className="absolute rounded-lg inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">
                             <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -84,49 +86,65 @@ export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpda
                     </button>
 
                     <form className="space-y-4" onSubmit={handleSubmit(submitData)}>
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Nombres</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-name" className="input-label w-1/3">Nombres<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-name" className="input" {...register("nombres")} />
                                 {errors.nombres && <span className="text-red-500 text-xs mt-1">{errors.nombres.message}</span>}
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Apellido paterno</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-lastname-1" className="input-label w-1/3">Apellido paterno<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-lastname-1" className="input" {...register("apellidoPaterno")} />
                                 {errors.apellidoPaterno && <span className="text-red-500 text-xs mt-1">{errors.apellidoPaterno.message}</span>}
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Apellido materno</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-lastname-2" className="input-label w-1/3">Apellido materno<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-lastname-2" className="input" {...register("apellidoMaterno")} />
                                 {errors.apellidoMaterno && <span className="text-red-500 text-xs mt-1">{errors.apellidoMaterno.message}</span>}
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Celular</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-telefono" className="input-label w-1/3">Celular<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-telefono" className="input" {...register("telefono")} />
                                 {errors.telefono && <span className="text-red-500 text-xs mt-1">{errors.telefono.message}</span>}
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Correo</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-telefono-2" className="input-label w-1/3">Celular 2 <span className="text-xs">(opcional)</span></label>
+                            <div className="flex flex-col w-2/3">
+                                <input type="text" id="c-telefono-2" className="input" {...register("telefono2")} />
+                                {errors.telefono2 && <span className="text-red-500 text-xs mt-1">{errors.telefono2.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-correo" className="input-label w-1/3">Correo<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-correo" className="input" {...register("correo")} />
                                 {errors.correo && <span className="text-red-500 text-xs mt-1">{errors.correo.message}</span>}
                             </div>
                         </div>
 
-                        <div className="flex items-center">
-                            <label htmlFor="c-name" className="input-label w-1/2">Cargo</label>
-                            <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-correo-2" className="input-label w-1/3">Correo 2 <span className="text-xs">(opcional)</span></label>
+                            <div className="flex flex-col w-2/3">
+                                <input type="text" id="c-correo" className="input" {...register("correo2")} />
+                                {errors.correo2 && <span className="text-red-500 text-xs mt-1">{errors.correo2.message}</span>}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="c-cargo" className="input-label w-1/3">Cargo<span className="text-orange-500">*</span></label>
+                            <div className="flex flex-col w-2/3">
                                 <input type="text" id="c-cargo" className="input" {...register("cargo")} />
                                 {errors.cargo && <span className="text-red-500 text-xs mt-1">{errors.cargo.message}</span>}
                             </div>

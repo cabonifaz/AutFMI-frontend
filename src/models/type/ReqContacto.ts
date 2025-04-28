@@ -1,4 +1,4 @@
-export interface ClientContact {
+export interface ReqContacto {
     idClienteContacto: number;
     nombre: string;
     apellidoPaterno: string;
@@ -8,5 +8,5 @@ export interface ClientContact {
     telefono2: string;
     correo: string;
     correo2: string;
-    idEstadoContacto: number;
+    asignado: number;
 }

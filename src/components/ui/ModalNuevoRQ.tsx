@@ -10,7 +10,7 @@ import { Loading } from "./Loading";
 import { NumberInput } from "../forms/NumberInput";
 import { Tabs } from "./Tabs";
 import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
-import { ClientContact } from "../../models/type/ClientContact";
+import { ReqContacto } from "../../models/type/ReqContacto";
 import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
 import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
@@ -40,7 +40,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
     const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
+    const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
     const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
 
     const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
@@ -252,7 +252,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
         setIsModalRQContactOPen(true);
     }
 
-    const handleEditContact = (contact: ClientContact) => {
+    const handleEditContact = (contact: ReqContacto) => {
         setModalMode("edit");
         setContactToEdit(contact);
         setIsModalRQContactOPen(true);
@@ -424,13 +424,14 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                 <th scope="col" className="table-header-cell">Celular</th>
                                                                 <th scope="col" className="table-header-cell">Correo</th>
                                                                 <th scope="col" className="table-header-cell">Cargo</th>
+                                                                <th scope="col" className="table-header-cell">Asignado</th>
                                                                 <th scope="col" className="table-header-cell"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {contactos.length <= 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={7} className="table-empty">
+                                                                    <td colSpan={8} className="table-empty">
                                                                         No hay contactos disponibles.
                                                                     </td>
                                                                 </tr>
@@ -443,6 +444,16 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                     <td className="table-cell">{contacto.correo}</td>
                                                                     <td className="table-cell">{contacto.cargo}</td>
                                                                     <td className="table-cell">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="input-checkbox"
+                                                                            name={`contact-${contacto.idClienteContacto}`}
+                                                                            id={`contact-${contacto.idClienteContacto}`}
+                                                                            checked={selectedContacts.includes(contacto.idClienteContacto)}
+                                                                            onChange={() => handleContactToggle(contacto.idClienteContacto)}
+                                                                        />
+                                                                    </td>
+                                                                    <td className="table-cell">
                                                                         <div className="flex items-center gap-2">
                                                                             <button
                                                                                 type="button"
@@ -450,14 +461,6 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                                 className="w-7 h-7">
                                                                                 <img src="/assets/ic_edit.svg" alt="edit icon" />
                                                                             </button>
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                className="input-checkbox"
-                                                                                name={`contact-${contacto.idClienteContacto}`}
-                                                                                id={`contact-${contacto.idClienteContacto}`}
-                                                                                checked={selectedContacts.includes(contacto.idClienteContacto)}
-                                                                                onChange={() => handleContactToggle(contacto.idClienteContacto)}
-                                                                            />
                                                                         </div>
                                                                     </td>
                                                                 </tr>

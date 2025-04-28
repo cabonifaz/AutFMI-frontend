@@ -6,6 +6,7 @@ export const AddRQContactSchema = z.object({
     apellidoMaterno: z.string().min(1, "El apellido materno es obligatorio"),
     telefono: z.string().min(1, "El teléfono es obligatorio"),
     telefono2: z.string().optional(),
+    asignado: z.boolean(),
     correo: z.string().email("El correo electrónico no es válido"),
     // optional but if provided must be a valid email refine it
     correo2: z.string().optional().refine((val) => val === "" || z.string().email("El correo electrónico no es válido").safeParse(val).success, {

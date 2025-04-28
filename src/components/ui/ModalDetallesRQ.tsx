@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
-import { SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { newRQSchemaType } from "../../models/schema/NewRQSchema";
 import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "./Tabs";
 import { RequirementItem } from "../../models/type/RequirementItemType";
@@ -14,8 +13,7 @@ import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileS
 import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
 import { Loading } from "./Loading";
 import { UpdateBaseRQSchema, UpdateBaseRQSchemaType } from "../../models/schema/UpdateBaseRQSchema";
-import { ClientContact } from "../../models/type/ClientContact";
-import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
+import { ReqContacto } from "../../models/type/ReqContacto";
 import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
 import { NumberInput } from "../forms/NumberInput";
@@ -47,10 +45,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const { requirement, loading: reqLoading, fetchRequirement } = useFetchRequirement(RQ?.idRequerimiento || null);
     const { deleteData, deleteLoading } = useDeleteHook();
 
-    const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
     const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [contactToEdit, setContactToEdit] = useState<ClientContact | null>(null);
+    const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
 
     const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
 
@@ -109,10 +106,6 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
             setArchivos(archivosFormateados);
             setValueFiles("lstArchivos", archivosFormateados);
-
-            if (requirement.requerimiento.idCliente !== 0 && requirement.requerimiento.idCliente !== null) {
-                fetchContacts(getValues("idCliente"));
-            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [requirement, setValue, setValueFiles]);
@@ -151,7 +144,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
         setClienteSeleccionado(selectedClienteText);
         setValue("idCliente", selectedClienteId);
-        fetchContacts(getValues("idCliente"));
+        fetchRequirement();
     };
 
     const onSubmitAddFiles: SubmitHandler<AddFilesSchemaType> = async (data) => {
@@ -236,14 +229,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     }, [totalVacantes]);
 
     const handleContactAdded = () => {
-        fetchContacts(getValues("idCliente"));
+        fetchRequirement();
         setIsModalRQContactOPen(false);
         setContactToEdit(null);
         setModalMode("add");
     }
 
     const handleContactUpdated = () => {
-        fetchContacts(getValues("idCliente"));
+        fetchRequirement();
         setIsModalRQContactOPen(false);
         setContactToEdit(null);
         setModalMode("add");
@@ -255,7 +248,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         setIsModalRQContactOPen(true);
     }
 
-    const handleEditContact = (contact: ClientContact) => {
+    const handleEditContact = (contact: ReqContacto) => {
         setModalMode("edit");
         setContactToEdit(contact);
         setIsModalRQContactOPen(true);
@@ -271,7 +264,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
                     </button>
                     <Tabs
-                        isDataLoading={reqLoading || loadingContacts}
+                        isDataLoading={reqLoading}
                         tabs={[
                             {
                                 label: "Datos RQ",
@@ -407,7 +400,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                         )}
 
                                         <div className="flex items-center justify-between">
-                                            <h2 className="text-sm font-medium text-gray-700">Lista de contactos confirmados</h2>
+                                            <h2 className="text-sm font-medium text-gray-700">Lista de contactos</h2>
                                             <button
                                                 type="button"
                                                 onClick={handleAddContact}
@@ -429,17 +422,18 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                 <th scope="col" className="table-header-cell">Celular</th>
                                                                 <th scope="col" className="table-header-cell">Correo</th>
                                                                 <th scope="col" className="table-header-cell">Cargo</th>
+                                                                <th scope="col" className="table-header-cell">Asignado</th>
                                                                 <th scope="col" className="table-header-cell"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {contactos.length <= 0 ? (
+                                                            {(requirement?.requerimiento?.lstRqContactos || []).length <= 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={7} className="table-empty">
+                                                                    <td colSpan={8} className="table-empty">
                                                                         No hay contactos disponibles.
                                                                     </td>
                                                                 </tr>
-                                                            ) : (contactos?.map((contacto) => (
+                                                            ) : (requirement?.requerimiento?.lstRqContactos?.map((contacto) => (
                                                                 <tr key={contacto.idClienteContacto} className="table-row">
                                                                     <td className="table-cell">{contacto.idClienteContacto}</td>
                                                                     <td className="table-cell">{contacto.nombre}</td>
@@ -447,6 +441,16 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                     <td className="table-cell">{contacto.telefono}</td>
                                                                     <td className="table-cell">{contacto.correo}</td>
                                                                     <td className="table-cell">{contacto.cargo}</td>
+                                                                    <td className="table-cell">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            name="contact-asig"
+                                                                            id="contact-asig"
+                                                                            checked={contacto.asignado === 1}
+                                                                            readOnly={true}
+                                                                            className="input-checkbox-readonly"
+                                                                        />
+                                                                    </td>
                                                                     <td className="table-cell">
                                                                         <div className="flex items-center gap-2">
                                                                             <button

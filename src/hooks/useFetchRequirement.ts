@@ -14,7 +14,7 @@ export const useFetchRequirement = (idRequerimiento: number | null) => {
         setLoading(true);
         try {
             const response = await apiClientWithToken.get<RequirementResponse>(
-                `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=true&showVacantesList=true`
+                `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=true&showVacantesList=true&showContactList=true`
             );
 
             if (response.data.idTipoMensaje === 2) {

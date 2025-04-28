@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 import { apiClientWithToken } from "../utils/apiClient";
 import { enqueueSnackbar } from "notistack";
-import { ClientContact } from "../models/type/ClientContact";
+import { ReqContacto } from "../models/type/ReqContacto";
 import { ClientContactResponse } from "../models/response/ClientContactsResponse";
 
 export const useFetchClientContacts = () => {
-    const [contactos, setContactos] = useState<ClientContact[]>([]);
+    const [contactos, setContactos] = useState<ReqContacto[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
     const fetchContacts = useCallback(async (idCliente: number) => {

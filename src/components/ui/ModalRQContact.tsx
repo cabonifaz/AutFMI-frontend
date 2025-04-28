@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { ClientContact } from "../../models/type/ClientContact";
+import { ReqContacto } from "../../models/type/ReqContacto";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { AddRQContactSchemaType, AddRQContactSchema } from "../../models/schema/AddRQContactSchema";
@@ -10,7 +9,7 @@ interface Props {
     onClose: () => void;
     onContactAdded?: () => void;
     onContactUpdated?: () => void;
-    contact?: ClientContact | null;
+    contact?: ReqContacto | null;
     RQState: "new" | "existing";
     modalMode: "add" | "edit";
     idCliente: number;
@@ -31,20 +30,22 @@ export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpda
             correo: contact?.correo || "",
             correo2: contact?.correo2 || "",
             cargo: contact?.cargo || "",
+            asignado: contact?.asignado === 1 ? true : false || false,
         },
     });
 
     const submitData: SubmitHandler<AddRQContactSchemaType> = async (data) => {
         let addContactData;
+        let updateContactData;
 
         // Check if it's over an existing RQ or a new one
         if (RQState === "new") {
-            addContactData = { idCliente: idCliente, flagConfirmar: 0, ...data }
+            addContactData = { idCliente: idCliente, flagConfirmar: data.asignado ? 1 : 0, ...data }
+            updateContactData = { idClienteContacto: contact?.idClienteContacto, flagConfirmar: data.asignado ? 1 : 0, ...data }
         } else {
-            addContactData = { idCliente: idCliente, idRQ: idRQ, flagConfirmar: 1, ...data }
+            addContactData = { idCliente: idCliente, idRq: idRQ, flagConfirmar: data.asignado ? 1 : 0, ...data }
+            updateContactData = { idClienteContacto: contact?.idClienteContacto, idRq: idRQ, flagConfirmar: data.asignado ? 1 : 0, ...data }
         }
-
-        const updateContactData = { idClienteContacto: contact?.idClienteContacto, ...data }
 
         switch (modalMode) {
             case "add":
@@ -149,6 +150,18 @@ export const ModalRQContact = ({ contact, onClose, onContactAdded, onContactUpda
                                 {errors.cargo && <span className="text-red-500 text-xs mt-1">{errors.cargo.message}</span>}
                             </div>
                         </div>
+
+                        {
+                            RQState === "existing" && (
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="c-asignado" className="input-label w-1/3">Asignado<span className="text-orange-500">*</span></label>
+                                    <div className="flex flex-col w-2/3">
+                                        <input type="checkbox" id="c-asignado" className="input-checkbox" {...register("asignado")} />
+                                        {errors.asignado && <span className="text-red-500 text-xs mt-1">{errors.asignado.message}</span>}
+                                    </div>
+                                </div>
+                            )
+                        }
 
                         <button type="submit" className="btn btn-blue w-full">{modalMode === 'add' ? "Agregar Contacto" : "Actualizar Contacto"}</button>
                     </form>

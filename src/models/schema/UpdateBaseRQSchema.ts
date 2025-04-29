@@ -1,8 +1,16 @@
 import { z } from "zod";
 
 const vacanteSchema = z.object({
+    idRequerimientoVacante: z.number(),
     idPerfil: z.number().min(1, "Debe seleccionar un perfil"),
-    cantidad: z.number().min(1, "La cantidad debe ser al menos 1")
+    cantidad: z.string()
+        .refine((val) => val.trim() !== "", {
+            message: "La cantidad es obligatoria"
+        })
+        .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+            message: "La cantidad debe ser mayor a 0"
+        }),
+    idEstado: z.number(),
 });
 
 export const UpdateBaseRQSchema = z.object({
@@ -28,7 +36,7 @@ export const UpdateBaseRQSchema = z.object({
         invalid_type_error: "Elija una modalidad"
     }).min(1, "Elija una modalidad"),
     fechaVencimiento: z.string().min(1, "La fecha de vencimiento es obligatoria"),
-    lstVacantes: z.array(vacanteSchema).optional(),
+    lstVacantes: z.array(vacanteSchema).min(1, "Debe agregar 1 vacante como mínimo"),
     lstArchivos: z
         .array(
             z.object({

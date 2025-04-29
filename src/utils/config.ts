@@ -28,8 +28,8 @@ export const ESTADO_EN_ENTREVISTA = 3;
 export const ESTADO_CONFIRMADO = 4;
 
 // RQ STATE
-export const ESTADO_ASIGNADO = 1;
-export const ESTADO_ATENDIDO = 2;
+export const ESTADO_ASIGNADO = 2;
+export const ESTADO_ATENDIDO = 3;
 
 // MODALIDADES
 export const MODALIDAD_PLANILLA = "Planilla";

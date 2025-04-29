@@ -390,7 +390,7 @@ const TalentTable: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=true`
+        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=true&showContactList=false`
       );
 
       if (response.data.idTipoMensaje === 2) {

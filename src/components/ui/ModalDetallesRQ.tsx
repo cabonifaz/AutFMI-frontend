@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "./Tabs";
 import { RequirementItem } from "../../models/type/RequirementItemType";
 import { useFetchRequirement } from "../../hooks/useFetchRequirement";
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ClientType } from "../../models/type/ClientType";
 import { useDeleteHook } from "../../hooks/useDeleteHook";
 import { addFilesSchema, AddFilesSchemaType } from "../../models/schema/AddFileSchema";
@@ -33,9 +33,10 @@ interface Props {
     RQ: RequirementItem | null;
     estadoOptions: ParamType[];
     clientes: ClientType[];
+    perfiles: ParamType[];
 }
 
-export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes }: Props) => {
+export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes, perfiles }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const [isEditingRQData, setIsEditingRQData] = useState(false);
     const [isEditingGestionData, setIsEditingGestionData] = useState(false);
@@ -49,6 +50,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
 
+    const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
+
     const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
 
     const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
@@ -61,6 +64,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         getValues,
         clearErrors,
         control,
+        watch,
         formState: { errors },
     } = useForm<UpdateBaseRQSchemaType>({
         resolver: zodResolver(UpdateBaseRQSchema),
@@ -73,6 +77,71 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             lstArchivos: [],
         },
     });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "lstVacantes"
+    });
+
+    const currentVacantes = watch("lstVacantes");
+
+    const getAvailableProfiles = (currentIndex: number) => {
+        const selectedProfiles = currentVacantes
+            .filter((_, index) => index !== currentIndex)
+            .map(v => v.idPerfil)
+            .filter(id => id !== 0);
+
+        return perfiles.filter(perfil =>
+            !selectedProfiles.includes(perfil.num1)
+        );
+    };
+
+    const handleProfileChange = (index: number, value: string) => {
+        const currentValue = getValues(`lstVacantes.${index}`);
+        if (currentValue.idRequerimientoVacante > 0 && currentValue.idEstado === 0) {
+            setValue(`lstVacantes.${index}.idEstado`, 2);
+        }
+        setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+        clearErrors(`lstVacantes.${index}.idPerfil`);
+    };
+
+    const handleAddVacante = () => {
+        append({ idPerfil: 0, cantidad: '1', idEstado: 1, idRequerimientoVacante: 0 });
+        setCantidadesVacantes(prev => [...prev, '1']);
+        clearErrors("lstVacantes");
+    };
+
+    const handleRemoveVacante = (index: number) => {
+        const vacante = getValues(`lstVacantes.${index}`);
+
+        if (vacante.idRequerimientoVacante > 0) {
+            setValue(`lstVacantes.${index}.idEstado`, 3);
+            setValue(`lstVacantes.${index}.idPerfil`, 0);
+            setValue(`lstVacantes.${index}.cantidad`, '0');
+        } else {
+            remove(index);
+            setCantidadesVacantes(prev => prev.filter((_, i) => i !== index));
+        }
+    };
+
+    const hasVacantesErrors = (errors: any) => {
+        if (errors.lstVacantes?.message) return true;
+        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return true;
+        if (currentVacantes.length <= 0) return true;
+
+        if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
+            return errors.lstVacantes.some((vacanteError: any) => vacanteError);
+        }
+
+        return false;
+    };
+
+    const getVacantesErrorMessage = (errors: any) => {
+        if (errors.lstVacantes?.message) return errors.lstVacantes.message;
+        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return "Agrega al menos una vacante.";
+        if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
+        return "Revisa los campos de vacantes.";
+    };
 
     const {
         handleSubmit: handleSubmitFiles,
@@ -88,8 +157,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         if (requirement) {
             setValue("idCliente", requirement.requerimiento.idCliente);
             setValue("codigoRQ", requirement.requerimiento.codigoRQ);
-            setValue("fechaSolicitud", format(new Date(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
-            setValue("fechaVencimiento", format(new Date(requirement.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
+            setValue("fechaSolicitud", format(parseISO(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
+            setValue("fechaVencimiento", format(parseISO(requirement.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
             setValue("duracion", String(requirement.requerimiento.duracion));
             setValue("idDuracion", requirement.requerimiento.idDuracion);
             setValue("idModalidad", requirement.requerimiento.idModalidad);
@@ -106,6 +175,13 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
             setArchivos(archivosFormateados);
             setValueFiles("lstArchivos", archivosFormateados);
+            setValue("lstVacantes", requirement.requerimiento.lstRqVacantes.map(vacante => ({
+                idRequerimientoVacante: vacante.idRequerimientoVacante,
+                idPerfil: vacante.idPerfil,
+                cantidad: String(vacante.cantidad),
+                idEstado: 0,
+            })));
+            setCantidadesVacantes(requirement.requerimiento.lstRqVacantes.map(vacante => String(vacante.cantidad)));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [requirement, setValue, setValueFiles]);
@@ -184,6 +260,19 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
             const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } = data;
 
+            const vacantesParaEnviar = data.lstVacantes
+                .filter(vacante =>
+                    vacante.idEstado !== 0 &&
+                    vacante.idPerfil !== 0 &&
+                    vacante.cantidad !== '0'
+                )
+                .map(vacante => ({
+                    idRequerimientoVacante: vacante.idRequerimientoVacante,
+                    idPerfil: vacante.idPerfil,
+                    cantidad: Number(vacante.cantidad),
+                    idEstado: vacante.idEstado
+                }));
+
             if (RQ) {
                 const payload = {
                     ...cleanData,
@@ -192,13 +281,13 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                     cliente: clienteSeleccionado,
                     estado: data.idEstado,
                     duracion: Number(data.duracion),
+                    lstVacantes: vacantesParaEnviar,
                 };
 
                 const response = await postData("/fmi/requirement/update", payload);
 
                 if (response.idTipoMensaje === 2) {
-                    onClose();
-                    updateRQData();
+                    fetchRequirement();
                 }
             }
         } catch (error) {
@@ -220,7 +309,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     };
 
     const newFiles = archivos.some((archivo) => archivo.idRequerimientoArchivo === 0);
-    const totalVacantes = requirement?.requerimiento.lstRqVacantes.reduce((total, vacante) => total + (vacante?.cantidad || 0), 0) || 0;
+    const [totalVacantes, setTotalVacantes] = useState(0);
+
+    useEffect(() => {
+        setTotalVacantes(cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0));
+    }, [cantidadesVacantes]);
 
     const circleClass = useMemo(() => {
         if (totalVacantes > 99) return 'w-8 h-8 text-xs';
@@ -473,6 +566,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 )
                             },
                             {
+                                hasError: hasVacantesErrors(errors) && errors.idCliente?.message === undefined,
+                                errorMessage: getVacantesErrorMessage(errors),
                                 label: (
                                     <p className="flex items-center gap-2">
                                         Vacantes
@@ -482,39 +577,132 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </p>
                                 ),
                                 children: (
-                                    <div className="p-1">
-                                        <div className="table-container">
-                                            <div className="table-wrapper">
-                                                <table className="table">
-                                                    <thead>
-                                                        <tr className="table-header">
-                                                            <th scope="col" className="table-header-cell">ID</th>
-                                                            <th scope="col" className="table-header-cell">Perfil profesional</th>
-                                                            <th scope="col" className="table-header-cell">Cantidad</th>
-                                                            <th scope="col" className="table-header-cell"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {requirement?.requerimiento.lstRqVacantes.length === 0 ? (
-                                                            <tr>
-                                                                <td colSpan={4} className="table-empty">
-                                                                    No hay vacantes disponibles.
-                                                                </td>
+                                    <>
+                                        <div className="text-end">
+                                            {/* <button
+                                                type="button"
+                                                onClick={handleEditClick}
+                                                className="focus:outline-none"
+                                            >
+                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
+                                            </button> */}
+                                            <button
+                                                type="button"
+                                                className="focus:outline-none rounded-lg py-1 px-2 mx-1 btn-blue cursor-pointer"
+                                                onClick={handleAddVacante}
+                                            >
+                                                Agregar
+                                            </button>
+
+                                        </div>
+                                        <div className="p-1 max-h-[30vh] overflow-y-auto">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th className="table-header-cell">Perfil profesional</th>
+                                                                <th className="table-header-cell">Cantidad</th>
                                                             </tr>
-                                                        ) : (
-                                                            requirement?.requerimiento.lstRqVacantes.map((vacante) => (
-                                                                <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                    <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                    <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                    <td className="table-cell">{vacante.cantidad}</td>
+                                                        </thead>
+                                                        <tbody>
+                                                            {fields.length <= 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={2} className="table-empty">
+                                                                        No hay vacantes disponibles.
+                                                                    </td>
                                                                 </tr>
-                                                            ))
-                                                        )}
-                                                    </tbody>
-                                                </table>
+                                                            ) : (
+                                                                fields.map((field, index) => {
+                                                                    const availableProfiles = getAvailableProfiles(index);
+                                                                    const currentProfile = currentVacantes[index]?.idPerfil;
+                                                                    const showCurrentProfile = currentProfile === 0 ||
+                                                                        availableProfiles.some(p => p.num1 === currentProfile) ||
+                                                                        !perfiles.some(p => p.num1 === currentProfile);
+
+                                                                    const optionsToShow = showCurrentProfile
+                                                                        ? [...availableProfiles]
+                                                                        : [...availableProfiles, ...perfiles.filter(p => p.num1 === currentProfile)];
+
+                                                                    return (
+                                                                        <tr key={field.id} className="table-row">
+                                                                            <td className="table-cell">
+                                                                                <select
+                                                                                    {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
+                                                                                    onChange={(e) => handleProfileChange(index, e.target.value)}
+                                                                                    className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                                                                                    value={currentProfile}
+                                                                                >
+                                                                                    <option value={0}>Seleccione un perfil</option>
+                                                                                    {optionsToShow.map((perfil) => (
+                                                                                        <option key={perfil.num1} value={perfil.num1}>
+                                                                                            {perfil.string1}
+                                                                                        </option>
+                                                                                    ))}
+                                                                                </select>
+                                                                                {errors.lstVacantes?.[index]?.idPerfil && (
+                                                                                    <p className="text-red-500 text-xs mt-1">
+                                                                                        {errors.lstVacantes[index]?.idPerfil?.message}
+                                                                                    </p>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="table-cell">
+                                                                                <div className="flex">
+                                                                                    <div className="flex flex-col gap-1 relative">
+                                                                                        <NumberInput<UpdateBaseRQSchemaType>
+                                                                                            register={register}
+                                                                                            control={control}
+                                                                                            name={`lstVacantes.${index}.cantidad`}
+                                                                                            defaultValue={1}
+                                                                                            onChange={(value) => {
+                                                                                                const numValue = Number(value) || 0;
+                                                                                                const currentValue = getValues(`lstVacantes.${index}`);
+                                                                                                if (currentValue.idRequerimientoVacante > 0 && currentValue.idEstado === 0) {
+                                                                                                    setValue(`lstVacantes.${index}.idEstado`, 2);
+                                                                                                }
+                                                                                                setCantidadesVacantes(prev => {
+                                                                                                    const newCantidades = [...prev];
+                                                                                                    newCantidades[index] = String(numValue);
+                                                                                                    return newCantidades;
+                                                                                                });
+                                                                                                clearErrors(`lstVacantes.${index}.cantidad`);
+                                                                                            }}
+                                                                                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                                                        />
+                                                                                        {errors.lstVacantes?.[index]?.cantidad && (
+                                                                                            <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                                                                {errors.lstVacantes[index]?.cantidad?.message}
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    {field.idEstado === 1 && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            className="ms-4 text-xl w-fit text-red-500 hover:text-red-700"
+                                                                                            onClick={() => handleRemoveVacante(index)}
+                                                                                        >
+                                                                                            ✕
+                                                                                        </button>
+                                                                                    )}
+                                                                                    <div className="ms-4 flex items-center">
+                                                                                        {field.idEstado === 1 ? (
+                                                                                            <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
+                                                                                                Nuevo
+                                                                                            </span>
+                                                                                        ) : null}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </>
                                 )
                             },
                             {
@@ -614,11 +802,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                     <td className="table-cell">{talento.email}</td>
                                                                     <td className="table-cell">{talento.situacion}</td>
                                                                     <td className="table-cell">
-                                                                        <span className={`badge ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'badge-green' :
+                                                                        <span className={`badge ${talento.estado?.toUpperCase() === 'DATOS COMPLETOS' ? 'badge-green' :
                                                                             talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
                                                                                 ''
                                                                             }`}>
-                                                                            {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
+                                                                            {(talento.estado || (talento.idEstado === 1 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
                                                                         </span>
                                                                     </td>
                                                                     <td className="table-cell">{talento.perfil}</td>

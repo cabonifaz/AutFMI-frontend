@@ -288,6 +288,7 @@ export const PantallaRequerimientos = () => {
                     estadoOptions={options}
                     RQ={selectedRQ}
                     clientes={clientes}
+                    perfiles={perfiles}
                     updateRQData={updateRQData}
                 />
             }

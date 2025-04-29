@@ -6,6 +6,7 @@ import { Loading } from '../components/ui/Loading';
 import BackButton from '../components/ui/BackButton';
 import Toast from '../components/ui/Toast';
 import { ReqVacante } from '../models/type/ReqVacante';
+import { format, parseISO } from 'date-fns';
 
 // Types
 type TalentoType = {
@@ -398,8 +399,8 @@ const TalentTable: React.FC = () => {
 
         // Formatear fecha
         if (response.data.requerimiento.fechaSolicitud) {
-          const date = new Date(response.data.requerimiento.fechaSolicitud);
-          setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+          const date = response.data.requerimiento.fechaSolicitud;
+          setDateFormatted(format(parseISO(date), 'dd/MM/yyyy'));
         }
 
         // Inicializar talentos desde API

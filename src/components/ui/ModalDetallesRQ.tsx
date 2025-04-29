@@ -18,7 +18,7 @@ import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
 import { NumberInput } from "../forms/NumberInput";
 import { useParams } from "../../context/ParamsContext";
-import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
+import { DURACION_RQ, ESTADO_ATENDIDO, MODALIDAD_RQ } from "../../utils/config";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -30,13 +30,14 @@ interface Archivo {
 interface Props {
     onClose: () => void;
     updateRQData: () => void;
+    handleAsignar: (idRequerimiento: number) => void;
     RQ: RequirementItem | null;
     estadoOptions: ParamType[];
     clientes: ClientType[];
     perfiles: ParamType[];
 }
 
-export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes, perfiles }: Props) => {
+export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes, perfiles, handleAsignar }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const [isEditingRQData, setIsEditingRQData] = useState(false);
     const [isEditingGestionData, setIsEditingGestionData] = useState(false);
@@ -769,55 +770,68 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Postulantes",
                                 children: (
-                                    <div className="p-1">
-                                        <div className="table-container">
-                                            <div className="table-wrapper">
-                                                <table className="table">
-                                                    <thead>
-                                                        <tr className="table-header">
-                                                            <th scope="col" className="table-header-cell">Nombres</th>
-                                                            <th scope="col" className="table-header-cell">Apellidos</th>
-                                                            <th scope="col" className="table-header-cell">Doc. Identidad</th>
-                                                            <th scope="col" className="table-header-cell">Celular</th>
-                                                            <th scope="col" className="table-header-cell">Email</th>
-                                                            <th scope="col" className="table-header-cell">Situación</th>
-                                                            <th scope="col" className="table-header-cell">Estado</th>
-                                                            <th scope="col" className="table-header-cell">Perfil</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {requirement?.requerimiento.lstRqTalento.length === 0 ? (
-                                                            <tr>
-                                                                <td colSpan={7} className="table-empty">
-                                                                    No hay postulantes disponibles.
-                                                                </td>
+                                    <>
+                                        <div className="text-end">
+                                            {(RQ && RQ.idEstado !== ESTADO_ATENDIDO) && (
+                                                <button
+                                                    type="button"
+                                                    className="focus:outline-none rounded-lg py-1 px-2 mx-1 btn-blue cursor-pointer"
+                                                    onClick={() => handleAsignar(RQ?.idRequerimiento)}
+                                                >
+                                                    Asignar
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="p-1">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th scope="col" className="table-header-cell">Nombres</th>
+                                                                <th scope="col" className="table-header-cell">Apellidos</th>
+                                                                <th scope="col" className="table-header-cell">Doc. Identidad</th>
+                                                                <th scope="col" className="table-header-cell">Celular</th>
+                                                                <th scope="col" className="table-header-cell">Email</th>
+                                                                <th scope="col" className="table-header-cell">Situación</th>
+                                                                <th scope="col" className="table-header-cell">Estado</th>
+                                                                <th scope="col" className="table-header-cell">Perfil</th>
                                                             </tr>
-                                                        ) : (
-                                                            requirement?.requerimiento.lstRqTalento.map((talento) => (
-                                                                <tr key={talento.idTalento} className="table-row">
-                                                                    <td className="table-cell">{talento.nombresTalento}</td>
-                                                                    <td className="table-cell">{talento.apellidosTalento}</td>
-                                                                    <td className="table-cell">{talento.dni}</td>
-                                                                    <td className="table-cell">{talento.celular}</td>
-                                                                    <td className="table-cell">{talento.email}</td>
-                                                                    <td className="table-cell">{talento.situacion}</td>
-                                                                    <td className="table-cell">
-                                                                        <span className={`badge ${talento.estado?.toUpperCase() === 'DATOS COMPLETOS' ? 'badge-green' :
-                                                                            talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
-                                                                                ''
-                                                                            }`}>
-                                                                            {(talento.estado || (talento.idEstado === 1 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
-                                                                        </span>
+                                                        </thead>
+                                                        <tbody>
+                                                            {requirement?.requerimiento.lstRqTalento.length === 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={7} className="table-empty">
+                                                                        No hay postulantes disponibles.
                                                                     </td>
-                                                                    <td className="table-cell">{talento.perfil}</td>
                                                                 </tr>
-                                                            ))
-                                                        )}
-                                                    </tbody>
-                                                </table>
+                                                            ) : (
+                                                                requirement?.requerimiento.lstRqTalento.map((talento) => (
+                                                                    <tr key={talento.idTalento} className="table-row">
+                                                                        <td className="table-cell">{talento.nombresTalento}</td>
+                                                                        <td className="table-cell">{talento.apellidosTalento}</td>
+                                                                        <td className="table-cell">{talento.dni}</td>
+                                                                        <td className="table-cell">{talento.celular}</td>
+                                                                        <td className="table-cell">{talento.email}</td>
+                                                                        <td className="table-cell">{talento.situacion}</td>
+                                                                        <td className="table-cell">
+                                                                            <span className={`badge ${talento.estado?.toUpperCase() === 'DATOS COMPLETOS' ? 'badge-green' :
+                                                                                talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
+                                                                                    ''
+                                                                                }`}>
+                                                                                {(talento.estado || (talento.idEstado === 1 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="table-cell">{talento.perfil}</td>
+                                                                    </tr>
+                                                                ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </>
                                 ),
                             },
                             {

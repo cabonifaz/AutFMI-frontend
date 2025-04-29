@@ -289,6 +289,7 @@ export const PantallaRequerimientos = () => {
                     RQ={selectedRQ}
                     clientes={clientes}
                     perfiles={perfiles}
+                    handleAsignar={handleAsignarClick}
                     updateRQData={updateRQData}
                 />
             }

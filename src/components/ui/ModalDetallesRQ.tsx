@@ -41,6 +41,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const [isEditingRQData, setIsEditingRQData] = useState(false);
     const [isEditingGestionData, setIsEditingGestionData] = useState(false);
+    const [isEditingVacantesData, setIsEditingVacantesData] = useState(false);
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
     const { postData, postloading } = usePostHook();
@@ -289,6 +290,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
                 if (response.idTipoMensaje === 2) {
                     fetchRequirement();
+                    setIsEditingGestionData(false);
+                    setIsEditingRQData(false);
+                    setIsEditingVacantesData(false);
                 }
             }
         } catch (error) {
@@ -302,6 +306,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
     const handleEditGestionClick = () => {
         setIsEditingGestionData((prev) => !prev);
+    }
+
+    const handleEditVacantesClick = () => {
+        setIsEditingVacantesData((prev) => !prev);
     }
 
     const handleCancelClick = () => {
@@ -457,8 +465,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 <div className="flex justify-end space-x-4 mt-4">
                                                     <button
                                                         type="submit"
-                                                        disabled={!isEditingRQData && !isEditingGestionData}
-                                                        className={`btn ${isEditingRQData || isEditingGestionData ? "btn-primary" : "btn-disabled"}`}
+                                                        disabled={!isEditingRQData}
+                                                        className={`btn ${isEditingRQData ? "btn-primary" : "btn-disabled"}`}
                                                     >
                                                         Actualizar
                                                     </button>
@@ -578,23 +586,33 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </p>
                                 ),
                                 children: (
-                                    <>
-                                        <div className="text-end">
-                                            {/* <button
-                                                type="button"
-                                                onClick={handleEditClick}
-                                                className="focus:outline-none"
-                                            >
-                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
-                                            </button> */}
+                                    <form onSubmit={handleSubmit(onSubmit)}>
+                                        <div className="flex items-center justify-between mb-1">
                                             <button
                                                 type="button"
-                                                className="focus:outline-none rounded-lg py-1 px-2 mx-1 btn-blue cursor-pointer"
-                                                onClick={handleAddVacante}
+                                                onClick={handleEditVacantesClick}
+                                                className="focus:outline-none ms-2"
                                             >
-                                                Agregar
+                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
                                             </button>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    className={`focus:outline-none rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-blue cursor-pointer" : "btn-disabled"}`}
+                                                    onClick={handleAddVacante}
+                                                    disabled={!isEditingVacantesData}
+                                                >
+                                                    Agregar
+                                                </button>
 
+                                                <button
+                                                    type="submit"
+                                                    disabled={!isEditingVacantesData}
+                                                    className={`focus:outline-none rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-primary cursor-pointer" : "btn-disabled"}`}
+                                                >
+                                                    Actualizar
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="p-1 max-h-[30vh] overflow-y-auto">
                                             <div className="table-container">
@@ -633,6 +651,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                     onChange={(e) => handleProfileChange(index, e.target.value)}
                                                                                     className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
                                                                                     value={currentProfile}
+                                                                                    disabled={!isEditingVacantesData}
                                                                                 >
                                                                                     <option value={0}>Seleccione un perfil</option>
                                                                                     {optionsToShow.map((perfil) => (
@@ -655,6 +674,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                             control={control}
                                                                                             name={`lstVacantes.${index}.cantidad`}
                                                                                             defaultValue={1}
+                                                                                            disabled={!isEditingVacantesData}
                                                                                             onChange={(value) => {
                                                                                                 const numValue = Number(value) || 0;
                                                                                                 const currentValue = getValues(`lstVacantes.${index}`);
@@ -703,7 +723,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+                                    </form>
                                 )
                             },
                             {
@@ -837,7 +857,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Gestión",
                                 children: (
-                                    <div className="px-4">
+                                    <form className="px-4" onSubmit={handleSubmit(onSubmit)}>
                                         <div className="flex justify-end mb-1">
                                             <button
                                                 type="button"
@@ -899,7 +919,16 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
                                             />
                                         </div>
-                                    </div>
+                                        <div className="flex justify-end space-x-4 mt-4">
+                                            <button
+                                                type="submit"
+                                                disabled={!isEditingGestionData}
+                                                className={`btn ${isEditingGestionData ? "btn-primary" : "btn-disabled"}`}
+                                            >
+                                                Actualizar
+                                            </button>
+                                        </div>
+                                    </form>
                                 )
                             },
                         ]}

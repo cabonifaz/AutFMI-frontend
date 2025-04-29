@@ -5,6 +5,7 @@ type NumberType = "int" | "float";
 
 interface NumberInputProps<T extends Record<string, any>> {
     register: UseFormRegister<T>;
+    key?: string | number;
     name: Path<T>;
     control: Control<T>;
     type?: NumberType;
@@ -17,6 +18,7 @@ interface NumberInputProps<T extends Record<string, any>> {
 
 export const NumberInput = <T extends Record<string, any>>({
     register,
+    key,
     name,
     control,
     type = "int",
@@ -93,6 +95,7 @@ export const NumberInput = <T extends Record<string, any>>({
 
     return (
         <input
+            key={key}
             type="text"
             ref={field.ref}
             value={inputValue}

@@ -53,6 +53,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
 
     const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
+    const [originalVacantes, setOriginalVacantes] = useState<Array<any>>([]);
+    const [originalCantidades, setOriginalCantidades] = useState<string[]>([]);
+    const [restoreKey, setRestoreKey] = useState(0);
 
     const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
 
@@ -80,12 +83,18 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, update } = useFieldArray({
         control,
         name: "lstVacantes"
     });
 
     const currentVacantes = watch("lstVacantes");
+
+    const restoreVacantesList = () => {
+        setValue("lstVacantes", [...originalVacantes]);
+        setCantidadesVacantes([...originalCantidades]);
+        setRestoreKey(prev => prev + 1);
+    };
 
     const getAvailableProfiles = (currentIndex: number) => {
         const selectedProfiles = currentVacantes
@@ -117,9 +126,18 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         const vacante = getValues(`lstVacantes.${index}`);
 
         if (vacante.idRequerimientoVacante > 0) {
-            setValue(`lstVacantes.${index}.idEstado`, 3);
-            setValue(`lstVacantes.${index}.idPerfil`, 0);
-            setValue(`lstVacantes.${index}.cantidad`, '0');
+            update(index, {
+                ...vacante,
+                idEstado: 3,
+                idPerfil: 0,
+                cantidad: '0'
+            });
+
+            setCantidadesVacantes(prev => {
+                const newCantidades = [...prev];
+                newCantidades[index] = '0';
+                return newCantidades;
+            });
         } else {
             remove(index);
             setCantidadesVacantes(prev => prev.filter((_, i) => i !== index));
@@ -177,13 +195,21 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
 
             setArchivos(archivosFormateados);
             setValueFiles("lstArchivos", archivosFormateados);
-            setValue("lstVacantes", requirement.requerimiento.lstRqVacantes.map(vacante => ({
+
+            const vacantesIniciales = requirement.requerimiento.lstRqVacantes.map(vacante => ({
                 idRequerimientoVacante: vacante.idRequerimientoVacante,
                 idPerfil: vacante.idPerfil,
                 cantidad: String(vacante.cantidad),
                 idEstado: 0,
-            })));
-            setCantidadesVacantes(requirement.requerimiento.lstRqVacantes.map(vacante => String(vacante.cantidad)));
+            }));
+
+            setValue("lstVacantes", vacantesIniciales);
+            setOriginalVacantes(vacantesIniciales);
+
+            const cantidadesIniciales = requirement.requerimiento.lstRqVacantes.map(vacante => String(vacante.cantidad));
+            setCantidadesVacantes(cantidadesIniciales);
+            setOriginalCantidades(cantidadesIniciales);
+            setRestoreKey(prev => prev + 1);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [requirement, setValue, setValueFiles]);
@@ -259,15 +285,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const onSubmit: SubmitHandler<UpdateBaseRQSchemaType> = async (data) => {
         try {
             const idCliente = Number(data.idCliente);
-
             const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } = data;
 
             const vacantesParaEnviar = data.lstVacantes
-                .filter(vacante =>
-                    vacante.idEstado !== 0 &&
-                    vacante.idPerfil !== 0 &&
-                    vacante.cantidad !== '0'
-                )
+                .filter(vacante => vacante.idEstado !== 0)
                 .map(vacante => ({
                     idRequerimientoVacante: vacante.idRequerimientoVacante,
                     idPerfil: vacante.idPerfil,
@@ -309,6 +330,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     }
 
     const handleEditVacantesClick = () => {
+        if (isEditingVacantesData) {
+            restoreVacantesList();
+        }
         setIsEditingVacantesData((prev) => !prev);
     }
 
@@ -577,6 +601,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 hasError: hasVacantesErrors(errors) && errors.idCliente?.message === undefined,
                                 errorMessage: getVacantesErrorMessage(errors),
+                                onBlur: () => {
+                                    restoreVacantesList();
+                                    setIsEditingVacantesData(false);
+                                },
                                 label: (
                                     <p className="flex items-center gap-2">
                                         Vacantes
@@ -633,6 +661,20 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                 </tr>
                                                             ) : (
                                                                 fields.map((field, index) => {
+                                                                    if (field.idEstado === 3) {
+                                                                        return (
+                                                                            <tr key={`hidden-${field.id}-${index}`} className="hidden">
+                                                                                {/* Campos ocultos pero presentes en el formulario */}
+                                                                                <input type="hidden" {...register(`lstVacantes.${index}.idEstado`)} value={3} />
+                                                                                <input type="hidden" {...register(`lstVacantes.${index}.idPerfil`)} value={0} />
+                                                                                <input type="hidden" {...register(`lstVacantes.${index}.cantidad`)} value={0} />
+                                                                                {field.idRequerimientoVacante && (
+                                                                                    <input type="hidden" {...register(`lstVacantes.${index}.idRequerimientoVacante`)} value={field.idRequerimientoVacante} />
+                                                                                )}
+                                                                            </tr>
+                                                                        );
+                                                                    }
+
                                                                     const availableProfiles = getAvailableProfiles(index);
                                                                     const currentProfile = currentVacantes[index]?.idPerfil;
                                                                     const showCurrentProfile = currentProfile === 0 ||
@@ -644,7 +686,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                         : [...availableProfiles, ...perfiles.filter(p => p.num1 === currentProfile)];
 
                                                                     return (
-                                                                        <tr key={field.id} className="table-row">
+                                                                        <tr key={index} className="table-row">
                                                                             <td className="table-cell">
                                                                                 <select
                                                                                     {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
@@ -671,9 +713,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                     <div className="flex flex-col gap-1 relative">
                                                                                         <NumberInput<UpdateBaseRQSchemaType>
                                                                                             register={register}
+                                                                                            key={`vacante-${index}-${restoreKey}`}
                                                                                             control={control}
                                                                                             name={`lstVacantes.${index}.cantidad`}
-                                                                                            defaultValue={1}
+                                                                                            defaultValue={Number(originalCantidades[index] || 1)}
                                                                                             disabled={!isEditingVacantesData}
                                                                                             onChange={(value) => {
                                                                                                 const numValue = Number(value) || 0;
@@ -696,13 +739,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                             </p>
                                                                                         )}
                                                                                     </div>
-                                                                                    {field.idEstado === 1 && (
+                                                                                    {isEditingVacantesData && (
                                                                                         <button
                                                                                             type="button"
-                                                                                            className="ms-4 text-xl w-fit text-red-500 hover:text-red-700"
+                                                                                            disabled={!isEditingVacantesData}
+                                                                                            className="ms-4 text-xl w-fit"
                                                                                             onClick={() => handleRemoveVacante(index)}
                                                                                         >
-                                                                                            ✕
+                                                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
                                                                                         </button>
                                                                                     )}
                                                                                     <div className="ms-4 flex items-center">

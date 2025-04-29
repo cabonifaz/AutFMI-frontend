@@ -1,20 +1,35 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 
 interface TabProps {
     label: string | ReactNode;
     children: ReactNode;
     hasError?: boolean;
     errorMessage?: string;
+    onBlur?: () => void;
 }
 
 interface TabsProps {
     tabs: TabProps[];
     showErrors?: boolean;
     isDataLoading?: boolean;
+    initialTab?: number;
 }
 
-export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsProps) => {
-    const [activeTab, setActiveTab] = useState(0);
+export const Tabs = ({ tabs, showErrors = false, isDataLoading = false, initialTab = 0 }: TabsProps) => {
+    const [activeTab, setActiveTab] = useState(initialTab);
+    const prevActiveTabRef = useRef<number>(initialTab);
+
+    const handleTabChange = (index: number) => {
+        if (activeTab !== index && tabs[activeTab].onBlur) {
+            tabs[activeTab].onBlur!();
+        }
+        setActiveTab(index);
+    };
+    useEffect(() => {
+        if (prevActiveTabRef.current !== activeTab) {
+            prevActiveTabRef.current = activeTab;
+        }
+    }, [activeTab]);
 
     return (
         <div className="flex flex-col">
@@ -25,9 +40,9 @@ export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsPr
                         <div key={index}>
                             <button
                                 type="button"
-                                onClick={() => setActiveTab(index)}
+                                onClick={() => handleTabChange(index)}
                                 className={`tab ${activeTab === index ? "tab-active" : "tab-inactive"}
-                            ${tab.hasError && showErrors ? "text-red-600" : ""}`}
+                                    ${tab.hasError && showErrors ? "text-red-600" : ""}`}
                             >
                                 {tab.label}
                             </button>
@@ -41,7 +56,6 @@ export const Tabs = ({ tabs, showErrors = false, isDataLoading = false }: TabsPr
                     ))}
                 </div>
             </div>
-
 
             <div className="mt-1">
                 {tabs[activeTab].children}

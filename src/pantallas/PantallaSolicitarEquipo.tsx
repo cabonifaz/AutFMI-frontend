@@ -218,7 +218,7 @@ const PantallaSolicitarEquipo = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
                         <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
-                        <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
+                        <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={false} />
                         <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
                             options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
                             required={true}

@@ -90,7 +90,7 @@ const PantallaDatos = () => {
                     </h3>
                     <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
                     <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
-                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
+                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={false} />
                     <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} required={true} />
                     <InputForm name="dni" control={control} label="Doc. Identidad" type="text" error={errors.dni} required={true} />
                     <InputForm name="email" control={control} label="Correo personal" error={errors.email} required={true} />

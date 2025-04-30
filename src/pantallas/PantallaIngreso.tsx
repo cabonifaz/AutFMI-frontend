@@ -130,7 +130,7 @@ const PantallaIngreso = () => {
           <h3 className="text-2xl font-semibold mt-2">Datos del talento</h3>
           <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
           <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
-          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={true} />
+          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={false} />
 
           <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}

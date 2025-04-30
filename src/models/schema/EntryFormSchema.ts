@@ -3,13 +3,19 @@ import { validDropdown } from "./Validations";
 
 export const EntryFormSchema = z.object({
     idModalidad: validDropdown,
-    nombres: z.string().min(1, "Campo obligatorio"),
-    apellidoPaterno: z.string().min(1, "Campo obligatorio"),
-    apellidoMaterno: z.string().min(1, "Campo obligatorio"),
+    nombres: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
+    apellidoPaterno: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
+    apellidoMaterno: z.string().optional().nullable(),
     idArea: validDropdown,
     idCliente: validDropdown.optional(),
     idMotivo: validDropdown,
-    cargo: z.string().min(1, "Campo obligatorio"),
+    cargo: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
     horarioTrabajo: z.string().min(1, "Campo obligatorio"),
     montoBase: z.number({
         required_error: "Campo obligatorio",
@@ -27,10 +33,18 @@ export const EntryFormSchema = z.object({
         required_error: "Campo obligatorio",
         invalid_type_error: "Monto Semestral debe tener 2 decimales"
     }).optional(),
-    fchInicioContrato: z.string().date("Campo obligatorio"),
-    fchTerminoContrato: z.string().date("Campo obligatorio"),
-    proyectoServicio: z.string().min(1, "Campo obligatorio"),
-    objetoContrato: z.string().min(1, "Campo obligatorio"),
+    fchInicioContrato: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).date("Campo obligatorio"),
+    fchTerminoContrato: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).date("Campo obligatorio"),
+    proyectoServicio: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
+    objetoContrato: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
     declararSunat: validDropdown,
     idSedeDeclarar: validDropdown,
 }).refine(

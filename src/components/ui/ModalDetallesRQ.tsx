@@ -19,6 +19,7 @@ import { DropdownForm } from "../forms";
 import { NumberInput } from "../forms/NumberInput";
 import { useParams } from "../../context/ParamsContext";
 import { DURACION_RQ, ESTADO_ATENDIDO, MODALIDAD_RQ } from "../../utils/config";
+import { enqueueSnackbar } from "notistack";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -77,7 +78,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             idCliente: 0,
             fechaSolicitud: "",
             descripcion: "",
-            idEstado: 0,
+            idEstadoRQ: 0,
             lstVacantes: [],
             lstArchivos: [],
         },
@@ -123,6 +124,13 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     };
 
     const handleRemoveVacante = (index: number) => {
+        const vacantes = getValues("lstVacantes").filter((vacante) => vacante.idEstado !== 3);
+
+        if (vacantes.length === 1) {
+            enqueueSnackbar("El Requerimiento debe tener al menos un vacante.", { variant: "warning" });
+            return;
+        }
+
         const vacante = getValues(`lstVacantes.${index}`);
 
         if (vacante.idRequerimientoVacante > 0) {
@@ -183,7 +191,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue("idDuracion", requirement.requerimiento.idDuracion);
             setValue("idModalidad", requirement.requerimiento.idModalidad);
             setValue("descripcion", requirement.requerimiento.descripcion);
-            setValue("idEstado", requirement.requerimiento.idEstado);
+            setValue("idEstadoRQ", requirement.requerimiento.idEstado);
             setClienteSeleccionado(requirement.requerimiento.cliente);
 
             const archivosFormateados = requirement.requerimiento.lstRqArchivo.map((archivo) => ({
@@ -302,19 +310,22 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                     idRequerimiento: RQ.idRequerimiento,
                     idCliente: idCliente,
                     cliente: clienteSeleccionado,
-                    estado: data.idEstado,
+                    estado: data.idEstadoRQ,
                     duracion: Number(data.duracion),
                     lstVacantes: vacantesParaEnviar,
                 };
 
-                const response = await postData("/fmi/requirement/update", payload);
+                console.log(payload);
 
-                if (response.idTipoMensaje === 2) {
-                    fetchRequirement();
-                    setIsEditingGestionData(false);
-                    setIsEditingRQData(false);
-                    setIsEditingVacantesData(false);
-                }
+                // const response = await postData("/fmi/requirement/update", payload);
+
+                // if (response.idTipoMensaje === 2) {
+                //     fetchRequirement();
+                //     updateRQData();
+                //     setIsEditingGestionData(false);
+                //     setIsEditingRQData(false);
+                //     setIsEditingVacantesData(false);
+                // }
             }
         } catch (error) {
             console.error("Error al transformar los datos:", error);
@@ -454,7 +465,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
                                                         <select
-                                                            {...register("idEstado")}
+                                                            {...register("idEstadoRQ", { valueAsNumber: true })}
                                                             disabled={!isEditingRQData}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                                         >
@@ -465,8 +476,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             ))}
                                                         </select>
                                                     </div>
-                                                    {errors.idEstado && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
+                                                    {errors.idEstadoRQ && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstadoRQ.message}</p>
                                                     )}
 
                                                     {/* Fecha Vencimiento */}

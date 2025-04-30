@@ -2,20 +2,34 @@ import { z } from 'zod';
 import { validDropdown } from './Validations';
 
 export const EquipoFormSchema = z.object({
-    nombres: z.string().min(1, { message: "El nombre es requerido" }),
-    apellidoPaterno: z.string().min(1, { message: "El apellido paterno es requerido" }),
-    apellidoMaterno: z.string().min(1, { message: "El apellido materno es requerido" }),
+    nombres: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "El nombre es requerido" }),
+    apellidoPaterno: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "El apellido paterno es requerido" }),
+    apellidoMaterno: z.string().optional().nullable(),
     idCliente: validDropdown,
     idArea: validDropdown,
-    cargo: z.string().min(1, { message: "El cargo es requerido" }),
-    fechaSolicitud: z.string().min(1, { message: "La fecha de solicitud es requerida" }),
-    fechaEntrega: z.string().min(1, { message: "La fecha de entrega es requerida" }),
+    cargo: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "El cargo es requerido" }),
+    fechaSolicitud: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "La fecha de solicitud es requerida" }),
+    fechaEntrega: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "La fecha de entrega es requerida" }),
 
     // Nuevos campos para selección única
     tipoHardware: validDropdown,
     anexoHardware: validDropdown,
-    celular: z.string().min(1, { message: "Celular es requerido" }),
-    internetMovil: z.string().min(1, { message: "Internet Móvil es requerido" }),
+    celular: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "Celular es requerido" }),
+    internetMovil: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, { message: "Internet Móvil es requerido" }),
 
     // Mantener para compatibilidad con el backend
     isPc: z.boolean().default(false),

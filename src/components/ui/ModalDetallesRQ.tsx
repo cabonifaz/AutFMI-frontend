@@ -315,17 +315,15 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                     lstVacantes: vacantesParaEnviar,
                 };
 
-                console.log(payload);
+                const response = await postData("/fmi/requirement/update", payload);
 
-                // const response = await postData("/fmi/requirement/update", payload);
-
-                // if (response.idTipoMensaje === 2) {
-                //     fetchRequirement();
-                //     updateRQData();
-                //     setIsEditingGestionData(false);
-                //     setIsEditingRQData(false);
-                //     setIsEditingVacantesData(false);
-                // }
+                if (response.idTipoMensaje === 2) {
+                    fetchRequirement();
+                    updateRQData();
+                    setIsEditingGestionData(false);
+                    setIsEditingRQData(false);
+                    setIsEditingVacantesData(false);
+                }
             }
         } catch (error) {
             console.error("Error al transformar los datos:", error);

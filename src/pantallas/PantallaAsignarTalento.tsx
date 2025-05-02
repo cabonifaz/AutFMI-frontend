@@ -283,9 +283,12 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
 
         <div className="overflow-y-auto flex-grow">
           {isLoading ? (
-            <div className="p-4 text-center text-gray-500">
-              Cargando talentos...
-            </div>
+            <>
+              <Loading overlayMode={true} />
+              <div className="p-4 text-center text-gray-500">
+                Cargando talentos...
+              </div>
+            </>
           ) : availableTalents.length > 0 ? (
             availableTalents.map((talent) => (
               <TalentoSelection
@@ -503,6 +506,7 @@ const TalentTable: React.FC = () => {
       }
 
       setLocalTalents(prev => [...prev, formattedTalent]);
+      await handleFinalize([...localTalents, formattedTalent]);
     } catch (error) {
       console.error('Error fetching talent details:', error);
       setLocalTalents(prev => [...prev, formatTalentFromBasicData(talent)]);
@@ -582,11 +586,12 @@ const TalentTable: React.FC = () => {
   };
 
   // Finalizar selección
-  const handleFinalize = async () => {
+  const handleFinalize = async (talents?: TalentoType[]) => {
     try {
       setIsLoading(true);
+      const talentsToUse = talents || localTalents;
 
-      const talentos = localTalents.map(talent => ({
+      const talentos = talentsToUse.map(talent => ({
         idTalento: talent.idTalento,
         nombres: talent.nombres,
         apellidos: talent.apellidos || `${talent.apellidoPaterno || ''} ${talent.apellidoMaterno || ''}`,
@@ -633,7 +638,7 @@ const TalentTable: React.FC = () => {
   return (
     <>
       {isLoading && (<Loading overlayMode={true} />)}
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 lg:p-0 lg:py-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />

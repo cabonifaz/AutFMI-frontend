@@ -1,3 +1,5 @@
+import { PerfilType } from "./PerfilType";
+
 export type RequirementItem = {
     idRequerimiento: number;
     cliente: string;
@@ -6,8 +8,10 @@ export type RequirementItem = {
     estado: string;
     idEstado: number;
     vacantes: number;
+    vacantesCubiertas: number;
     duracion: string;
     fechaVencimiento: string;
     modalidad: string;
     idAlerta: number;
+    lstPerfiles: PerfilType[];
 };

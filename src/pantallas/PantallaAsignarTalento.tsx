@@ -506,7 +506,7 @@ const TalentTable: React.FC = () => {
       }
 
       setLocalTalents(prev => [...prev, formattedTalent]);
-      await handleFinalize([...localTalents, formattedTalent]);
+      await handleFinalize({ talents: [...localTalents, formattedTalent], flagCorreo: false });
     } catch (error) {
       console.error('Error fetching talent details:', error);
       setLocalTalents(prev => [...prev, formatTalentFromBasicData(talent)]);
@@ -586,7 +586,7 @@ const TalentTable: React.FC = () => {
   };
 
   // Finalizar selección
-  const handleFinalize = async (talents?: TalentoType[]) => {
+  const handleFinalize = async ({ talents, flagCorreo }: { talents?: TalentoType[], flagCorreo: boolean }) => {
     try {
       setIsLoading(true);
       const talentsToUse = talents || localTalents;
@@ -606,6 +606,7 @@ const TalentTable: React.FC = () => {
 
       const payload = {
         idRequerimiento,
+        flagCorreo: flagCorreo,
         lstTalentos: talentos
       };
 
@@ -730,7 +731,7 @@ const TalentTable: React.FC = () => {
         <ConfirmationModal
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
-          onConfirm={handleFinalize}
+          onConfirm={() => handleFinalize({ flagCorreo: true })}
           message="¿Está seguro que desea finalizar y guardar los talentos seleccionados?"
         />
 

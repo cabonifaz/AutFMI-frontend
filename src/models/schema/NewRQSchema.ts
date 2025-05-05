@@ -9,6 +9,7 @@ const vacanteSchema = z.object({
         .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
             message: "La cantidad debe ser mayor a 0"
         }),
+    tarifa: z.string().optional().nullable(),
 });
 
 export const newRQSchema = z.object({

@@ -5,6 +5,7 @@ const vacanteSchema = z.object({
     idPerfil: z.number(),
     cantidad: z.string(),
     idEstado: z.number(),
+    tarifa: z.string().optional().nullable(),
 }).superRefine((data, ctx) => {
     if (data.idEstado !== 3) {
         if (data.idPerfil === undefined || data.idPerfil <= 0) {

@@ -35,10 +35,9 @@ export const PantallaRequerimientos = () => {
 
     const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
     const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
-    const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ},${PERFIL}`);
+    const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ}`);
 
     const options = paramsByMaestro[ESTADO_RQ] || [];
-    const perfiles = paramsByMaestro[PERFIL] || [];
     const paramOptions: BaseOption[] = options.map((param) => ({
         value: param.num1.toString(),
         label: param.string1,
@@ -293,7 +292,6 @@ export const PantallaRequerimientos = () => {
                     updateRQData={updateRQData}
                     estadoOptions={options}
                     clientes={clientes}
-                    perfiles={perfiles}
                 />
             }
             {isDetallesRQModalOpen &&
@@ -302,7 +300,6 @@ export const PantallaRequerimientos = () => {
                     estadoOptions={options}
                     RQ={selectedRQ}
                     clientes={clientes}
-                    perfiles={perfiles}
                     handleAsignar={handleAsignarClick}
                     updateRQData={updateRQData}
                 />

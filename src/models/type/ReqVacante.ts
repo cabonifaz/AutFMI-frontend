@@ -3,4 +3,5 @@ export interface ReqVacante {
     idPerfil: number;
     perfilProfesional: string;
     cantidad: number;
+    tarifa: string;
 }

@@ -15,6 +15,7 @@ import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
 import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
 import { useParams } from "../../context/ParamsContext";
+import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 
 interface Archivo {
     name: string;
@@ -26,11 +27,10 @@ interface Props {
     onClose: () => void;
     updateRQData: () => void;
     estadoOptions: ParamType[];
-    perfiles: ParamType[];
     clientes: ClientType[];
 }
 
-export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes, perfiles }: Props) => {
+export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const { postData, postloading } = usePostHook();
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
@@ -41,7 +41,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
     const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
-    const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+    const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+    const { tarifario } = useFetchTarifario();
 
     const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
     const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
@@ -82,13 +83,14 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
             .map(v => v.idPerfil)
             .filter(id => id !== 0);
 
-        return perfiles.filter(perfil =>
-            !selectedProfiles.includes(perfil.num1)
+        return tarifario.filter(perfil =>
+            !selectedProfiles.includes(perfil.idPerfil)
         );
     };
 
     const handleProfileChange = (index: number, value: string) => {
         setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+        setValue(`lstVacantes.${index}.tarifa`, tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toString() || '-');
         clearErrors(`lstVacantes.${index}.idPerfil`);
     };
 
@@ -502,13 +504,14 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                             <tr className="table-header">
                                                                 <th scope="col" className="table-header-cell">Perfil profesional</th>
                                                                 <th scope="col" className="table-header-cell">Cantidad</th>
+                                                                <th scope="col" className="table-header-cell">Tarifa</th>
                                                                 <th scope="col" className="table-header-cell"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {fields.length <= 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={3} className="table-empty">
+                                                                    <td colSpan={4} className="table-empty">
                                                                         No hay vacantes disponibles.
                                                                     </td>
                                                                 </tr>
@@ -517,12 +520,12 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                     const availableProfiles = getAvailableProfiles(index);
                                                                     const currentProfile = currentVacantes[index]?.idPerfil;
                                                                     const showCurrentProfile = currentProfile === 0 ||
-                                                                        availableProfiles.some(p => p.num1 === currentProfile) ||
-                                                                        !perfiles.some(p => p.num1 === currentProfile);
+                                                                        availableProfiles.some(p => p.idPerfil === currentProfile) ||
+                                                                        !tarifario.some(p => p.idPerfil === currentProfile);
 
                                                                     const optionsToShow = showCurrentProfile
                                                                         ? [...availableProfiles]
-                                                                        : [...availableProfiles, ...perfiles.filter(p => p.num1 === currentProfile)];
+                                                                        : [...availableProfiles, ...tarifario.filter(p => p.idPerfil === currentProfile)];
 
                                                                     return (
                                                                         <tr key={field.id} className="table-row">
@@ -535,8 +538,8 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                                 >
                                                                                     <option value={0}>Seleccione un perfil</option>
                                                                                     {optionsToShow.map((perfil) => (
-                                                                                        <option key={perfil.num1} value={perfil.num1}>
-                                                                                            {perfil.string1}
+                                                                                        <option key={perfil.idPerfil} value={perfil.idPerfil}>
+                                                                                            {perfil.perfil}
                                                                                         </option>
                                                                                     ))}
                                                                                 </select>
@@ -571,14 +574,26 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes,
                                                                                             </p>
                                                                                         )}
                                                                                     </div>
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        className="ms-4 text-xl text-red-500 hover:text-red-700"
-                                                                                        onClick={() => handleRemoveVacante(index)}
-                                                                                    >
-                                                                                        ✕
-                                                                                    </button>
+
                                                                                 </div>
+                                                                            </td>
+                                                                            <td className="table-cell">
+                                                                                <input
+                                                                                    {...register(`lstVacantes.${index}.tarifa`)}
+                                                                                    defaultValue={'-'}
+                                                                                    type="text"
+                                                                                    id="v-tarifa"
+                                                                                    className="input-readonly-text"
+                                                                                    readOnly />
+                                                                            </td>
+                                                                            <td className="table-cell">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    className="ms-4 text-xl text-red-500 hover:text-red-700"
+                                                                                    onClick={() => handleRemoveVacante(index)}
+                                                                                >
+                                                                                    <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
+                                                                                </button>
                                                                             </td>
                                                                         </tr>
                                                                     );

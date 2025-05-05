@@ -20,6 +20,7 @@ import { NumberInput } from "../forms/NumberInput";
 import { useParams } from "../../context/ParamsContext";
 import { DURACION_RQ, ESTADO_ATENDIDO, MODALIDAD_RQ } from "../../utils/config";
 import { enqueueSnackbar } from "notistack";
+import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 
 interface Archivo {
     idRequerimientoArchivo: number;
@@ -35,10 +36,9 @@ interface Props {
     RQ: RequirementItem | null;
     estadoOptions: ParamType[];
     clientes: ClientType[];
-    perfiles: ParamType[];
 }
 
-export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes, perfiles, handleAsignar }: Props) => {
+export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clientes, handleAsignar }: Props) => {
     const [archivos, setArchivos] = useState<Archivo[]>([]);
     const [isEditingRQData, setIsEditingRQData] = useState(false);
     const [isEditingGestionData, setIsEditingGestionData] = useState(false);
@@ -58,7 +58,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     const [originalCantidades, setOriginalCantidades] = useState<string[]>([]);
     const [restoreKey, setRestoreKey] = useState(0);
 
-    const { paramsByMaestro, loading: paramLoading } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+    const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+    const { tarifario } = useFetchTarifario();
 
     const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
     const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
@@ -103,8 +104,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             .map(v => v.idPerfil)
             .filter(id => id !== 0);
 
-        return perfiles.filter(perfil =>
-            !selectedProfiles.includes(perfil.num1)
+        return tarifario.filter(perfil =>
+            !selectedProfiles.includes(perfil.idPerfil)
         );
     };
 
@@ -114,6 +115,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue(`lstVacantes.${index}.idEstado`, 2);
         }
         setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+        setValue(`lstVacantes.${index}.tarifa`, tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toString() || '-');
         clearErrors(`lstVacantes.${index}.idPerfil`);
     };
 
@@ -209,6 +211,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                 idPerfil: vacante.idPerfil,
                 cantidad: String(vacante.cantidad),
                 idEstado: 0,
+                tarifa: tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toString() || '-',
             }));
 
             setValue("lstVacantes", vacantesIniciales);
@@ -343,6 +346,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             restoreVacantesList();
         }
         setIsEditingVacantesData((prev) => !prev);
+        getValues(`lstVacantes`).map((vacante, index) => {
+            setValue(`lstVacantes.${index}.tarifa`, tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toString() || '-');
+        })
     }
 
     const handleCancelClick = () => {
@@ -659,12 +665,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             <tr className="table-header">
                                                                 <th className="table-header-cell">Perfil profesional</th>
                                                                 <th className="table-header-cell">Cantidad</th>
+                                                                <th className="table-header-cell">Tarifa</th>
+                                                                <th className="table-header-cell"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {fields.length <= 0 ? (
                                                                 <tr>
-                                                                    <td colSpan={2} className="table-empty">
+                                                                    <td colSpan={4} className="table-empty">
                                                                         No hay vacantes disponibles.
                                                                     </td>
                                                                 </tr>
@@ -687,12 +695,12 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                     const availableProfiles = getAvailableProfiles(index);
                                                                     const currentProfile = currentVacantes[index]?.idPerfil;
                                                                     const showCurrentProfile = currentProfile === 0 ||
-                                                                        availableProfiles.some(p => p.num1 === currentProfile) ||
-                                                                        !perfiles.some(p => p.num1 === currentProfile);
+                                                                        availableProfiles.some(p => p.idPerfil === currentProfile) ||
+                                                                        !tarifario.some(p => p.idPerfil === currentProfile);
 
                                                                     const optionsToShow = showCurrentProfile
                                                                         ? [...availableProfiles]
-                                                                        : [...availableProfiles, ...perfiles.filter(p => p.num1 === currentProfile)];
+                                                                        : [...availableProfiles, ...tarifario.filter(p => p.idPerfil === currentProfile)];
 
                                                                     return (
                                                                         <tr key={index} className="table-row">
@@ -706,8 +714,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                 >
                                                                                     <option value={0}>Seleccione un perfil</option>
                                                                                     {optionsToShow.map((perfil) => (
-                                                                                        <option key={perfil.num1} value={perfil.num1}>
-                                                                                            {perfil.string1}
+                                                                                        <option key={perfil.idPerfil} value={perfil.idPerfil}>
+                                                                                            {perfil.perfil}
                                                                                         </option>
                                                                                     ))}
                                                                                 </select>
@@ -748,16 +756,6 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                             </p>
                                                                                         )}
                                                                                     </div>
-                                                                                    {isEditingVacantesData && (
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            disabled={!isEditingVacantesData}
-                                                                                            className="ms-4 text-xl w-fit"
-                                                                                            onClick={() => handleRemoveVacante(index)}
-                                                                                        >
-                                                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
-                                                                                        </button>
-                                                                                    )}
                                                                                     <div className="ms-4 flex items-center">
                                                                                         {field.idEstado === 1 ? (
                                                                                             <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
@@ -766,6 +764,27 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                                         ) : null}
                                                                                     </div>
                                                                                 </div>
+                                                                            </td>
+                                                                            <td className="table-cell">
+                                                                                <input
+                                                                                    {...register(`lstVacantes.${index}.tarifa`)}
+                                                                                    defaultValue={getValues(`lstVacantes.${index}.tarifa`)?.toString() || '-'}
+                                                                                    type="text"
+                                                                                    id="v-tarifa"
+                                                                                    className="input-readonly-text"
+                                                                                    readOnly />
+                                                                            </td>
+                                                                            <td className="table-cell">
+                                                                                {isEditingVacantesData && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        disabled={!isEditingVacantesData}
+                                                                                        className="ms-4 text-xl w-fit"
+                                                                                        onClick={() => handleRemoveVacante(index)}
+                                                                                    >
+                                                                                        <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
+                                                                                    </button>
+                                                                                )}
                                                                             </td>
                                                                         </tr>
                                                                     );

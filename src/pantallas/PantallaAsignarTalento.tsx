@@ -16,13 +16,13 @@ type TalentoType = {
   apellidoPaterno?: string;
   apellidoMaterno?: string;
   dni: string;
-  telefono?: string;
   celular?: string;
   email: string;
   estado?: string;
   idEstado?: number;
   situacion?: string;
   idSituacion?: number;
+  tooltip: string;
   perfil?: string;
   idPerfil?: number;
   confirmado?: boolean;
@@ -102,17 +102,30 @@ const TableRow: React.FC<TableRowProps> = ({
         {talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}
       </td>
       <td className="py-3 px-4 whitespace-nowrap">{talento.dni}</td>
-      <td className="py-3 px-4 whitespace-nowrap">{talento.telefono || talento.celular}</td>
+      <td className="py-3 px-4 whitespace-nowrap">{talento.celular}</td>
       <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
       <td className="py-3 px-4 whitespace-nowrap">
-        {talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}
+        <div className="min-w-full flex justify-center gap-1 items-center">
+          <p>
+            {talento?.situacion || ''}
+          </p>
+          {talento.idSituacion === 2 && (
+            <div className="w-fit relative group">
+              <img src="/assets/ic_error.svg" alt="icon tooltip ocupado" className="min-w-5 min-h-5 w-5 h-5 cursor-pointer" />
+              <div className="absolute invisible group-hover:visible z-10 left-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                <p className="text-start">{talento?.tooltip || ''}</p>
+                <div className="absolute top-1/2 right-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-t-transparent border-b-transparent border-r-[#484848]"></div>
+              </div>
+            </div>
+          )}
+        </div>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${isAceptado ? 'bg-green-100 text-green-800' :
           isObservado ? 'bg-yellow-100 text-yellow-800' :
             'bg-gray-100 text-gray-800'
           }`}>
-          {(talento.estado || (talento.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
+          {talento?.estado || ''}
         </span>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
@@ -122,9 +135,9 @@ const TableRow: React.FC<TableRowProps> = ({
         <input
           type="checkbox"
           checked={talento.confirmado || false}
-          disabled={isConfirmedFromAPI || !isAceptado || disabled}
+          disabled={isConfirmedFromAPI || !isAceptado || disabled || talento?.idSituacion === 2}
           onChange={handleCheckboxChange}
-          className="input-checkbox"
+          className={(isConfirmedFromAPI || !isAceptado || disabled || talento?.idSituacion === 2) ? "input-checkbox-readonly" : "input-checkbox"}
         />
       </td>
       <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
@@ -421,6 +434,7 @@ const TalentTable: React.FC = () => {
             situacion: talent.situacion,
             idSituacion: talent.idSituacion,
             confirmado: talent.confirmado,
+            tooltip: talent.tooltip,
             idPerfil: talent.idPerfil,
             perfil: talent.perfil,
             isFromAPI: true,
@@ -457,8 +471,9 @@ const TalentTable: React.FC = () => {
           apellidoMaterno: talent.apellidoMaterno,
           dni: talent.dni || '',
           email: talent.email || '',
-          idEstado: 1,
-          idSituacion: 1,
+          idEstado: talent.idEstado || 1,
+          idSituacion: talent.idSituacion || 1,
+          tooltip: talent.tooltip || '',
           idPerfil: talent.idPerfil || 0,
           perfil: talent.perfil || '',
         }));
@@ -478,7 +493,7 @@ const TalentTable: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
+        `/fmi/requirement/talents/data?idTalento=${talent.idTalento}&idRequerimiento=${idRequerimiento}`
       );
 
       let formattedTalent: TalentoType;
@@ -491,13 +506,13 @@ const TalentTable: React.FC = () => {
           apellidos: talentDetails.apellidos || '',
           dni: talentDetails.dni || '',
           celular: talentDetails.celular || '',
-          telefono: talentDetails.celular || '',
           email: talentDetails.email || '',
           estado: talentDetails.estado || 'OBSERVADO',
           idEstado: talentDetails.idEstado || 1,
           situacion: talentDetails.situacion || 'LIBRE',
           idSituacion: talentDetails.idSituacion || 1,
           confirmado: talentDetails.confirmado || false,
+          tooltip: talentDetails.tooltip || '',
           idPerfil: idPerfil,
           perfil: perfil,
         };
@@ -524,13 +539,13 @@ const TalentTable: React.FC = () => {
         `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
         talent.apellidos || '',
       dni: talent.dni || '',
-      telefono: talent.telefono || talent.celular || '',
-      celular: talent.telefono || talent.celular || '',
+      celular: talent.celular || '',
       email: talent.email || '',
       estado: talent.estado?.toUpperCase() || (talent.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO'),
       situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
       idEstado: talent.idEstado || 1,
       idSituacion: talent.idSituacion || 1,
+      tooltip: talent.tooltip || '',
       idPerfil: talent.idPerfil || 0,
       perfil: talent.perfil || '',
       confirmado: talent.confirmado || false
@@ -596,7 +611,7 @@ const TalentTable: React.FC = () => {
         nombres: talent.nombres,
         apellidos: talent.apellidos || `${talent.apellidoPaterno || ''} ${talent.apellidoMaterno || ''}`,
         dni: talent.dni,
-        celular: talent.telefono || talent.celular || '',
+        celular: talent.celular || '',
         email: talent.email,
         idEstado: !talent.confirmado ? talent.idEstado || (talent.estado === 'DATOS COMPLETOS' ? ESTADO_DATOS_COMPLETOS : ESTADO_OBSERVADO) : ESTADO_CONFIRMADO,
         idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2),
@@ -656,7 +671,7 @@ const TalentTable: React.FC = () => {
               <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado || 'Cargando...'}</p>
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Vacantes: </span>
-                ({`${requerimiento?.lstRqVacantes?.map((vacante) => `${vacante.cantidad} ${vacante.perfilProfesional}`).join(', ') || 'Cargando...'}`})
+                {`${requerimiento?.lstRqVacantes?.map((vacante) => `${vacante.cantidad} ${vacante.perfilProfesional}`).join(', ') || 'Cargando...'}`}
               </p>
             </div>
           </div>

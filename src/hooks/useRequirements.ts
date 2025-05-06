@@ -7,7 +7,7 @@ type FetchRequerimientosParams = {
     nPag: number;
     cPag?: string | null;
     idCliente?: number | null;
-    codigoRQ?: string | null;
+    buscar?: string | null;
     fechaSolicitud?: string | null;
     estado?: number | null;
 };
@@ -49,7 +49,7 @@ export const useRequerimientos = () => {
             nPag: currentPage,
             cPag: null,
             idCliente: null,
-            codigoRQ: null,
+            buscar: null,
             fechaSolicitud: null,
             estado: null,
         };

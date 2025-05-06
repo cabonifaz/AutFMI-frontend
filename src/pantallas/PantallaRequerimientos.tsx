@@ -4,7 +4,7 @@ import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
-import { ESTADO_ATENDIDO, ESTADO_RQ, LIMITE_ALERTA_RQ, PERFIL } from "../utils/config";
+import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
 import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
 import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
@@ -16,7 +16,7 @@ import { useParams } from "../context/ParamsContext";
 
 interface SearchProps {
     idCliente: number | null;
-    codigoRQ: string | null;
+    buscar: string | null;
     estado: number | null;
     fechaSolicitud: string | null;
 }
@@ -50,11 +50,11 @@ export const PantallaRequerimientos = () => {
 
     const { toggleMenu } = useMenu();
 
-    const search = ({ idCliente, codigoRQ, estado, fechaSolicitud }: SearchProps) => {
+    const search = ({ idCliente, buscar, estado, fechaSolicitud }: SearchProps) => {
         fetchRequerimientos({
             nPag: 1,
             idCliente: idCliente,
-            codigoRQ: codigoRQ,
+            buscar: buscar,
             estado: estado,
             fechaSolicitud: fechaSolicitud,
         });
@@ -97,7 +97,7 @@ export const PantallaRequerimientos = () => {
         if (!loading) {
             search({
                 idCliente: overrides.idCliente !== undefined ? overrides.idCliente : selectedCliente,
-                codigoRQ: RequerimientoRef.current?.value || null,
+                buscar: RequerimientoRef.current?.value || null,
                 estado: overrides.estado !== undefined ? overrides.estado : selectedEstado,
                 fechaSolicitud: overrides.fechaSolicitud !== undefined ? overrides.fechaSolicitud : (selectedDate ? selectedDate : null),
             });
@@ -151,7 +151,7 @@ export const PantallaRequerimientos = () => {
                 <div className="card mb-6">
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="requerimiento" className="input-label">Requerimiento</label>
+                            <label htmlFor="requerimiento" className="input-label">Búsqueda por título o código de requerimiento</label>
                             <input
                                 type="text"
                                 name="requerimiento"
@@ -212,6 +212,7 @@ export const PantallaRequerimientos = () => {
                                 <tr className="table-header">
                                     <th className="table-header-cell">ID</th>
                                     <th className="table-header-cell">Cliente</th>
+                                    <th className="table-header-cell">Título</th>
                                     <th className="table-header-cell">Requerimiento</th>
                                     <th className="table-header-cell">Fecha Solicitud</th>
                                     <th className="table-header-cell">Estado</th>
@@ -232,6 +233,7 @@ export const PantallaRequerimientos = () => {
                                         <tr key={req.idRequerimiento} className="table-row">
                                             <td className="table-cell">{req.idRequerimiento}</td>
                                             <td className="table-cell">{req.cliente}</td>
+                                            <td className="table-cell">{req.titulo}</td>
                                             <td className="table-cell">{req.codigoRQ}</td>
                                             <td className="table-cell">{req.fechaSolicitud}</td>
                                             <td className="table-cell">{req.estado}</td>

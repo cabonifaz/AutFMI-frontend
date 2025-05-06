@@ -105,7 +105,7 @@ const TableRow: React.FC<TableRowProps> = ({
       <td className="py-3 px-4 whitespace-nowrap">{talento.celular}</td>
       <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
       <td className="py-3 px-4 whitespace-nowrap">
-        <div className="min-w-full flex justify-center gap-1 items-center">
+        <div className="min-w-full flex gap-1 items-center">
           <p>
             {talento?.situacion || ''}
           </p>

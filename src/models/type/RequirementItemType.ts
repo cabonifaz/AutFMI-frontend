@@ -3,6 +3,7 @@ import { PerfilType } from "./PerfilType";
 export type RequirementItem = {
     idRequerimiento: number;
     cliente: string;
+    titulo: string;
     codigoRQ: string;
     fechaSolicitud: string;
     estado: string;

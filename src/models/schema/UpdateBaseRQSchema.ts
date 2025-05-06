@@ -36,6 +36,7 @@ export const UpdateBaseRQSchema = z.object({
     codigoRQ: z.string().optional(),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
+    titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
     duracion: z.string()

@@ -16,6 +16,7 @@ export const newRQSchema = z.object({
     idCliente: z.number({
         invalid_type_error: "Debe elegir un cliente"
     }).min(1, "Debe elegir un cliente"),
+    titulo: z.string().min(1, "El título es obligatorio"),
     codigoRQ: z.string().optional(),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),

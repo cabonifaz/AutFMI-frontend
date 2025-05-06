@@ -90,7 +90,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
 
     const handleProfileChange = (index: number, value: string) => {
         setValue(`lstVacantes.${index}.idPerfil`, Number(value));
-        setValue(`lstVacantes.${index}.tarifa`, tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toString() || '-');
+        setValue(`lstVacantes.${index}.tarifa`, `S/. ${tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toFixed(2)}` || 'S/. -');
         clearErrors(`lstVacantes.${index}.idPerfil`);
     };
 
@@ -280,6 +280,17 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                 children: <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
                                     <div className="max-h-[42vh] overflow-y-auto pr-2">
                                         <div className="space-y-4 flex-1">
+                                            {/* Título RQ */}
+                                            <div className="flex items-center">
+                                                <label className="w-1/3 text-sm font-medium text-gray-700">Título:</label>
+                                                <input
+                                                    {...register("titulo")}
+                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                />
+                                            </div>
+                                            {errors.titulo && (
+                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.titulo.message}</p>
+                                            )}
                                             {/* Código RQ */}
                                             <div className="flex items-center">
                                                 <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
@@ -580,7 +591,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                                             <td className="table-cell">
                                                                                 <input
                                                                                     {...register(`lstVacantes.${index}.tarifa`)}
-                                                                                    defaultValue={'-'}
+                                                                                    defaultValue={'S/. -'}
                                                                                     type="text"
                                                                                     id="v-tarifa"
                                                                                     className="input-readonly-text"

@@ -187,6 +187,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         if (requirement) {
             setValue("idCliente", requirement.requerimiento.idCliente);
             setValue("codigoRQ", requirement.requerimiento.codigoRQ);
+            setValue("titulo", requirement.requerimiento.titulo);
             setValue("fechaSolicitud", format(parseISO(requirement.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
             setValue("fechaVencimiento", format(parseISO(requirement.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
             setValue("duracion", String(requirement.requerimiento.duracion));

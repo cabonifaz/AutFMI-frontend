@@ -9,6 +9,7 @@ export type RequirementResponse = {
     requerimiento: {
         idCliente: number;
         cliente: string;
+        titulo: string;
         codigoRQ: string;
         fechaSolicitud: string;
         fechaVencimiento: string;

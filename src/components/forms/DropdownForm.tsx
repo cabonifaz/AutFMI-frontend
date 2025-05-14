@@ -16,7 +16,7 @@ interface Props {
 const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, disabled = false, required, clearErrors }: Props) => {
     return (
         <>
-            <div className={`${flex ? "flex-1" : "flex flex-1 gap-4"}`}>
+            <div className={`${flex ? "flex-1" : "flex flex-1 gap-4 items-center"}`}>
                 {label && <label htmlFor={name} className={`${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}>{label}{required && <span className="text-red-400">*</span>}</label>}
                 <div className={`${label ? "flex-[2]" : "basis-80"} `}>
                     <Controller

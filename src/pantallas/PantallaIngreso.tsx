@@ -34,15 +34,14 @@ const PantallaIngreso = () => {
     resolver: zodResolver(EntryFormSchema),
     mode: "onChange",
     defaultValues: {
-      idModalidad: 0,
+      idModalidadContrato: 0,
       nombres: "",
-      apellidoPaterno: "",
-      apellidoMaterno: "",
+      apellidos: "",
       idArea: 0,
       idCliente: 0,
       idMotivo: 0,
       cargo: "",
-      horarioTrabajo: "",
+      horario: "",
       montoBase: 0,
       montoMovilidad: 0,
       montoTrimestral: 0,
@@ -61,12 +60,11 @@ const PantallaIngreso = () => {
       const date = parse(talentoDetails?.fechaInicioLabores, 'dd-MM-yyyy', new Date());
       reset({
         nombres: talentoDetails?.nombres || "",
-        apellidoPaterno: talentoDetails?.apellidoPaterno || "",
-        apellidoMaterno: talentoDetails?.apellidoMaterno || "",
+        apellidos: talentoDetails?.apellidoPaterno || "",
         fchInicioContrato: format(date, "yyyy-MM-dd") || "",
         cargo: talentoDetails?.cargo || "",
         montoBase: talentoDetails?.remuneracion || 0,
-        idModalidad: talentoDetails?.idModalidad || 0,
+        idModalidadContrato: talentoDetails?.idModalidad || 0,
       });
     }
   }, [reset, talentoDetails]);
@@ -116,7 +114,7 @@ const PantallaIngreso = () => {
             <DropdownForm
               name="idModalidad"
               control={control}
-              error={errors.idModalidad}
+              error={errors.idModalidadContrato}
               options={modalityValues?.map((modality) => ({
                 value: modality.num1,
                 label: modality.string1
@@ -130,8 +128,7 @@ const PantallaIngreso = () => {
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold mt-2">Datos del talento</h3>
           <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} required={true} />
-          <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} required={true} />
-          <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} required={false} />
+          <InputForm name="apellidos" control={control} label="Apellidos" error={errors.apellidos} required={true} />
 
           <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
@@ -154,7 +151,7 @@ const PantallaIngreso = () => {
           />
 
           <InputForm name="cargo" control={control} label="Cargo" error={errors.cargo} required={true} />
-          <InputForm name="horarioTrabajo" control={control} label="Horario de trabajo" error={errors.horarioTrabajo} required={true} />
+          <InputForm name="horario" control={control} label="Horario de trabajo" error={errors.horario} required={true} />
           {/* Salary */}
           <SalaryStructureForm control={control} mainLabel="Estructura Salarial" setValue={setValue} errors={errors}
             inputs={[

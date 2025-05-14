@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { Key, useEffect, useState } from "react";
 import { Control, Controller, FieldError } from "react-hook-form";
 
 interface Props {
+    key?: Key;
     name: string;
     control: Control<any>;
     label: string;
@@ -21,6 +22,7 @@ interface Props {
 
 const InputForm = ({
     regex,
+    key,
     name,
     control,
     label,
@@ -81,17 +83,19 @@ const InputForm = ({
     };
 
     return (
-        <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row gap-4"}`}>
+        <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row gap-4 items-center"}`}>
             <label className={`${word_wrap ? "w-[11rem]" : isTable ? "" : "min-w-[11rem]"}`}>
                 {label}{required && <span className="text-red-400">*</span>}
             </label>
             <div className="flex-[2]">
                 <Controller
+                    key={key}
                     name={name}
                     control={control}
                     render={({ field }) => (
                         <div className="relative">
                             <input
+                                {...field}
                                 type={type === 'number' ? 'text' : type}
                                 value={field.value ?? ''}
                                 onChange={(e) => handleChange(e.target.value, field.onChange)}

@@ -7,6 +7,7 @@ import BackButton from '../components/ui/BackButton';
 import Toast from '../components/ui/Toast';
 import { ReqVacante } from '../models/type/ReqVacante';
 import { format, parseISO } from 'date-fns';
+import { ModalIngreso } from '../components/ui/ModalIngreso';
 
 // Types
 type TalentoType = {
@@ -27,9 +28,34 @@ type TalentoType = {
   idPerfil?: number;
   confirmado?: boolean;
   isFromAPI?: boolean;
+
+  ingreso?: number;
+  idCliente?: number;
+  idArea?: number;
+  cargo?: string;
+  fchInicioContrato?: string;
+  fchTerminoContrato?: string;
+  proyectoServicio?: string;
+  objetoContrato?: string;
+  remuneracion?: number;
+  idTiempoContrato?: number;
+  tiempoContrato?: number;
+  idModalidadContrato?: number;
+  horario?: string;
+  tieneEquipo?: number;
+  ubicacion?: string;
+  idMotivo?: number;
+  idMoneda?: number;
+  declararSunat?: number;
+  sedeDeclarar?: string;
+  montoBase?: number;
+  montoMovilidad?: number;
+  montoTrimestral?: number;
+  montoSemestral?: number;
 };
 
 type RequerimientoType = {
+  idCliente: number;
   cliente: string;
   codigoRQ: string;
   fechaSolicitud: string;
@@ -367,6 +393,7 @@ const TalentTable: React.FC = () => {
 
   // Estados
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showModalIngreso, setShowModalIngreso] = useState(false);
   const [localTalents, setLocalTalents] = useState<TalentoType[]>([]);
   const [searchResults, setSearchResults] = useState<TalentoType[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -375,6 +402,7 @@ const TalentTable: React.FC = () => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [dateFormatted, setDateFormatted] = useState('');
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
+  const [currentTalento, setCurrentTalento] = useState<TalentoType | null>(null);
 
   const calculateRemainingVacancies = useCallback((talents: TalentoType[], req: RequerimientoType | null) => {
     if (!req) return 0;
@@ -423,6 +451,7 @@ const TalentTable: React.FC = () => {
         if (response.data.requerimiento.lstRqTalento?.length > 0) {
           const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
             idTalento: talent.idTalento,
+            idCliente: requerimiento?.idCliente,
             nombres: talent.nombresTalento,
             apellidos: talent.apellidosTalento,
             dni: talent.dni,
@@ -466,6 +495,7 @@ const TalentTable: React.FC = () => {
       if (response.data.idTipoMensaje === 2) {
         const formattedTalents = response.data.talentos.map((talent: any) => ({
           idTalento: talent.idTalento,
+          idCliente: requerimiento?.idCliente,
           nombres: talent.nombres,
           apellidoPaterno: talent.apellidoPaterno,
           apellidoMaterno: talent.apellidoMaterno,
@@ -502,6 +532,7 @@ const TalentTable: React.FC = () => {
         const talentDetails = response.data.talento;
         formattedTalent = {
           idTalento: talentDetails.idTalento,
+          idCliente: requerimiento?.idCliente,
           nombres: talentDetails.nombres,
           apellidos: talentDetails.apellidos || '',
           dni: talentDetails.dni || '',
@@ -534,6 +565,7 @@ const TalentTable: React.FC = () => {
   const formatTalentFromBasicData = (talent: TalentoType): TalentoType => {
     return {
       idTalento: talent.idTalento,
+      idCliente: requerimiento?.idCliente,
       nombres: talent.nombres,
       apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
         `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
@@ -541,8 +573,8 @@ const TalentTable: React.FC = () => {
       dni: talent.dni || '',
       celular: talent.celular || '',
       email: talent.email || '',
-      estado: talent.estado?.toUpperCase() || (talent.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO'),
-      situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
+      estado: talent.estado || '',
+      situacion: talent.situacion || '',
       idEstado: talent.idEstado || 1,
       idSituacion: talent.idSituacion || 1,
       tooltip: talent.tooltip || '',
@@ -560,10 +592,16 @@ const TalentTable: React.FC = () => {
       return false;
     }
 
+    if (confirm) {
+      setCurrentTalento(talento);
+      setShowModalIngreso(true);
+      return;
+    }
+
     setLocalTalents(prev =>
       prev.map(talent =>
         talent.idTalento === talento.idTalento
-          ? { ...talent, confirmado: confirm, isFromAPI: false }
+          ? { ...talent, confirmado: confirm, isFromAPI: false, ingreso: 0 }
           : talent
       )
     );
@@ -589,7 +627,7 @@ const TalentTable: React.FC = () => {
   // Verificar confirmación
   const handleConfirmOpen = () => {
     const acceptedTalents = localTalents.filter(
-      talent => talent.estado?.toUpperCase() === 'DATOS COMPLETOS' || talent.idEstado === 2
+      talent => talent.idEstado === 2
     );
 
     if (acceptedTalents.length === 0) {
@@ -616,7 +654,31 @@ const TalentTable: React.FC = () => {
         idEstado: !talent.confirmado ? talent.idEstado || (talent.estado === 'DATOS COMPLETOS' ? ESTADO_DATOS_COMPLETOS : ESTADO_OBSERVADO) : ESTADO_CONFIRMADO,
         idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2),
         idPerfil: talent.idPerfil || 0,
-        confirmado: talent.confirmado || false
+        confirmado: talent.confirmado || false,
+
+        ingreso: talent.ingreso || 0,
+        idCliente: talent.idCliente || 0,
+        idArea: talent.idArea || 0,
+        cargo: talent.cargo || '',
+        fchInicioContrato: talent.fchInicioContrato || '',
+        fchTerminoContrato: talent.fchTerminoContrato || '',
+        proyectoServicio: talent.proyectoServicio || '',
+        objetoContrato: talent.objetoContrato || '',
+        remuneracion: talent.remuneracion || 0,
+        idTiempoContrato: talent.idTiempoContrato || 0,
+        tiempoContrato: talent.tiempoContrato || 0,
+        idModalidadContrato: talent.idModalidadContrato || 0,
+        horario: talent.horario || '',
+        tieneEquipo: talent.tieneEquipo || 0,
+        ubicacion: talent.ubicacion || '',
+        idMotivo: talent.idMotivo || 0,
+        idMoneda: talent.idMoneda || 1,
+        declararSunat: talent.declararSunat || 0,
+        sedeDeclarar: talent.sedeDeclarar || '',
+        montoBase: talent.montoBase || 0,
+        montoMovilidad: talent.montoMovilidad || 0,
+        montoTrimestral: talent.montoTrimestral || 0,
+        montoSemestral: talent.montoSemestral || 0
       }));
 
       const payload = {
@@ -651,9 +713,22 @@ const TalentTable: React.FC = () => {
   // Validaciones
   const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
 
+  const handleClose = () => {
+    setShowModalIngreso(false);
+  }
+
+  const handleOnConfirmModalIngreso = (talento: TalentoType) => {
+    setLocalTalents(prevTalents =>
+      prevTalents.map(t =>
+        t.idTalento === talento.idTalento ? talento : t
+      )
+    );
+  }
+
   return (
     <>
       {isLoading && (<Loading overlayMode={true} />)}
+      {showModalIngreso && (<ModalIngreso onConfirm={handleOnConfirmModalIngreso} currentTalent={currentTalento} onClose={handleClose} />)}
       <div className="container mx-auto p-4 lg:p-0 lg:py-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold flex gap-2">

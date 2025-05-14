@@ -13,7 +13,7 @@ interface InputItem {
 interface Props {
     control: Control<any>;
     setValue: UseFormSetValue<any>;
-    mainLabel: string;
+    mainLabel?: string;
     inputs: InputItem[];
     errors: FieldErrors;
 }
@@ -45,9 +45,11 @@ const SalaryStructureForm = ({ control, setValue, mainLabel, inputs, errors }: P
 
     return (
         <div className="flex flex-col md:flex-row items-start justify-between gap-4 mt-4">
-            <div className="w-full md:flex-1 md:basis-3/12">
-                <label className="text-lg font-semibold">{mainLabel}</label>
-            </div>
+            {mainLabel && (
+                <div className="w-full md:flex-1 md:basis-3/12">
+                    <label className="text-lg font-semibold">{mainLabel}</label>
+                </div>
+            )}
 
             <div className="w-full md:flex-1 md:basis-9/12">
                 <div className="overflow-x-auto">

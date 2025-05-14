@@ -2,21 +2,20 @@ import { z } from "zod";
 import { validDropdown } from "./Validations";
 
 export const EntryFormSchema = z.object({
-    idModalidad: validDropdown,
+    idModalidadContrato: validDropdown,
     nombres: z.string({
         invalid_type_error: "Campo obligatorio",
     }).min(1, "Campo obligatorio"),
-    apellidoPaterno: z.string({
+    apellidos: z.string({
         invalid_type_error: "Campo obligatorio",
     }).min(1, "Campo obligatorio"),
-    apellidoMaterno: z.string().optional().nullable(),
     idArea: validDropdown,
     idCliente: validDropdown.optional(),
     idMotivo: validDropdown,
     cargo: z.string({
         invalid_type_error: "Campo obligatorio",
     }).min(1, "Campo obligatorio"),
-    horarioTrabajo: z.string().min(1, "Campo obligatorio"),
+    horario: z.string().min(1, "Campo obligatorio"),
     montoBase: z.number({
         required_error: "Campo obligatorio",
         invalid_type_error: "Monto base debe tener 2 decimales"
@@ -47,6 +46,12 @@ export const EntryFormSchema = z.object({
     }).min(1, "Campo obligatorio"),
     declararSunat: validDropdown,
     idSedeDeclarar: validDropdown,
+    ubicacion: z.string({
+        invalid_type_error: "Campo obligatorio",
+    }).min(1, "Campo obligatorio"),
+    tieneEquipo: z.boolean({
+        required_error: "Debe seleccionar si cuenta con equipo",
+    }),
 }).refine(
     (data) => {
         if (!data.fchInicioContrato || !data.fchTerminoContrato) {

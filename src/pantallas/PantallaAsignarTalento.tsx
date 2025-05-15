@@ -658,7 +658,8 @@ const TalentTable: React.FC = () => {
         confirmado: talent.confirmado || false,
 
         ingreso: talent.ingreso || 0,
-        idCliente: talent.idCliente || 0,
+        idCliente: requerimiento?.idCliente || 0,
+        cliente: requerimiento?.cliente || '',
         idArea: talent.idArea || 0,
         cargo: talent.cargo || '',
         fchInicioContrato: talent.fchInicioContrato || '',

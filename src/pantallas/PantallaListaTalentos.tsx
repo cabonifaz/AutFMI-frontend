@@ -1,33 +1,20 @@
 import { useRef, useState } from 'react';
-import { TalentoType } from '../models/type/TalentoType';
 import { useNavigate } from 'react-router-dom';
 import useTalentos from '../hooks/useTalentos';
-import ModalModalidad from '../components/ui/ModalModalidad';
-import { enqueueSnackbar } from 'notistack';
-import useDownloadPdf from '../hooks/useDownloadPdf';
 import { PantallaWrapper } from './PantallaWrapper';
 import { useMenu } from '../context/MenuContext';
 import { Loading } from '../components/ui/Loading';
+import { TalentoType } from '../models/type/TalentoType';
+import { ModalArchivos } from '../components/ui/ModalArchivos';
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
   const { toggleMenu } = useMenu();
-  const { fetchAndOpenPdf, loading: downloadPdfLoading } = useDownloadPdf();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTalento, selectTalento] = useState<TalentoType | null>(null);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [currentTalent, setCurrentTalent] = useState<TalentoType | null>(null)
   const { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm } = useTalentos();
 
   const textSearchRef = useRef<HTMLInputElement>(null);
-
-  const handleCloseModal = () => setIsModalOpen(false);
-  const handleOpenModal = (talento: TalentoType) => {
-    if (talento.idUsuarioTalento === 0) {
-      enqueueSnackbar('Debe actualizar los datos del talento', { variant: 'warning' });
-      return;
-    };
-    selectTalento(talento);
-    setIsModalOpen(true);
-  };
 
   const handleSearch = () => {
     if (textSearchRef.current) {
@@ -36,10 +23,27 @@ const PantallaListaTalentos = () => {
     }
   };
 
+  const handleFilesButtonClick = (talento: TalentoType) => {
+    // fetchAndOpenPdf(talento.idTipoHistorial, talento.idTalento)
+    setCurrentTalent(talento);
+    setShowFilesModal(true);
+  }
+
+  const handleModalArchivoClose = () => {
+    setCurrentTalent(null);
+    setShowFilesModal(false);
+  }
+
   return (
     <>
+      {showFilesModal && (
+        <ModalArchivos
+          isOpen={showFilesModal}
+          onClose={handleModalArchivoClose}
+          talento={currentTalent}
+        />
+      )}
       {loading && (<Loading overlayMode={true} />)}
-      {downloadPdfLoading && (<Loading overlayMode={true} />)}
       <PantallaWrapper>
         <div className="mb-3 flex gap-2 md:gap-4">
           <div className="space-y-1 cursor-pointer self-center ms-1 lg:hidden" onClick={toggleMenu}>
@@ -83,16 +87,11 @@ const PantallaListaTalentos = () => {
                     </td>
                     <td className="text-center">
                       <div className='flex items-center justify-center gap-2'>
-                        <button
-                          className="w-12 rounded-lg hover:bg-slate-200"
-                          aria-label="Editar talento"
-                          onClick={() => navigate("/formDatos", { state: { talento } })}>
-                          <img src="assets/ic_edit.svg" alt="edit icon" />
-                        </button>
+                        {/* FILE BUTTONS */}
                         <button
                           className="w-12 rounded-lg hover:bg-slate-200 p-2"
                           aria-label="Descargar PDF"
-                          onClick={() => fetchAndOpenPdf(talento.idTipoHistorial, talento.idUsuarioTalento)}
+                          onClick={handleFilesButtonClick.bind(null, talento)}
                         >
                           <img src="assets/ic_pdf.svg" alt="download pdf icon" />
                         </button>
@@ -100,31 +99,21 @@ const PantallaListaTalentos = () => {
                     </td>
                     <td className="py-5 lg:px-4 flex flex-col md:flex-row *:w-[90%] *:md:w-fit gap-2 justify-center">
                       <button
-                        className={`btn ${talento.esTrabajador ? 'btn-disabled' : 'btn-blue'}`}
-                        onClick={() => handleOpenModal(talento)}
-                        aria-label="Ingreso de talento"
-                        disabled={talento.esTrabajador}>
-                        Ingreso
-                      </button>
-                      <button
-                        className={`btn ${!talento.esTrabajador ? 'btn-disabled' : 'btn-orange'}`}
+                        className={`btn btn-orange`}
                         onClick={() => navigate('/formMovimiento', { state: { talento } })}
-                        aria-label="Movimiento"
-                        disabled={!talento.esTrabajador}>
+                        aria-label="Movimiento">
                         Movimiento
                       </button>
                       <button
-                        className={`btn ${!talento.esTrabajador ? 'btn-disabled' : 'btn-red'}`}
+                        className={`btn btn-red`}
                         onClick={() => navigate('/formCese', { state: { talento } })}
-                        aria-label="Cese"
-                        disabled={!talento.esTrabajador}>
+                        aria-label="Cese">
                         Cese
                       </button>
                       <button
-                        className={`btn ${!talento.esTrabajador ? 'btn-disabled' : 'btn-primary'}`}
+                        className={`btn btn-primary`}
                         onClick={() => navigate('/formSolicitarEquipo', { state: { talento } })}
-                        aria-label="equipo"
-                        disabled={!talento.esTrabajador}>
+                        aria-label="equipo">
                         Solicitar equipo
                       </button>
                     </td>
@@ -154,12 +143,6 @@ const PantallaListaTalentos = () => {
           )}
         </div>
       </PantallaWrapper>
-
-      <ModalModalidad
-        talento={selectedTalento!}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
     </>
   );
 };

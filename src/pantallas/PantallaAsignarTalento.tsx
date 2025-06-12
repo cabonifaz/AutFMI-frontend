@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiClientWithToken } from '../utils/apiClient';
 import { ESTADO_ATENDIDO, ESTADO_CONFIRMADO, ESTADO_DATOS_COMPLETOS, ESTADO_OBSERVADO } from '../utils/config';
@@ -451,7 +451,7 @@ const TalentTable: React.FC = () => {
         if (response.data.requerimiento.lstRqTalento?.length > 0) {
           const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
             idTalento: talent.idTalento,
-            idCliente: requerimiento?.idCliente,
+            idCliente: response.data.requerimiento.idCliente || 0,
             nombres: talent.nombresTalento,
             apellidos: talent.apellidosTalento,
             dni: talent.dni,
@@ -606,13 +606,7 @@ const TalentTable: React.FC = () => {
           : talent
       )
     );
-
-    // Mostrar mensaje informativo
-    if (confirm) {
-      showToast(`Talento confirmado. Vacantes restantes: ${remainingVacancies - 1}`, 'success');
-    } else {
-      showToast(`Confirmación cancelada. Vacantes restantes: ${remainingVacancies + 1}`, 'warning');
-    }
+    showToast(`Confirmación cancelada. Vacantes restantes: ${remainingVacancies + 1}`, 'warning');
   };
 
   // Remover talento
@@ -725,6 +719,7 @@ const TalentTable: React.FC = () => {
         t.idTalento === talento.idTalento ? talento : t
       )
     );
+    showToast(`Talento confirmado. Vacantes restantes: ${remainingVacancies - 1}`, 'success');
   }
 
   return (
@@ -824,7 +819,7 @@ const TalentTable: React.FC = () => {
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={() => handleFinalize({ flagCorreo: true })}
-          message="¿Está seguro que desea finalizar y guardar los talentos seleccionados?"
+          message="¿Está seguro que desea finalizar y guardar los talentos confirmados?"
         />
 
         {/* Notificaciones */}

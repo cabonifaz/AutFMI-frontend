@@ -104,7 +104,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                 sedeDeclarar: sedeSunatList.find(sede => sede.idSede === data.idSedeDeclarar)?.nombre,
                 tieneEquipo: data.tieneEquipo ? 1 : 0,
                 ingreso: 1,
-                confirmado: true
+                confirmado: true,
+                isFromAPI: false,
             };
             onConfirm(updatedTalento);
             onClose();
@@ -134,6 +135,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                                         <DropdownForm name="idCliente" control={control} label="Cliente" error={errors.idCliente}
                                             options={clientes?.map((client) => ({ value: client.idCliente, label: client.razonSocial })) || []}
                                             required={true}
+                                            disabled={true}
                                         />
                                         <DropdownForm name="idArea" control={control} label="Área" error={errors.idArea}
                                             options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
@@ -147,7 +149,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                                                 <div className="flex gap-4">
                                                     <label className="text-wrap w-[11rem]">
                                                         ¿Cuenta con equipo? <span className="text-red-500">*</span>
-                                                        <div><p className="text-sm text-zinc-500">(PC o Laptop)</p></div>
+                                                        <div><p className="text-sm text-zinc-500">(Laptop)</p></div>
                                                     </label>
                                                     <div className="flex items-center gap-6">
                                                         <label className="flex items-center cursor-pointer">

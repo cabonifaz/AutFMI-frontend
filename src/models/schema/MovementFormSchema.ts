@@ -31,7 +31,7 @@ export const MovementFormSchema = z.object({
         invalid_type_error: "Campo obligatorio",
     }).min(1, "Campo obligatorio"),
     idMovArea: validDropdown,
-    jornada: z.string({
+    horario: z.string({
         invalid_type_error: "Campo obligatorio",
     }).min(1, "Campo obligatorio"),
     fchMovimiento: z.string({

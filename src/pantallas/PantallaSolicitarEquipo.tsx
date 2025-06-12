@@ -21,7 +21,7 @@ const PantallaSolicitarEquipo = () => {
     const [defaultSoftwareIds, setDefaultSoftwareIds] = useState<string[]>([]);
 
     const { postData, postloading } = usePostHook();
-    const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idUsuarioTalento);
+    const { employee, loading: employeeLoading } = useFetchEmpleado(talento?.idTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
     const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD},${TIPO_HARDWARE},${ANEXO_HARDWARE},${TIPO_SOFTWARE}`);
 
@@ -160,7 +160,7 @@ const PantallaSolicitarEquipo = () => {
 
         try {
             const formattedData = {
-                idUsuarioEmpleado: talento?.idUsuarioTalento,
+                idTalento: talento?.idTalento,
                 nombreEmpleado: data.nombres,
                 apellidoPaternoEmpleado: data.apellidoPaterno,
                 apellidoMaternoEmpleado: data.apellidoMaterno,

@@ -2,15 +2,10 @@ export type TalentoDetailType = {
     nombres: string;
     apellidoPaterno: string;
     apellidoMaterno: string;
-    telefono: string;
+    celular: string;
     email: string;
     dni: string;
-    tiempoContrato: number;
-    idTiempoContrato: number;
-    fechaInicioLabores: string;
     cargo: string;
     remuneracion: number;
     idMoneda: number;
-    idModalidad: number;
-    ubicacion: string;
 }

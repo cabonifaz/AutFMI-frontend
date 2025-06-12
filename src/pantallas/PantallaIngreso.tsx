@@ -57,14 +57,11 @@ const PantallaIngreso = () => {
 
   useEffect(() => {
     if (talentoDetails) {
-      const date = parse(talentoDetails?.fechaInicioLabores, 'dd-MM-yyyy', new Date());
       reset({
         nombres: talentoDetails?.nombres || "",
         apellidos: talentoDetails?.apellidoPaterno || "",
-        fchInicioContrato: format(date, "yyyy-MM-dd") || "",
         cargo: talentoDetails?.cargo || "",
-        montoBase: talentoDetails?.remuneracion || 0,
-        idModalidadContrato: talentoDetails?.idModalidad || 0,
+        montoBase: talentoDetails?.remuneracion || 0
       });
     }
   }, [reset, talentoDetails]);

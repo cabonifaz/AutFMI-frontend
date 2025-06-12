@@ -41,17 +41,15 @@ const useDownloadPdf = () => {
         });
     };
 
-    const fetchAndOpenPdf = async (idTipoHistorial: number, idUsuarioTalento: number) => {
+    const fetchAndOpenPdf = async (url: string) => {
         setLoading(true);
         try {
-            const response = await apiClientWithToken.get<DownloadPDFResponse>(
-                `/fmi/employee/lastHistory?idTipoHistorial=${idTipoHistorial}&idUsuarioTalento=${idUsuarioTalento}`
-            );
+            const response = await apiClientWithToken.get<DownloadPDFResponse>(url);
 
             const { result, lstArchivos } = response.data;
 
             if (result.idTipoMensaje !== 2) {
-                enqueueSnackbar(result.mensaje, { variant: 'error' });
+                enqueueSnackbar(result.mensaje, { variant: 'warning' });
                 return;
             }
 

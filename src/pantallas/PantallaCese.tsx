@@ -19,7 +19,7 @@ const PantallaCese = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
 
     const { postData, postloading } = usePostHook();
-    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
+    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
     const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD},${MOTIVO_CESE}`);
 
@@ -49,6 +49,7 @@ const PantallaCese = () => {
                 apellidoPaterno: employee.apellidoPaterno || "",
                 apellidoMaterno: employee.apellidoMaterno || "",
                 idArea: employee.idArea || 0,
+                idCliente: employee.idCliente || 0
             });
         }
     }, [employee, reset]);
@@ -66,7 +67,7 @@ const PantallaCese = () => {
         }
 
         const response = await postData("/fmi/employee/contractTermination", {
-            idUsuarioTalento: talento.idUsuarioTalento,
+            idTalento: talento.idTalento,
             area: area,
             cliente: cliente,
             ...data

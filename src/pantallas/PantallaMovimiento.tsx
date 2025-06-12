@@ -19,7 +19,7 @@ const PantallaMovimiento = () => {
     const { talento } = location.state as { talento: TalentoType } || {};
 
     const { postData, postloading } = usePostHook();
-    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idUsuarioTalento);
+    const { employee, loading: employeeLoading } = useFetchEmpleado(talento.idTalento);
     const { clientes, loading: clientsLoading } = useFetchClients();
     const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD}`);
 
@@ -42,7 +42,7 @@ const PantallaMovimiento = () => {
             montoSemestral: 0,
             puesto: "",
             idMovArea: 0,
-            jornada: "",
+            horario: "",
             fchMovimiento: ""
         }
     });
@@ -56,6 +56,7 @@ const PantallaMovimiento = () => {
                 idArea: employee.idArea || 0,
                 idCliente: employee.idCliente || 0,
                 montoBase: employee.remuneracion || 0,
+                puesto: employee.cargo || ""
             });
         }
     }, [employee, employeeLoading, reset]);
@@ -73,7 +74,7 @@ const PantallaMovimiento = () => {
         }
 
         const response = await postData("/fmi/employee/movement", {
-            idUsuarioTalento: talento.idUsuarioTalento,
+            idTalento: talento.idTalento,
             idMoneda: null,
             idModalidad: null,
             fchInicioContrato: null,
@@ -130,7 +131,7 @@ const PantallaMovimiento = () => {
                         options={unitValues?.map((unit) => ({ value: unit.num1, label: unit.string1 })) || []}
                         required={true}
                     />
-                    <InputForm name="jornada" control={control} label="Jornada" error={errors.jornada} required={true} />
+                    <InputForm name="horario" control={control} label="Jornada" error={errors.horario} required={true} />
                     <InputForm name="fchMovimiento" control={control} label="Fecha de movimiento" type="date" error={errors.fchMovimiento} word_wrap={true} required={true} />
                     {/* Form options */}
                     <div className="flex justify-center gap-4">

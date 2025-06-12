@@ -56,17 +56,12 @@ const PantallaDatos = () => {
                 nombres: talentoDetails?.nombres || "",
                 apellidoPaterno: talentoDetails?.apellidoPaterno || "",
                 apellidoMaterno: talentoDetails?.apellidoMaterno || "",
-                telefono: talentoDetails?.telefono || "",
+                telefono: talentoDetails?.celular || "",
                 dni: talentoDetails?.dni || "",
                 email: talentoDetails?.email || "",
-                tiempoContrato: talentoDetails?.tiempoContrato || 0,
-                idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
-                fechaInicioLabores: formatDateToDMY(talentoDetails?.fechaInicioLabores),
                 cargo: talentoDetails?.cargo || "",
                 remuneracion: talentoDetails?.remuneracion || 0,
                 idMoneda: talentoDetails?.idMoneda || 0,
-                idModalidad: talentoDetails?.idModalidad || 0,
-                ubicacion: talentoDetails?.ubicacion || ""
             });
         }
     }, [talentoDetails, reset]);

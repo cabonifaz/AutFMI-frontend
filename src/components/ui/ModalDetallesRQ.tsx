@@ -400,7 +400,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         <>
             {(postloading || deleteLoading) && <Loading overlayMode={true} />}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto relative">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
                     <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
                     <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
@@ -532,7 +532,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Cliente",
                                 children: (
-                                    <>
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
                                         {/* Cliente */}
                                         <div className="flex items-center">
                                             <label className="text-sm font-medium text-gray-700">Cliente:</label>
@@ -564,7 +564,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             </button>
                                         </div>
 
-                                        <div className="mt-4 max-h-[30vh] overflow-y-auto">
+                                        <div className="mt-4 flex-1 overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
@@ -623,7 +623,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
                                 )
                             },
                             {
@@ -642,232 +642,239 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </p>
                                 ),
                                 children: (
-                                    <form onSubmit={handleSubmit(onSubmit)}>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <button
-                                                type="button"
-                                                onClick={handleEditVacantesClick}
-                                                className="focus:outline-none ms-2"
-                                            >
-                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
-                                            </button>
-                                            <div className="flex items-center gap-2">
+                                    <div >
+                                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(570px-120px)]">
+                                            <div className="flex items-center justify-between my-2">
                                                 <button
                                                     type="button"
-                                                    className={`focus:outline-none rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-blue cursor-pointer" : "btn-disabled"}`}
-                                                    onClick={handleAddVacante}
-                                                    disabled={!isEditingVacantesData}
+                                                    onClick={handleEditVacantesClick}
+                                                    className="focus:outline-none ms-2"
                                                 >
-                                                    Agregar
+                                                    <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
                                                 </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className={`focus:outline-none text-sm min-w-24 h-8 rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-blue cursor-pointer" : "btn-disabled"}`}
+                                                        onClick={handleAddVacante}
+                                                        disabled={!isEditingVacantesData}
+                                                    >
+                                                        Agregar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto">
+                                                <div className="table-container">
+                                                    <div className="table-wrapper">
+                                                        <table className="table">
+                                                            <thead>
+                                                                <tr className="table-header">
+                                                                    <th className="table-header-cell">Perfil profesional</th>
+                                                                    <th className="table-header-cell">Cantidad</th>
+                                                                    <th className="table-header-cell">Tarifa</th>
+                                                                    <th className="table-header-cell"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {fields.length <= 0 ? (
+                                                                    <tr>
+                                                                        <td colSpan={4} className="table-empty">
+                                                                            No hay vacantes disponibles.
+                                                                        </td>
+                                                                    </tr>
+                                                                ) : (
+                                                                    fields.map((field, index) => {
+                                                                        if (field.idEstado === 3) {
+                                                                            return (
+                                                                                <tr key={`hidden-${field.id}-${index}`} className="hidden">
+                                                                                    {/* Campos ocultos pero presentes en el formulario */}
+                                                                                    <input type="hidden" {...register(`lstVacantes.${index}.idEstado`)} value={3} />
+                                                                                    <input type="hidden" {...register(`lstVacantes.${index}.idPerfil`)} value={0} />
+                                                                                    <input type="hidden" {...register(`lstVacantes.${index}.cantidad`)} value={0} />
+                                                                                    {field.idRequerimientoVacante && (
+                                                                                        <input type="hidden" {...register(`lstVacantes.${index}.idRequerimientoVacante`)} value={field.idRequerimientoVacante} />
+                                                                                    )}
+                                                                                </tr>
+                                                                            );
+                                                                        }
 
+                                                                        const availableProfiles = getAvailableProfiles(index);
+                                                                        const currentProfile = currentVacantes[index]?.idPerfil;
+                                                                        const showCurrentProfile = currentProfile === 0 ||
+                                                                            availableProfiles.some(p => p.idPerfil === currentProfile) ||
+                                                                            !tarifario.some(p => p.idPerfil === currentProfile);
+
+                                                                        const optionsToShow = showCurrentProfile
+                                                                            ? [...availableProfiles]
+                                                                            : [...availableProfiles, ...tarifario.filter(p => p.idPerfil === currentProfile)];
+
+                                                                        return (
+                                                                            <tr key={index} className="table-row">
+                                                                                <td className="table-cell">
+                                                                                    <select
+                                                                                        {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
+                                                                                        onChange={(e) => handleProfileChange(index, e.target.value)}
+                                                                                        className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                                                                                        value={currentProfile}
+                                                                                        disabled={!isEditingVacantesData}
+                                                                                    >
+                                                                                        <option value={0}>Seleccione un perfil</option>
+                                                                                        {optionsToShow.map((perfil) => (
+                                                                                            <option key={perfil.idPerfil} value={perfil.idPerfil}>
+                                                                                                {perfil.perfil}
+                                                                                            </option>
+                                                                                        ))}
+                                                                                    </select>
+                                                                                    {errors.lstVacantes?.[index]?.idPerfil && (
+                                                                                        <p className="text-red-500 text-xs mt-1">
+                                                                                            {errors.lstVacantes[index]?.idPerfil?.message}
+                                                                                        </p>
+                                                                                    )}
+                                                                                </td>
+                                                                                <td className="table-cell">
+                                                                                    <div className="flex">
+                                                                                        <div className="flex flex-col gap-1 relative">
+                                                                                            <NumberInput<UpdateBaseRQSchemaType>
+                                                                                                register={register}
+                                                                                                key={`vacante-${index}-${restoreKey}`}
+                                                                                                control={control}
+                                                                                                name={`lstVacantes.${index}.cantidad`}
+                                                                                                defaultValue={Number(originalCantidades[index] || 1)}
+                                                                                                disabled={!isEditingVacantesData}
+                                                                                                onChange={(value) => {
+                                                                                                    const numValue = Number(value) || 0;
+                                                                                                    const currentValue = getValues(`lstVacantes.${index}`);
+                                                                                                    if (currentValue.idRequerimientoVacante > 0 && currentValue.idEstado === 0) {
+                                                                                                        setValue(`lstVacantes.${index}.idEstado`, 2);
+                                                                                                    }
+                                                                                                    setCantidadesVacantes(prev => {
+                                                                                                        const newCantidades = [...prev];
+                                                                                                        newCantidades[index] = String(numValue);
+                                                                                                        return newCantidades;
+                                                                                                    });
+                                                                                                    clearErrors(`lstVacantes.${index}.cantidad`);
+                                                                                                }}
+                                                                                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                                                            />
+                                                                                            {errors.lstVacantes?.[index]?.cantidad && (
+                                                                                                <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                                                                    {errors.lstVacantes[index]?.cantidad?.message}
+                                                                                                </p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div className="ms-4 flex items-center">
+                                                                                            {field.idEstado === 1 ? (
+                                                                                                <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
+                                                                                                    Nuevo
+                                                                                                </span>
+                                                                                            ) : null}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td className="table-cell">
+                                                                                    <input
+                                                                                        {...register(`lstVacantes.${index}.tarifa`)}
+                                                                                        defaultValue={getValues(`lstVacantes.${index}.tarifa`)?.toString() || '-'}
+                                                                                        type="text"
+                                                                                        id="v-tarifa"
+                                                                                        className="input-readonly-text"
+                                                                                        readOnly />
+                                                                                </td>
+                                                                                <td className="table-cell">
+                                                                                    {isEditingVacantesData && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            disabled={!isEditingVacantesData}
+                                                                                            className="ms-4 text-xl w-fit"
+                                                                                            onClick={() => handleRemoveVacante(index)}
+                                                                                        >
+                                                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
+                                                                                        </button>
+                                                                                    )}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 self-end">
                                                 <button
                                                     type="submit"
                                                     disabled={!isEditingVacantesData}
-                                                    className={`focus:outline-none rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-primary cursor-pointer" : "btn-disabled"}`}
+                                                    className={`focus:outline-none text-sm min-w-24 h-8 rounded-lg py-1 px-2 mx-1 ${isEditingVacantesData ? "btn-primary cursor-pointer" : "btn-disabled"}`}
                                                 >
                                                     Actualizar
                                                 </button>
                                             </div>
-                                        </div>
-                                        <div className="p-1 max-h-[30vh] overflow-y-auto">
-                                            <div className="table-container">
-                                                <div className="table-wrapper">
-                                                    <table className="table">
-                                                        <thead>
-                                                            <tr className="table-header">
-                                                                <th className="table-header-cell">Perfil profesional</th>
-                                                                <th className="table-header-cell">Cantidad</th>
-                                                                <th className="table-header-cell">Tarifa</th>
-                                                                <th className="table-header-cell"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {fields.length <= 0 ? (
-                                                                <tr>
-                                                                    <td colSpan={4} className="table-empty">
-                                                                        No hay vacantes disponibles.
-                                                                    </td>
-                                                                </tr>
-                                                            ) : (
-                                                                fields.map((field, index) => {
-                                                                    if (field.idEstado === 3) {
-                                                                        return (
-                                                                            <tr key={`hidden-${field.id}-${index}`} className="hidden">
-                                                                                {/* Campos ocultos pero presentes en el formulario */}
-                                                                                <input type="hidden" {...register(`lstVacantes.${index}.idEstado`)} value={3} />
-                                                                                <input type="hidden" {...register(`lstVacantes.${index}.idPerfil`)} value={0} />
-                                                                                <input type="hidden" {...register(`lstVacantes.${index}.cantidad`)} value={0} />
-                                                                                {field.idRequerimientoVacante && (
-                                                                                    <input type="hidden" {...register(`lstVacantes.${index}.idRequerimientoVacante`)} value={field.idRequerimientoVacante} />
-                                                                                )}
-                                                                            </tr>
-                                                                        );
-                                                                    }
-
-                                                                    const availableProfiles = getAvailableProfiles(index);
-                                                                    const currentProfile = currentVacantes[index]?.idPerfil;
-                                                                    const showCurrentProfile = currentProfile === 0 ||
-                                                                        availableProfiles.some(p => p.idPerfil === currentProfile) ||
-                                                                        !tarifario.some(p => p.idPerfil === currentProfile);
-
-                                                                    const optionsToShow = showCurrentProfile
-                                                                        ? [...availableProfiles]
-                                                                        : [...availableProfiles, ...tarifario.filter(p => p.idPerfil === currentProfile)];
-
-                                                                    return (
-                                                                        <tr key={index} className="table-row">
-                                                                            <td className="table-cell">
-                                                                                <select
-                                                                                    {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
-                                                                                    onChange={(e) => handleProfileChange(index, e.target.value)}
-                                                                                    className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                                                                                    value={currentProfile}
-                                                                                    disabled={!isEditingVacantesData}
-                                                                                >
-                                                                                    <option value={0}>Seleccione un perfil</option>
-                                                                                    {optionsToShow.map((perfil) => (
-                                                                                        <option key={perfil.idPerfil} value={perfil.idPerfil}>
-                                                                                            {perfil.perfil}
-                                                                                        </option>
-                                                                                    ))}
-                                                                                </select>
-                                                                                {errors.lstVacantes?.[index]?.idPerfil && (
-                                                                                    <p className="text-red-500 text-xs mt-1">
-                                                                                        {errors.lstVacantes[index]?.idPerfil?.message}
-                                                                                    </p>
-                                                                                )}
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                <div className="flex">
-                                                                                    <div className="flex flex-col gap-1 relative">
-                                                                                        <NumberInput<UpdateBaseRQSchemaType>
-                                                                                            register={register}
-                                                                                            key={`vacante-${index}-${restoreKey}`}
-                                                                                            control={control}
-                                                                                            name={`lstVacantes.${index}.cantidad`}
-                                                                                            defaultValue={Number(originalCantidades[index] || 1)}
-                                                                                            disabled={!isEditingVacantesData}
-                                                                                            onChange={(value) => {
-                                                                                                const numValue = Number(value) || 0;
-                                                                                                const currentValue = getValues(`lstVacantes.${index}`);
-                                                                                                if (currentValue.idRequerimientoVacante > 0 && currentValue.idEstado === 0) {
-                                                                                                    setValue(`lstVacantes.${index}.idEstado`, 2);
-                                                                                                }
-                                                                                                setCantidadesVacantes(prev => {
-                                                                                                    const newCantidades = [...prev];
-                                                                                                    newCantidades[index] = String(numValue);
-                                                                                                    return newCantidades;
-                                                                                                });
-                                                                                                clearErrors(`lstVacantes.${index}.cantidad`);
-                                                                                            }}
-                                                                                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                                                        />
-                                                                                        {errors.lstVacantes?.[index]?.cantidad && (
-                                                                                            <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
-                                                                                                {errors.lstVacantes[index]?.cantidad?.message}
-                                                                                            </p>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <div className="ms-4 flex items-center">
-                                                                                        {field.idEstado === 1 ? (
-                                                                                            <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
-                                                                                                Nuevo
-                                                                                            </span>
-                                                                                        ) : null}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                <input
-                                                                                    {...register(`lstVacantes.${index}.tarifa`)}
-                                                                                    defaultValue={getValues(`lstVacantes.${index}.tarifa`)?.toString() || '-'}
-                                                                                    type="text"
-                                                                                    id="v-tarifa"
-                                                                                    className="input-readonly-text"
-                                                                                    readOnly />
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                {isEditingVacantesData && (
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        disabled={!isEditingVacantesData}
-                                                                                        className="ms-4 text-xl w-fit"
-                                                                                        onClick={() => handleRemoveVacante(index)}
-                                                                                    >
-                                                                                        <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
-                                                                                    </button>
-                                                                                )}
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
+                                        </form>
+                                    </div>
                                 )
                             },
                             {
                                 label: "Archivos",
                                 children: (
-                                    <div className="p-4 ">
-                                        {/* Lista de archivos */}
-                                        <div>
-                                            <form onSubmit={handleSubmitFiles(onSubmitAddFiles)} className="flex flex-col">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => document.getElementById("fileInput")?.click()}
-                                                        className="btn btn-text"
+                                    <div className="p-4 h-full flex flex-col">
+                                        <div className="flex flex-col h-[calc(570px-120px)]">
+                                            {/* Encabezado */}
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => document.getElementById("fileInput")?.click()}
+                                                    className="btn btn-text"
+                                                >
+                                                    Elegir archivos
+                                                </button>
+                                            </div>
+
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                id="fileInput"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                            />
+
+                                            {/* Lista de archivos */}
+                                            <div className="mt-2 flex-1 overflow-y-auto mb-4">
+                                                {archivos.map((archivo, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
                                                     >
-                                                        Elegir archivos
-                                                    </button>
-                                                </div>
-                                                <input
-                                                    type="file"
-                                                    multiple
-                                                    onChange={handleFileChange}
-                                                    className="hidden"
-                                                    id="fileInput"
-                                                    accept=".pdf,.doc,.docx,.xls,.xlsx"
-                                                />
-                                                <div className="mt-2 max-h-80 overflow-y-auto">
-                                                    {archivos.map((archivo, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
-                                                        >
-                                                            <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                                                                {archivo.name}
+                                                        <span className="text-sm text-gray-700 truncate flex-1 mr-2">
+                                                            {archivo.name}
+                                                        </span>
+                                                        {archivo.idRequerimientoArchivo === 0 && (
+                                                            <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
+                                                                Nuevo
                                                             </span>
-                                                            {archivo.idRequerimientoArchivo === 0 && (
-                                                                <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
-                                                                    Nuevo
-                                                                </span>
-                                                            )}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRemoveFile(index, archivo.idRequerimientoArchivo)}
-                                                                className="text-red-500 hover:text-red-600 focus:outline-none"
-                                                            >
-                                                                <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFile(index, archivo.idRequerimientoArchivo)}
+                                                            className="text-red-500 hover:text-red-600 focus:outline-none"
+                                                        >
+                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-auto flex justify-end">
                                                 <button
                                                     type="submit"
                                                     disabled={!newFiles}
-                                                    className={`btn w-fit self-end mt-4 ${newFiles ? "btn-primary" : "btn-disabled"
-                                                        }`}>
+                                                    className={`btn w-fit text-sm ${newFiles ? "btn-primary" : "btn-disabled"}`}
+                                                >
                                                     Agregar archivos nuevos
                                                 </button>
-                                            </form>
+                                            </div>
                                         </div>
                                     </div>
                                 )
@@ -880,7 +887,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             {(RQ && RQ.idEstado !== ESTADO_ATENDIDO) && (
                                                 <button
                                                     type="button"
-                                                    className="focus:outline-none rounded-lg py-1 px-2 mx-1 btn-blue cursor-pointer"
+                                                    className="focus:outline-none text-sm rounded-lg py-1 px-2 mx-1 my-2 btn-blue cursor-pointer"
                                                     onClick={() => handleAsignar(RQ?.idRequerimiento)}
                                                 >
                                                     Asignar
@@ -893,11 +900,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <table className="table">
                                                         <thead>
                                                             <tr className="table-header">
-                                                                <th scope="col" className="table-header-cell">Nombres</th>
-                                                                <th scope="col" className="table-header-cell">Apellidos</th>
+                                                                <th scope="col" className="table-header-cell">Nombres y apellidos</th>
                                                                 <th scope="col" className="table-header-cell">Doc. Identidad</th>
                                                                 <th scope="col" className="table-header-cell">Celular</th>
-                                                                <th scope="col" className="table-header-cell">Email</th>
+                                                                <th scope="col" className="table-header-cell">Correo</th>
                                                                 <th scope="col" className="table-header-cell">Situación</th>
                                                                 <th scope="col" className="table-header-cell">Estado</th>
                                                                 <th scope="col" className="table-header-cell">Perfil</th>
@@ -913,8 +919,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             ) : (
                                                                 requirement?.requerimiento.lstRqTalento.map((talento) => (
                                                                     <tr key={talento.idTalento} className="table-row">
-                                                                        <td className="table-cell">{talento.nombresTalento}</td>
-                                                                        <td className="table-cell">{talento.apellidosTalento}</td>
+                                                                        <td className="table-cell">{talento.nombresTalento} {talento.apellidosTalento}</td>
                                                                         <td className="table-cell">{talento.dni}</td>
                                                                         <td className="table-cell">{talento.celular}</td>
                                                                         <td className="table-cell">{talento.email}</td>
@@ -942,78 +947,76 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Gestión",
                                 children: (
-                                    <form className="px-4" onSubmit={handleSubmit(onSubmit)}>
-                                        <div className="flex justify-end mb-1">
-                                            <button
-                                                type="button"
-                                                onClick={handleEditGestionClick}
-                                                className="focus:outline-none"
-                                            >
-                                                <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
-                                            </button>
-                                        </div>
-                                        {/* <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">PPto:</label>
-                                            <input
-                                                type="text"
-                                                placeholder="PPto"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                disabled
-                                            />
-                                        </div> */}
-                                        <div className="flex items-center mb-6">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Duración:</label>
-                                            <div className="flex gap-4 w-2/3">
-                                                <div className="flex flex-col gap-1">
-                                                    <NumberInput<UpdateBaseRQSchemaType>
-                                                        register={register}
+                                    <div className="h-full flex flex-col px-4">
+                                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-[calc(570px-120px)]">
+                                            {/* Contenido del formulario */}
+                                            <div className="flex justify-end mb-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleEditGestionClick}
+                                                    className="focus:outline-none"
+                                                >
+                                                    <img src="/assets/ic_edit.svg" alt="Editar" className="w-7 h-7" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center mb-6">
+                                                <label className="w-1/3 text-sm font-medium text-gray-700">Duración:</label>
+                                                <div className="flex gap-4 w-2/3">
+                                                    <div className="flex flex-col gap-1">
+                                                        <NumberInput<UpdateBaseRQSchemaType>
+                                                            register={register}
+                                                            control={control}
+                                                            name="duracion"
+                                                            type="float"
+                                                            defaultValue={1}
+                                                            decimalPlaces={1}
+                                                            disabled={!isEditingGestionData}
+                                                            onChange={() => clearErrors(`duracion`)}
+                                                            className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                        />
+                                                        {errors.duracion && (
+                                                            <p className="text-red-500 text-xs mt-1">{errors.duracion.message}</p>
+                                                        )}
+                                                    </div>
+                                                    <DropdownForm
+                                                        name="idDuracion"
                                                         control={control}
-                                                        name="duracion"
-                                                        type="float"
-                                                        defaultValue={1}
-                                                        decimalPlaces={1}
+                                                        error={errors.idDuracion}
+                                                        required={false}
+                                                        flex={true}
                                                         disabled={!isEditingGestionData}
-                                                        onChange={() => clearErrors(`duracion`)}
-                                                        className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                        options={duracionRQ.map((duracion) => ({ value: duracion.num1, label: duracion.string1 }))}
                                                     />
-                                                    {errors.duracion && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.duracion.message}</p>
-                                                    )}
                                                 </div>
+                                            </div>
+
+                                            <div className="flex items-center">
+                                                <label className="w-1/3 text-sm font-medium text-gray-700">Modalidad:</label>
                                                 <DropdownForm
-                                                    name="idDuracion"
+                                                    name="idModalidad"
                                                     control={control}
-                                                    error={errors.idDuracion}
+                                                    error={errors.idModalidad}
                                                     required={false}
                                                     flex={true}
                                                     disabled={!isEditingGestionData}
-                                                    options={duracionRQ.map((duracion) => ({ value: duracion.num1, label: duracion.string1 }))}
+                                                    options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
                                                 />
                                             </div>
 
-                                        </div>
-                                        <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Modalidad:</label>
-                                            <DropdownForm
-                                                name="idModalidad"
-                                                control={control}
-                                                error={errors.idModalidad}
-                                                required={false}
-                                                flex={true}
-                                                disabled={!isEditingGestionData}
-                                                options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
-                                            />
-                                        </div>
-                                        <div className="flex justify-end space-x-4 mt-4">
-                                            <button
-                                                type="submit"
-                                                disabled={!isEditingGestionData}
-                                                className={`btn ${isEditingGestionData ? "btn-primary" : "btn-disabled"}`}
-                                            >
-                                                Actualizar
-                                            </button>
-                                        </div>
-                                    </form>
+                                            <div className="flex-1"></div>
+
+                                            <div className="flex justify-end mt-4">
+                                                <button
+                                                    type="submit"
+                                                    disabled={!isEditingGestionData}
+                                                    className={`btn text-sm ${isEditingGestionData ? "btn-primary" : "btn-disabled"}`}
+                                                >
+                                                    Actualizar
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 )
                             },
                         ]}

@@ -138,8 +138,8 @@ export const PantallaRequerimientos = () => {
         <>
             {(loading || paramLoading || clientsLoading) && (<Loading overlayMode={true} />)}
             <PantallaWrapper>
-                <div className="flex flex-col h-[calc(100vh-40px)]">
-                    <div className="flex-none">
+                <div className="flex flex-col h-screen overflow-hidden p-2">
+                    <div className="flex-none max-w-[95vw]">
                         <h2 className="text-2xl font-semibold mb-4 flex gap-2">
                             <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>
                                 <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
@@ -148,7 +148,6 @@ export const PantallaRequerimientos = () => {
                             </div>
                             Requerimientos
                         </h2>
-                        {/* filters */}
                         <div className="card mb-6">
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-2">
@@ -206,90 +205,85 @@ export const PantallaRequerimientos = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
-                        {/* Table */}
-                        <div className="table-container">
-                            <div className="table-wrapper">
-                                <table className="table">
-                                    <thead>
-                                        <tr className="table-header">
-                                            <th className="table-header-cell">ID</th>
-                                            <th className="table-header-cell">Cliente</th>
-                                            <th className="table-header-cell">Título</th>
-                                            <th className="table-header-cell">Requerimiento</th>
-                                            <th className="table-header-cell">Fecha Solicitud</th>
-                                            <th className="table-header-cell">Estado</th>
-                                            <th className="table-header-cell text-center">Confirmados / Vacantes</th>
-                                            <th className="table-header-cell">Acciones</th>
-                                            <th className="table-header-cell"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {emptyList ? (
-                                            <tr>
-                                                <td colSpan={8} className="table-empty">
-                                                    No hay requerimientos disponibles.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            requerimientos.map((req) => (
-                                                <tr key={req.idRequerimiento} className="table-row">
-                                                    <td className="table-cell">{req.idRequerimiento}</td>
-                                                    <td className="table-cell">{req.cliente}</td>
-                                                    <td className="table-cell">{req.titulo}</td>
-                                                    <td className="table-cell">{req.codigoRQ}</td>
-                                                    <td className="table-cell">{req.fechaSolicitud}</td>
-                                                    <td className="table-cell">{req.estado}</td>
-                                                    <td className="table-cell text-center">
-                                                        <div className="min-w-full flex justify-center">
-                                                            <div className="w-fit relative group">
-                                                                <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit">
-                                                                    {req.vacantesCubiertas} / {req.vacantes}
-                                                                </p>
-                                                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                                                    {req?.lstPerfiles?.map((perfil, index) => (
-                                                                        <p className="text-start" key={index}>{perfil.vacantesCubiertas} / {perfil.vacantesTotales} {perfil.perfil}</p>
-                                                                    ))}
-                                                                    <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
-                                                                </div>
-                                                            </div>
+                    <div className="rounded-lg max-w-[95vw] lg:max-w-[calc(100vw-100px)] xl:max-w-[calc(100vw-192px)] overflow-x-auto">
+                        <table className="table">
+                            <thead className="sticky top-0 bg-white z-10">
+                                <tr className="table-header">
+                                    <th className="table-header-cell text-nowrap">ID</th>
+                                    <th className="table-header-cell text-nowrap">Cliente</th>
+                                    <th className="table-header-cell text-nowrap">Título</th>
+                                    <th className="table-header-cell text-nowrap">Requerimiento</th>
+                                    <th className="table-header-cell text-nowrap">Fecha Solicitud</th>
+                                    <th className="table-header-cell text-nowrap">Estado</th>
+                                    <th className="table-header-cell text-center text-nowrap">Confirmados / Vacantes</th>
+                                    <th className="table-header-cell text-nowrap">Acciones</th>
+                                    <th className="table-header-cell text-nowrap"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {emptyList ? (
+                                    <tr>
+                                        <td colSpan={8} className="table-empty">
+                                            No hay requerimientos disponibles.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    requerimientos.map((req) => (
+                                        <tr key={req.idRequerimiento} className="table-row">
+                                            <td className="table-cell">{req.idRequerimiento}</td>
+                                            <td className="table-cell">{req.cliente}</td>
+                                            <td className="table-cell">{req.titulo}</td>
+                                            <td className="table-cell">{req.codigoRQ}</td>
+                                            <td className="table-cell">{req.fechaSolicitud}</td>
+                                            <td className="table-cell">{req.estado}</td>
+                                            <td className="table-cell text-center">
+                                                <div className="min-w-full flex justify-center">
+                                                    <div className="w-fit relative group">
+                                                        <p className="px-2 py-1 rounded-lg bg-slate-100 w-fit">
+                                                            {req.vacantesCubiertas} / {req.vacantes}
+                                                        </p>
+                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                            {req?.lstPerfiles?.map((perfil, index) => (
+                                                                <p className="text-start" key={index}>{perfil.vacantesCubiertas} / {perfil.vacantesTotales} {perfil.perfil}</p>
+                                                            ))}
+                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
                                                         </div>
-                                                    </td>
-                                                    <td className="table-cell">
-                                                        <button
-                                                            onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                            disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                            className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
-                                                            Asignar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => openDetallesRQModal(req)}
-                                                            className="btn btn-actions btn-primary">
-                                                            Detalles
-                                                        </button>
-                                                    </td>
-                                                    <td className="table-cell">
-                                                        {req?.idAlerta !== null && req?.idAlerta > 0 && (
-                                                            <div className="relative inline-block group">
-                                                                <img
-                                                                    src={getAlertIconPath(req.idAlerta)}
-                                                                    alt="icon estado alerta RQ"
-                                                                    className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                                                                />
-                                                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                                                    Vence: {req.fechaVencimiento}
-                                                                    <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="table-cell">
+                                                <button
+                                                    onClick={() => handleAsignarClick(req.idRequerimiento)}
+                                                    disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                    className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
+                                                    Asignar
+                                                </button>
+                                                <button
+                                                    onClick={() => openDetallesRQModal(req)}
+                                                    className="btn btn-actions btn-primary">
+                                                    Detalles
+                                                </button>
+                                            </td>
+                                            <td className="table-cell">
+                                                {req?.idAlerta !== null && req?.idAlerta > 0 && (
+                                                    <div className="relative inline-block group">
+                                                        <img
+                                                            src={getAlertIconPath(req.idAlerta)}
+                                                            alt="icon estado alerta RQ"
+                                                            className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                                        />
+                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                            Vence: {req.fechaVencimiento}
+                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Pagination */}
@@ -310,7 +304,6 @@ export const PantallaRequerimientos = () => {
                             </button>
                         </div>
                     )}
-
                 </div>
             </PantallaWrapper>
             {isNuevoRQModalOpen &&

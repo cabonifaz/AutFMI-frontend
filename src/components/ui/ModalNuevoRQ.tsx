@@ -266,7 +266,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
         <>
             {(postloading) && (<Loading overlayMode={true} />)}
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto relative">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1050px] min-h-[570px] overflow-y-auto relative">
                     <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
                     <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
                         <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
@@ -277,122 +277,126 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                         tabs={[
                             {
                                 label: "Datos RQ",
-                                children: <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
-                                    <div className="max-h-[42vh] overflow-y-auto pr-2">
-                                        <div className="space-y-4 flex-1">
-                                            {/* Título RQ */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Título:</label>
-                                                <input
-                                                    {...register("titulo")}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                />
-                                            </div>
-                                            {errors.titulo && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.titulo.message}</p>
-                                            )}
-                                            {/* Código RQ */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
-                                                <input
-                                                    {...register("codigoRQ")}
-                                                    disabled={autogenRQ}
-                                                    className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
-                                                />
-                                            </div>
-                                            {errors.codigoRQ && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
-                                            )}
+                                children: (
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
+                                        <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
+                                            <div className="overflow-y-auto pr-2">
+                                                <div className="space-y-4 flex-1">
+                                                    {/* Título RQ */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Título:</label>
+                                                        <input
+                                                            {...register("titulo")}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                        />
+                                                    </div>
+                                                    {errors.titulo && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.titulo.message}</p>
+                                                    )}
+                                                    {/* Código RQ */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
+                                                        <input
+                                                            {...register("codigoRQ")}
+                                                            disabled={autogenRQ}
+                                                            className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
+                                                        />
+                                                    </div>
+                                                    {errors.codigoRQ && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
+                                                    )}
 
-                                            {/* Auto Gen RQ */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Autogenerar RQ:</label>
-                                                <input
-                                                    {...register("autogenRQ")}
-                                                    type="checkbox"
-                                                    onChange={(e) => {
-                                                        setAutogenRQ(e.target.checked);
-                                                        setValue("codigoRQ", e.target.checked ? "Autogenerado" : "");
-                                                        clearErrors("codigoRQ");
-                                                    }}
-                                                    className="input-checkbox"
-                                                />
-                                            </div>
-                                            {errors.autogenRQ && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.autogenRQ.message}</p>
-                                            )}
+                                                    {/* Auto Gen RQ */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Autogenerar RQ:</label>
+                                                        <input
+                                                            {...register("autogenRQ")}
+                                                            type="checkbox"
+                                                            onChange={(e) => {
+                                                                setAutogenRQ(e.target.checked);
+                                                                setValue("codigoRQ", e.target.checked ? "Autogenerado" : "");
+                                                                clearErrors("codigoRQ");
+                                                            }}
+                                                            className="input-checkbox"
+                                                        />
+                                                    </div>
+                                                    {errors.autogenRQ && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.autogenRQ.message}</p>
+                                                    )}
 
-                                            {/* Fecha de Solicitud */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
-                                                <input
-                                                    type="date"
-                                                    {...register("fechaSolicitud")}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                />
-                                            </div>
-                                            {errors.fechaSolicitud && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
-                                            )}
+                                                    {/* Fecha de Solicitud */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
+                                                        <input
+                                                            type="date"
+                                                            {...register("fechaSolicitud")}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                        />
+                                                    </div>
+                                                    {errors.fechaSolicitud && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
+                                                    )}
 
-                                            {/* Descripción */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
-                                                <textarea
-                                                    {...register("descripcion")}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
-                                                />
-                                            </div>
-                                            {errors.descripcion && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
-                                            )}
+                                                    {/* Descripción */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
+                                                        <textarea
+                                                            {...register("descripcion")}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
+                                                        />
+                                                    </div>
+                                                    {errors.descripcion && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
+                                                    )}
 
-                                            {/* Estado */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
-                                                <select
-                                                    {...register("idEstado", { valueAsNumber: true })}
-                                                    className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                    {/* Estado */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
+                                                        <select
+                                                            {...register("idEstado", { valueAsNumber: true })}
+                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                                                        >
+                                                            {estadoOptions.map((option) => (
+                                                                <option key={option.num1} value={option.num1}>
+                                                                    {option.string1}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    {errors.idEstado && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
+                                                    )}
+
+                                                    {/* Fecha Vencimiento */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha Vencimiento:</label>
+                                                        <input type="date" {...register("fechaVencimiento")} id="fechaVencimiento" className="input w-2/3" />
+                                                    </div>
+                                                    {errors.fechaVencimiento && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Botones de acción */}
+                                            <div className="flex justify-end space-x-4 mt-6 me-1">
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-primary"
                                                 >
-                                                    {estadoOptions.map((option) => (
-                                                        <option key={option.num1} value={option.num1}>
-                                                            {option.string1}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    Agregar RQ
+                                                </button>
                                             </div>
-                                            {errors.idEstado && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
-                                            )}
-
-                                            {/* Fecha Vencimiento */}
-                                            <div className="flex items-center">
-                                                <label className="w-1/3 text-sm font-medium text-gray-700">Fecha Vencimiento:</label>
-                                                <input type="date" {...register("fechaVencimiento")} id="fechaVencimiento" className="input w-2/3" />
-                                            </div>
-                                            {errors.fechaVencimiento && (
-                                                <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
-                                            )}
-                                        </div>
+                                        </form>
                                     </div>
-
-                                    {/* Botones de acción */}
-                                    <div className="flex justify-end space-x-4 mt-6 me-1">
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary"
-                                        >
-                                            Agregar RQ
-                                        </button>
-                                    </div>
-                                </form>
+                                )
                             },
                             {
                                 label: "Cliente",
                                 hasError: errors.idCliente?.message !== undefined,
                                 errorMessage: errors.idCliente?.message,
                                 children: (
-                                    <>
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
                                         {/* Cliente */}
                                         <div className="flex items-center">
                                             <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
@@ -423,7 +427,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                             </button>
                                         </div>
 
-                                        <div className="my-4 max-h-[35vh] overflow-y-auto">
+                                        <div className="flex-1 overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
@@ -482,7 +486,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
                                 )
                             },
                             {
@@ -497,7 +501,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                 hasError: hasVacantesErrors(errors) && errors.idCliente?.message === undefined,
                                 errorMessage: getVacantesErrorMessage(errors),
                                 children: (
-                                    <>
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
                                         <div className="mb-1 text-end">
                                             <button
                                                 type="button"
@@ -507,7 +511,7 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                 Agregar
                                             </button>
                                         </div>
-                                        <div className="p-1 max-h-[39vh] overflow-y-auto">
+                                        <div className="p-1 flex-1 overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
@@ -615,13 +619,13 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
                                 )
                             },
                             {
                                 label: "Archivos",
                                 children: (
-                                    <>
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
                                         {/* Archivos */}
                                         <div className="mx-4">
                                             <div className="flex items-center justify-between">
@@ -643,31 +647,30 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                 id="fileInput"
                                                 accept=".pdf,.doc,.docx,.xls,.xlsx"
                                             />
-
-                                            <div className="mt-2 max-h-[40vh] overflow-y-auto">
-                                                {archivos.map((archivo, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
-                                                    >
-                                                        <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                                                            {archivo.name}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveFile(index)}
-                                                            className="text-red-500 hover:text-red-600 focus:outline-none"
-                                                        >
-                                                            <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {errors.lstArchivos && (
-                                                <p className="text-red-500 text-sm mt-1">{errors.lstArchivos.message}</p>
-                                            )}
                                         </div>
-                                    </>
+                                        <div className="mt-2 flex-1 overflow-y-auto">
+                                            {archivos.map((archivo, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
+                                                >
+                                                    <span className="text-sm text-gray-700 truncate flex-1 mr-2">
+                                                        {archivo.name}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveFile(index)}
+                                                        className="text-red-500 hover:text-red-600 focus:outline-none"
+                                                    >
+                                                        <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {errors.lstArchivos && (
+                                            <p className="text-red-500 text-sm mt-1">{errors.lstArchivos.message}</p>
+                                        )}
+                                    </div>
                                 )
                             },
                             {

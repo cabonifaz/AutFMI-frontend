@@ -32,8 +32,7 @@ export const PantallaRequerimientos = () => {
     const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
     const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
     const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
-
-    const { requerimientos, loading, emptyList, fetchRequerimientos } = useRequerimientos();
+    const { requerimientos, loading, emptyList, fetchRequerimientos, currentPage, setCurrentPage } = useRequerimientos();
     const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
     const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ}`);
 
@@ -139,153 +138,179 @@ export const PantallaRequerimientos = () => {
         <>
             {(loading || paramLoading || clientsLoading) && (<Loading overlayMode={true} />)}
             <PantallaWrapper>
-                <h2 className="text-2xl font-semibold mb-4 flex gap-2">
-                    <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>
-                        <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
-                        <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
-                        <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
+                <div className="flex flex-col h-[calc(100vh-40px)]">
+                    <div className="flex-none">
+                        <h2 className="text-2xl font-semibold mb-4 flex gap-2">
+                            <div className="space-y-1 cursor-pointer ms-1 lg:hidden self-center" onClick={toggleMenu}>
+                                <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
+                                <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
+                                <div className="w-6 h-1 bg-gray-800 rounded-lg"></div>
+                            </div>
+                            Requerimientos
+                        </h2>
+                        {/* filters */}
+                        <div className="card mb-6">
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="requerimiento" className="input-label">Búsqueda por título o código de requerimiento</label>
+                                    <input
+                                        type="text"
+                                        name="requerimiento"
+                                        id="requerimiento"
+                                        ref={RequerimientoRef}
+                                        className="input"
+                                    />
+                                </div>
+                                <div className="flex gap-4 justify-evenly sm:justify-start flex-wrap">
+                                    <FilterDropDown
+                                        name="cliente"
+                                        label="Cliente"
+                                        options={clientOptions}
+                                        optionsType="radio"
+                                        optionsPanelSize="w-36"
+                                        inputPosition="right"
+                                        isOpen={openDropdown === 0}
+                                        onToggle={() => setOpenDropdown(openDropdown === 0 ? null : 0)}
+                                        selectedValues={selectedCliente ? [selectedCliente.toString()] : []}
+                                        onChange={handleClienteChangeFilter}
+                                    />
+                                    <FilterDropDown
+                                        name="estado"
+                                        label="Estado"
+                                        options={paramOptions}
+                                        optionsType="radio"
+                                        optionsPanelSize="w-36"
+                                        inputPosition="right"
+                                        isOpen={openDropdown === 1}
+                                        onToggle={() => setOpenDropdown(openDropdown === 1 ? null : 1)}
+                                        selectedValues={selectedEstado ? [selectedEstado.toString()] : []}
+                                        onChange={handleEstadoChangeFilter}
+                                    />
+                                    <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
+                                </div>
+                                <div className="flex justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={handleSearch}
+                                        className="btn btn-primary">
+                                        Buscar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsNuevoRQModalOpen(true)}
+                                        className="btn btn-blue">
+                                        Nuevo RQ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    Requerimientos
-                </h2>
-                {/* filters */}
-                <div className="card mb-6">
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="requerimiento" className="input-label">Búsqueda por título o código de requerimiento</label>
-                            <input
-                                type="text"
-                                name="requerimiento"
-                                id="requerimiento"
-                                ref={RequerimientoRef}
-                                className="input"
-                            />
-                        </div>
-                        <div className="flex gap-4 justify-evenly sm:justify-start flex-wrap">
-                            <FilterDropDown
-                                name="cliente"
-                                label="Cliente"
-                                options={clientOptions}
-                                optionsType="radio"
-                                optionsPanelSize="w-36"
-                                inputPosition="right"
-                                isOpen={openDropdown === 0}
-                                onToggle={() => setOpenDropdown(openDropdown === 0 ? null : 0)}
-                                selectedValues={selectedCliente ? [selectedCliente.toString()] : []}
-                                onChange={handleClienteChangeFilter}
-                            />
-                            <FilterDropDown
-                                name="estado"
-                                label="Estado"
-                                options={paramOptions}
-                                optionsType="radio"
-                                optionsPanelSize="w-36"
-                                inputPosition="right"
-                                isOpen={openDropdown === 1}
-                                onToggle={() => setOpenDropdown(openDropdown === 1 ? null : 1)}
-                                selectedValues={selectedEstado ? [selectedEstado.toString()] : []}
-                                onChange={handleEstadoChangeFilter}
-                            />
-                            <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
-                        </div>
-                        <div className="flex justify-between">
-                            <button
-                                type="button"
-                                onClick={handleSearch}
-                                className="btn btn-primary">
-                                Buscar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsNuevoRQModalOpen(true)}
-                                className="btn btn-blue">
-                                Nuevo RQ
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Table */}
-                <div className="table-container">
-                    <div className="table-wrapper">
-                        <table className="table">
-                            <thead>
-                                <tr className="table-header">
-                                    <th className="table-header-cell">ID</th>
-                                    <th className="table-header-cell">Cliente</th>
-                                    <th className="table-header-cell">Título</th>
-                                    <th className="table-header-cell">Requerimiento</th>
-                                    <th className="table-header-cell">Fecha Solicitud</th>
-                                    <th className="table-header-cell">Estado</th>
-                                    <th className="table-header-cell text-center">Confirmados / Vacantes</th>
-                                    <th className="table-header-cell">Acciones</th>
-                                    <th className="table-header-cell"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {emptyList ? (
-                                    <tr>
-                                        <td colSpan={8} className="table-empty">
-                                            No hay requerimientos disponibles.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    requerimientos.map((req) => (
-                                        <tr key={req.idRequerimiento} className="table-row">
-                                            <td className="table-cell">{req.idRequerimiento}</td>
-                                            <td className="table-cell">{req.cliente}</td>
-                                            <td className="table-cell">{req.titulo}</td>
-                                            <td className="table-cell">{req.codigoRQ}</td>
-                                            <td className="table-cell">{req.fechaSolicitud}</td>
-                                            <td className="table-cell">{req.estado}</td>
-                                            <td className="table-cell text-center">
-                                                <div className="min-w-full flex justify-center">
-                                                    <div className="w-fit relative group">
-                                                        <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit">
-                                                            {req.vacantesCubiertas} / {req.vacantes}
-                                                        </p>
-                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                                            {req?.lstPerfiles?.map((perfil, index) => (
-                                                                <p className="text-start" key={index}>{perfil.vacantesCubiertas} / {perfil.vacantesTotales} {perfil.perfil}</p>
-                                                            ))}
-                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="table-cell">
-                                                <button
-                                                    onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                    disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                    className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
-                                                    Asignar
-                                                </button>
-                                                <button
-                                                    onClick={() => openDetallesRQModal(req)}
-                                                    className="btn btn-actions btn-primary">
-                                                    Detalles
-                                                </button>
-                                            </td>
-                                            <td className="table-cell">
-                                                {req?.idAlerta !== null && req?.idAlerta > 0 && (
-                                                    <div className="relative inline-block group">
-                                                        <img
-                                                            src={getAlertIconPath(req.idAlerta)}
-                                                            alt="icon estado alerta RQ"
-                                                            className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                                                        />
-                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                                            Vence: {req.fechaVencimiento}
-                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </td>
+                    <div className="flex-1 overflow-y-auto">
+                        {/* Table */}
+                        <div className="table-container">
+                            <div className="table-wrapper">
+                                <table className="table">
+                                    <thead>
+                                        <tr className="table-header">
+                                            <th className="table-header-cell">ID</th>
+                                            <th className="table-header-cell">Cliente</th>
+                                            <th className="table-header-cell">Título</th>
+                                            <th className="table-header-cell">Requerimiento</th>
+                                            <th className="table-header-cell">Fecha Solicitud</th>
+                                            <th className="table-header-cell">Estado</th>
+                                            <th className="table-header-cell text-center">Confirmados / Vacantes</th>
+                                            <th className="table-header-cell">Acciones</th>
+                                            <th className="table-header-cell"></th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {emptyList ? (
+                                            <tr>
+                                                <td colSpan={8} className="table-empty">
+                                                    No hay requerimientos disponibles.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            requerimientos.map((req) => (
+                                                <tr key={req.idRequerimiento} className="table-row">
+                                                    <td className="table-cell">{req.idRequerimiento}</td>
+                                                    <td className="table-cell">{req.cliente}</td>
+                                                    <td className="table-cell">{req.titulo}</td>
+                                                    <td className="table-cell">{req.codigoRQ}</td>
+                                                    <td className="table-cell">{req.fechaSolicitud}</td>
+                                                    <td className="table-cell">{req.estado}</td>
+                                                    <td className="table-cell text-center">
+                                                        <div className="min-w-full flex justify-center">
+                                                            <div className="w-fit relative group">
+                                                                <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit">
+                                                                    {req.vacantesCubiertas} / {req.vacantes}
+                                                                </p>
+                                                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                                    {req?.lstPerfiles?.map((perfil, index) => (
+                                                                        <p className="text-start" key={index}>{perfil.vacantesCubiertas} / {perfil.vacantesTotales} {perfil.perfil}</p>
+                                                                    ))}
+                                                                    <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="table-cell">
+                                                        <button
+                                                            onClick={() => handleAsignarClick(req.idRequerimiento)}
+                                                            disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                            className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
+                                                            Asignar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openDetallesRQModal(req)}
+                                                            className="btn btn-actions btn-primary">
+                                                            Detalles
+                                                        </button>
+                                                    </td>
+                                                    <td className="table-cell">
+                                                        {req?.idAlerta !== null && req?.idAlerta > 0 && (
+                                                            <div className="relative inline-block group">
+                                                                <img
+                                                                    src={getAlertIconPath(req.idAlerta)}
+                                                                    alt="icon estado alerta RQ"
+                                                                    className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                                                />
+                                                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                                    Vence: {req.fechaVencimiento}
+                                                                    <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Pagination */}
+                    {requerimientos.length > 0 && (
+                        <div className="flex justify-center items-center gap-4 mt-4 mb-2">
+                            <button
+                                className={`btn ${currentPage === 1 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
+                                onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
+                                disabled={currentPage === 1 || emptyList}>
+                                Anterior
+                            </button>
+                            <span>Página {currentPage}</span>
+                            <button
+                                className={`btn ${requerimientos.length < 8 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
+                                onClick={() => setCurrentPage(prevPage => prevPage + 1)}
+                                disabled={emptyList || requerimientos.length < 8}>
+                                Siguiente
+                            </button>
+                        </div>
+                    )}
+
                 </div>
             </PantallaWrapper>
             {isNuevoRQModalOpen &&

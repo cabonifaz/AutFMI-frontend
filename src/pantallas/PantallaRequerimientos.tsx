@@ -32,7 +32,7 @@ export const PantallaRequerimientos = () => {
     const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
     const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
     const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
-    const { requerimientos, loading, emptyList, fetchRequerimientos, currentPage, setCurrentPage } = useRequerimientos();
+    const { requerimientos, loading, emptyList, fetchRequerimientos, currentPage, setCurrentPage, totalElementos, totalPaginas } = useRequerimientos();
     const { clientes, fetchClients, loading: clientsLoading } = useFetchClients();
     const { paramsByMaestro, loading: paramLoading } = useParams(`${ESTADO_RQ}`);
 
@@ -133,6 +133,20 @@ export const PantallaRequerimientos = () => {
                 return "/assets/ic_success.svg";
         }
     }
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPaginas) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const shouldShowPagination = totalElementos > 0 && totalPaginas > 1;
 
     return (
         <>
@@ -287,21 +301,32 @@ export const PantallaRequerimientos = () => {
                     </div>
 
                     {/* Pagination */}
-                    {requerimientos.length > 0 && (
-                        <div className="flex justify-center items-center gap-4 mt-4 mb-2">
-                            <button
-                                className={`btn ${currentPage === 1 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
-                                onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
-                                disabled={currentPage === 1 || emptyList}>
-                                Anterior
-                            </button>
-                            <span>Página {currentPage}</span>
-                            <button
-                                className={`btn ${requerimientos.length < 8 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
-                                onClick={() => setCurrentPage(prevPage => prevPage + 1)}
-                                disabled={emptyList || requerimientos.length < 8}>
-                                Siguiente
-                            </button>
+                    {totalElementos > 0 && (
+                        <div className="flex flex-col items-center gap-2 my-4">
+                            {shouldShowPagination && (
+                                <div className="flex justify-center items-center gap-4">
+                                    {/* Botón Anterior */}
+                                    <button
+                                        className={`btn ${currentPage === 1 ? 'btn-disabled' : 'btn-blue'}`}
+                                        onClick={handlePreviousPage}
+                                        disabled={currentPage === 1}>
+                                        Anterior
+                                    </button>
+
+                                    {/* Información de página actual */}
+                                    <span className="text-sm">
+                                        Página {currentPage} de {totalPaginas}
+                                    </span>
+
+                                    {/* Botón Siguiente */}
+                                    <button
+                                        className={`btn ${currentPage >= totalPaginas ? 'btn-disabled' : 'btn-blue'}`}
+                                        onClick={handleNextPage}
+                                        disabled={currentPage >= totalPaginas}>
+                                        Siguiente
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

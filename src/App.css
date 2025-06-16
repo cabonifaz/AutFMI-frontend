@@ -167,24 +167,6 @@
   min-width: 100%;
 }
 
-.table-wrapper::-webkit-scrollbar {
-  height: 8px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
 .table-header {
   @apply bg-gray-50 text-left text-xs font-medium text-gray-500 tracking-wider;
 }

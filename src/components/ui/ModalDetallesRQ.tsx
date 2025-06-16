@@ -564,7 +564,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             </button>
                                         </div>
 
-                                        <div className="mt-4 flex-1 overflow-y-auto">
+                                        <div className="mt-4 flex-1 overflow-y-auto custom-scroll">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
@@ -663,7 +663,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="flex-1 overflow-y-auto">
+                                            <div className="flex-1 overflow-y-auto custom-scroll">
                                                 <div className="table-container">
                                                     <div className="table-wrapper">
                                                         <table className="table">
@@ -894,10 +894,10 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="p-1">
-                                            <div className="table-container">
-                                                <div className="table-wrapper">
-                                                    <table className="table">
+                                        <div className="p-1 custom-scroll">
+                                            <div className="table-container custom-scroll">
+                                                <div className="table-wrapper custom-scroll">
+                                                    <table className="table custom-scroll">
                                                         <thead>
                                                             <tr className="table-header">
                                                                 <th scope="col" className="table-header-cell">Nombres y apellidos</th>

@@ -6,6 +6,8 @@ import { TalentosResponse } from '../models/response/TalentosResponse';
 
 const useTalentos = () => {
     const [talentos, setTalentos] = useState<TalentoType[]>([]);
+    const [totalElementos, setTotalElementos] = useState(0);
+    const [totalPaginas, setTotalPaginas] = useState(0);
     const [loading, setLoading] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -23,6 +25,8 @@ const useTalentos = () => {
 
             if (response.status === 200 && response.data.idTipoMensaje === 2) {
                 setTalentos(response.data.talentos);
+                setTotalElementos(response.data.totalElementos || 0);
+                setTotalPaginas(response.data.totalPaginas || 0);
                 setEmptyList(response.data.talentos.length === 0);
                 return;
             }
@@ -38,7 +42,7 @@ const useTalentos = () => {
         fetchTalentos(currentPage, searchTerm);
     }, [currentPage, enqueueSnackbar, fetchTalentos, searchTerm]);
 
-    return { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm };
+    return { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm, totalElementos, totalPaginas };
 };
 
 export default useTalentos;

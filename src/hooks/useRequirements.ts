@@ -15,6 +15,8 @@ type FetchRequerimientosParams = {
 export const useRequerimientos = () => {
     const [requerimientos, setRequerimientos] = useState<RequirementItem[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [totalElementos, setTotalElementos] = useState(0);
+    const [totalPaginas, setTotalPaginas] = useState(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [emptyList, setEmptyList] = useState<boolean>(false);
 
@@ -34,6 +36,8 @@ export const useRequerimientos = () => {
 
             if (response.status === 200 && response.data.idTipoMensaje === 2) {
                 setRequerimientos(response.data.requerimientos || []);
+                setTotalElementos(response.data.totalElementos || 0);
+                setTotalPaginas(response.data.totalPaginas || 0);
                 setEmptyList(response.data.requerimientos.length === 0);
                 return;
             }
@@ -56,5 +60,5 @@ export const useRequerimientos = () => {
         fetchRequerimientos(params);
     }, [currentPage, fetchRequerimientos]);
 
-    return { requerimientos, loading, fetchRequerimientos, setCurrentPage, currentPage, emptyList };
+    return { requerimientos, loading, fetchRequerimientos, setCurrentPage, currentPage, emptyList, totalElementos, totalPaginas };
 };

@@ -12,7 +12,7 @@ const PantallaListaTalentos = () => {
   const { toggleMenu } = useMenu();
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [currentTalent, setCurrentTalent] = useState<TalentoType | null>(null)
-  const { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm } = useTalentos();
+  const { talentos, loading, currentPage, setCurrentPage, setSearchTerm, totalElementos, totalPaginas } = useTalentos();
 
   const textSearchRef = useRef<HTMLInputElement>(null);
 
@@ -24,7 +24,6 @@ const PantallaListaTalentos = () => {
   };
 
   const handleFilesButtonClick = (talento: TalentoType) => {
-    // fetchAndOpenPdf(talento.idTipoHistorial, talento.idTalento)
     setCurrentTalent(talento);
     setShowFilesModal(true);
   }
@@ -33,6 +32,20 @@ const PantallaListaTalentos = () => {
     setCurrentTalent(null);
     setShowFilesModal(false);
   }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPaginas) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const shouldShowPagination = totalElementos > 0 && totalPaginas > 1;
 
   return (
     <>
@@ -125,21 +138,32 @@ const PantallaListaTalentos = () => {
             </div>
 
             {/* Pagination */}
-            {talentos.length > 0 && (
-              <div className="flex justify-center items-center gap-4 my-2">
-                <button
-                  className={`btn ${currentPage === 1 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
-                  onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
-                  disabled={currentPage === 1 || emptyList}>
-                  Anterior
-                </button>
-                <span>Página {currentPage}</span>
-                <button
-                  className={`btn ${talentos.length < 15 || emptyList ? 'btn-disabled' : 'btn-blue'}`}
-                  onClick={() => setCurrentPage(prevPage => prevPage + 1)}
-                  disabled={emptyList || talentos.length < 15}>
-                  Siguiente
-                </button>
+            {totalElementos > 0 && (
+              <div className="flex flex-col items-center gap-2 my-4">
+                {shouldShowPagination && (
+                  <div className="flex justify-center items-center gap-4">
+                    {/* Botón Anterior */}
+                    <button
+                      className={`btn ${currentPage === 1 ? 'btn-disabled' : 'btn-blue'}`}
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}>
+                      Anterior
+                    </button>
+
+                    {/* Información de página actual */}
+                    <span className="text-sm">
+                      Página {currentPage} de {totalPaginas}
+                    </span>
+
+                    {/* Botón Siguiente */}
+                    <button
+                      className={`btn ${currentPage >= totalPaginas ? 'btn-disabled' : 'btn-blue'}`}
+                      onClick={handleNextPage}
+                      disabled={currentPage >= totalPaginas}>
+                      Siguiente
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

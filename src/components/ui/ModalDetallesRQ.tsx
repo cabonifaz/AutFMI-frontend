@@ -634,9 +634,9 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     setIsEditingVacantesData(false);
                                 },
                                 label: (
-                                    <p className="flex items-center gap-2">
+                                    <p className="flex gap-2">
                                         Vacantes
-                                        <span className={`inline-flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
+                                        <span className={`flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
                                             {totalVacantes}
                                         </span>
                                     </p>

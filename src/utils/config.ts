@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://api-fmi.aplicacion2-team.com";
+export const API_BASE_URL = "https://api-autfmi.aplicacion2-team.com";
 export const TOKEN = "jwt_token";
 
 // PARAMS

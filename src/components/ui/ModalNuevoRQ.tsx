@@ -1,9 +1,18 @@
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
-import { SubmitHandler, useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  SubmitHandler,
+  useFieldArray,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
-import { fileToBase64, getFileNameAndExtension, getTipoArchivoId } from "../../utils/util";
+import {
+  fileToBase64,
+  getFileNameAndExtension,
+  getTipoArchivoId,
+} from "../../utils/util";
 import { usePostHook } from "../../hooks/usePostHook";
 import { ClientType } from "../../models/type/ClientType";
 import { Loading } from "./Loading";
@@ -18,668 +27,883 @@ import { useParams } from "../../context/ParamsContext";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 
 interface Archivo {
-    name: string;
-    size: number;
-    file: File;
+  name: string;
+  size: number;
+  file: File;
 }
 
 interface Props {
-    onClose: () => void;
-    updateRQData: () => void;
-    estadoOptions: ParamType[];
-    clientes: ClientType[];
+  onClose: () => void;
+  updateRQData: () => void;
+  estadoOptions: ParamType[];
+  clientes: ClientType[];
 }
 
-export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes }: Props) => {
-    const [archivos, setArchivos] = useState<Archivo[]>([]);
-    const { postData, postloading } = usePostHook();
-    const [clienteSeleccionado, setClienteSeleccionado] = useState("");
-    const [autogenRQ, setAutogenRQ] = useState(false);
-    const [showValidationErrors, setShowValidationErrors] = useState(false);
-    const { contactos, loading: loadingContacts, fetchContacts } = useFetchClientContacts();
-    const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
-    const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
-    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
-    const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
-    const { tarifario } = useFetchTarifario();
+export const AgregarRQModal = ({
+  onClose,
+  updateRQData,
+  estadoOptions,
+  clientes,
+}: Props) => {
+  const [archivos, setArchivos] = useState<Archivo[]>([]);
+  const { postData, postloading } = usePostHook();
+  const [clienteSeleccionado, setClienteSeleccionado] = useState("");
+  const [autogenRQ, setAutogenRQ] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const {
+    contactos,
+    loading: loadingContacts,
+    fetchContacts,
+  } = useFetchClientContacts();
+  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
+  const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
+  const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+  const {
+    tarifario,
+    fetchTarifario,
+    loading: loadingTarifario,
+  } = useFetchTarifario();
 
-    const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
-    const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
+  const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
+  const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
 
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        clearErrors,
-        control,
-        trigger,
-        watch,
-        getValues,
-        formState: { errors },
-    } = useForm<newRQSchemaType>({
-        resolver: zodResolver(newRQSchema),
-        reValidateMode: 'onChange',
-        defaultValues: {
-            idCliente: 0,
-            fechaSolicitud: "",
-            descripcion: "",
-            idEstado: 0,
-            lstVacantes: [],
-            lstArchivos: [],
-        },
-    });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    control,
+    trigger,
+    watch,
+    getValues,
+    formState: { errors },
+  } = useForm<newRQSchemaType>({
+    resolver: zodResolver(newRQSchema),
+    reValidateMode: "onChange",
+    defaultValues: {
+      idCliente: 0,
+      fechaSolicitud: "",
+      descripcion: "",
+      idEstado: 0,
+      lstVacantes: [],
+      lstArchivos: [],
+    },
+  });
 
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: "lstVacantes"
-    });
+  const { fields, append, remove, update } = useFieldArray({
+    control,
+    name: "lstVacantes",
+  });
 
-    const currentVacantes = watch("lstVacantes");
+  const currentVacantes = watch("lstVacantes");
 
-    const getAvailableProfiles = (currentIndex: number) => {
-        const selectedProfiles = currentVacantes
-            .filter((_, index) => index !== currentIndex)
-            .map(v => v.idPerfil)
-            .filter(id => id !== 0);
+  const getAvailableProfiles = (currentIndex: number) => {
+    if (getValues("idCliente") === 0) return [];
 
-        return tarifario.filter(perfil =>
-            !selectedProfiles.includes(perfil.idPerfil)
-        );
-    };
+    const selectedProfiles = currentVacantes
+      .filter((_, index) => index !== currentIndex)
+      .map((v) => v.idPerfil)
+      .filter((id) => id !== 0);
 
-    const handleProfileChange = (index: number, value: string) => {
-        setValue(`lstVacantes.${index}.idPerfil`, Number(value));
-        setValue(`lstVacantes.${index}.tarifa`, `S/. ${tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toFixed(2)}` || 'S/. -');
-        clearErrors(`lstVacantes.${index}.idPerfil`);
-    };
+    return tarifario.filter(
+      (perfil) => !selectedProfiles.includes(perfil.idPerfil),
+    );
+  };
 
-    const handleAddVacante = () => {
-        append({ idPerfil: 0, cantidad: '1' });
-        setCantidadesVacantes(prev => [...prev, '1']);
-        clearErrors("lstVacantes");
-    };
+  const handleProfileChange = (index: number, value: string) => {
+    setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+    setValue(
+      `lstVacantes.${index}.tarifa`,
+      `S/. ${tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toFixed(2)}` ||
+        "S/. -",
+    );
+    clearErrors(`lstVacantes.${index}.idPerfil`);
+  };
 
-    const handleRemoveVacante = (index: number) => {
-        remove(index);
-        setCantidadesVacantes(prev => prev.filter((_, i) => i !== index));
-    };
+  const handleAddVacante = () => {
+    append({ idPerfil: 0, cantidad: "1" });
+    setCantidadesVacantes((prev) => [...prev, "1"]);
+    clearErrors("lstVacantes");
+  };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            const nuevosArchivos = Array.from(event.target.files).map((file) => ({
-                name: file.name,
-                size: file.size,
-                file,
-            }));
-            setArchivos((prevArchivos) => [...prevArchivos, ...nuevosArchivos]);
-            setValue("lstArchivos", nuevosArchivos, { shouldValidate: true });
-        }
-    };
+  const handleRemoveVacante = (index: number) => {
+    remove(index);
+    setCantidadesVacantes((prev) => prev.filter((_, i) => i !== index));
+  };
 
-    const handleRemoveFile = (index: number) => {
-        const updatedArchivos = archivos.filter((_, i) => i !== index);
-        setArchivos(updatedArchivos);
-        setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
-    };
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const nuevosArchivos = Array.from(event.target.files).map((file) => ({
+        name: file.name,
+        size: file.size,
+        file,
+      }));
+      setArchivos((prevArchivos) => [...prevArchivos, ...nuevosArchivos]);
+      setValue("lstArchivos", nuevosArchivos, { shouldValidate: true });
+    }
+  };
 
-    const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedClienteId = Number(event.target.value);
-        const selectedClienteText = clientes.find(cliente => cliente.idCliente === Number(selectedClienteId))?.razonSocial || "";
-        setClienteSeleccionado(selectedClienteText);
-        setValue("idCliente", selectedClienteId);
-        clearErrors();
+  const handleRemoveFile = (index: number) => {
+    const updatedArchivos = archivos.filter((_, i) => i !== index);
+    setArchivos(updatedArchivos);
+    setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
+  };
 
-        setSelectedContacts([]);
-        fetchContacts(selectedClienteId);
-    };
+  const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedClienteId = Number(event.target.value);
+    const selectedClienteText =
+      clientes.find(
+        (cliente) => cliente.idCliente === Number(selectedClienteId),
+      )?.razonSocial || "";
+    setClienteSeleccionado(selectedClienteText);
+    setValue("idCliente", selectedClienteId);
+    clearErrors();
 
-    const handleContactToggle = (contactId: number) => {
-        setSelectedContacts(prev =>
-            prev.includes(contactId)
-                ? prev.filter(id => id !== contactId)
-                : [...prev, contactId]
-        );
-    };
+    setSelectedContacts([]);
+    fetchContacts(selectedClienteId);
+    // Cargar tarifario para el cliente seleccionado
+    // Limpiar lista de vacantes
+    if (selectedClienteId > 0) {
+      fetchTarifario(selectedClienteId);
+      setValue("lstVacantes", []);
+      setCantidadesVacantes(["0"]);
+    }
+  };
 
-    const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
-        try {
-            // 1. Transformar el estado a número
-            const idCliente = Number(data.idCliente);
+  useEffect(() => {
+    const currentIdCliente = getValues("idCliente");
+    if (currentIdCliente > 0) {
+      fetchTarifario(currentIdCliente);
+    }
+  }, [fetchTarifario, getValues]);
 
-            // 2. Transformar los archivos
-            const lstArchivos = await Promise.all(
-                data.lstArchivos?.map(async (archivo) => {
-                    const base64 = await fileToBase64(archivo.file);
-                    const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(archivo.name);
-                    const idTipoArchivo = getTipoArchivoId(extensionArchivo);
-                    return {
-                        string64: base64,
-                        nombreArchivo,
-                        extensionArchivo,
-                        idTipoArchivo,
-                    };
-                }) || []
-            );
+  const handleContactToggle = (contactId: number) => {
+    setSelectedContacts((prev) =>
+      prev.includes(contactId)
+        ? prev.filter((id) => id !== contactId)
+        : [...prev, contactId],
+    );
+  };
 
-            // 3. Crear el objeto final para enviar
-            const payload = {
-                ...data,
-                idCliente: idCliente,
-                codigoRQ: data.codigoRQ,
-                cliente: clienteSeleccionado,
-                estado: data.idEstado,
-                duracion: Number(data.duracion),
-                lstVacantes: data.lstVacantes.map((vacante) => ({
-                    idPerfil: Number(vacante.idPerfil),
-                    cantidad: Number(vacante.cantidad),
-                })),
-                lstContactos: selectedContacts.join(","),
-                lstArchivos,
-            };
+  const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
+    try {
+      // 1. Transformar el estado a número
+      const idCliente = Number(data.idCliente);
 
-            // 4. Enviar los datos al servidor
-            const response = await postData("/fmi/requirement/save", payload);
+      // 2. Transformar los archivos
+      const lstArchivos = await Promise.all(
+        data.lstArchivos?.map(async (archivo) => {
+          const base64 = await fileToBase64(archivo.file);
+          const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(
+            archivo.name,
+          );
+          const idTipoArchivo = getTipoArchivoId(extensionArchivo);
+          return {
+            string64: base64,
+            nombreArchivo,
+            extensionArchivo,
+            idTipoArchivo,
+          };
+        }) || [],
+      );
 
-            if (response.idTipoMensaje === 2) {
-                onClose();
-                updateRQData();
-            }
-        } catch (error) {
-            console.error("Error al transformar los datos:", error);
-        }
-    };
+      // 3. Crear el objeto final para enviar
+      const payload = {
+        ...data,
+        idCliente: idCliente,
+        codigoRQ: data.codigoRQ,
+        cliente: clienteSeleccionado,
+        estado: data.idEstado,
+        duracion: Number(data.duracion),
+        lstVacantes: data.lstVacantes.map((vacante) => ({
+          idPerfil: Number(vacante.idPerfil),
+          cantidad: Number(vacante.cantidad),
+        })),
+        lstContactos: selectedContacts.join(","),
+        lstArchivos,
+      };
 
-    const handleFormSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        setShowValidationErrors(true);
+      // 4. Enviar los datos al servidor
+      const response = await postData("/fmi/requirement/save", payload);
 
-        const isValid = await trigger();
-        if (isValid) {
-            await handleSubmit(onSubmit)();
-        }
-    };
+      if (response.idTipoMensaje === 2) {
+        onClose();
+        updateRQData();
+      }
+    } catch (error) {
+      console.error("Error al transformar los datos:", error);
+    }
+  };
 
-    const hasVacantesErrors = (errors: any) => {
-        if (errors.lstVacantes?.message) return true;
-        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return true;
-        if (currentVacantes.length <= 0) return true;
+  const handleFormSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setShowValidationErrors(true);
 
-        if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
-            return errors.lstVacantes.some((vacanteError: any) => vacanteError);
-        }
+    const isValid = await trigger();
+    if (isValid) {
+      await handleSubmit(onSubmit)();
+    }
+  };
 
-        return false;
-    };
+  const hasVacantesErrors = (errors: any) => {
+    if (errors.lstVacantes?.message) return true;
+    if (totalVacantes <= 0 && errors.idCliente?.message !== undefined)
+      return true;
+    if (currentVacantes.length <= 0) return true;
 
-    const getVacantesErrorMessage = (errors: any) => {
-        if (errors.lstVacantes?.message) return errors.lstVacantes.message;
-        if (totalVacantes <= 0 && errors.idCliente?.message !== undefined) return "Agrega al menos una vacante.";
-        if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
-        return "Revisa los campos de vacantes.";
-    };
-
-    const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
-    const [totalVacantes, setTotalVacantes] = useState(0);
-
-    useEffect(() => {
-        setTotalVacantes(cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0));
-    }, [cantidadesVacantes]);
-
-    const circleClass = useMemo(() => {
-        if (totalVacantes > 99) return 'w-8 h-8 text-xs';
-        if (totalVacantes > 9) return 'w-7 h-7 text-sm';
-        return 'w-6 h-6 text-sm';
-    }, [totalVacantes]);
-
-    const handleContactAdded = () => {
-        fetchContacts(getValues("idCliente"));
-        setIsModalRQContactOPen(false);
-        setContactToEdit(null);
-        setModalMode("add");
-        setSelectedContacts([]);
+    if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
+      return errors.lstVacantes.some((vacanteError: any) => vacanteError);
     }
 
-    const handleContactUpdated = () => {
-        fetchContacts(getValues("idCliente"));
-        setIsModalRQContactOPen(false);
-        setContactToEdit(null);
-        setModalMode("add");
-        setSelectedContacts([]);
-    }
+    return false;
+  };
 
-    const handleAddContact = () => {
-        setModalMode("add");
-        setContactToEdit(null);
-        setIsModalRQContactOPen(true);
-    }
+  const getVacantesErrorMessage = (errors: any) => {
+    if (errors.lstVacantes?.message) return errors.lstVacantes.message;
+    if (totalVacantes <= 0 && errors.idCliente?.message !== undefined)
+      return "Agrega al menos una vacante.";
+    if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
+    return "Revisa los campos de vacantes.";
+  };
 
-    const handleEditContact = (contact: ReqContacto) => {
-        setModalMode("edit");
-        setContactToEdit(contact);
-        setIsModalRQContactOPen(true);
-    }
+  const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
+  const [totalVacantes, setTotalVacantes] = useState(0);
 
-    const hasGestionErrors = errors.duracion?.message !== undefined || errors.idModalidad?.message !== undefined || errors.idDuracion?.message !== undefined;
+  useEffect(() => {
+    setTotalVacantes(
+      cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0),
+    );
+  }, [cantidadesVacantes]);
 
-    return (
-        <>
-            {(postloading) && (<Loading overlayMode={true} />)}
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1050px] min-h-[570px] overflow-y-auto relative">
-                    <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
-                    <button type="button" onClick={onClose} className="absolute top-4 right-4 focus:outline-none">
-                        <img src="/assets/ic_close_x_fmi.svg" alt="icon close" className="w-6 h-6" />
-                    </button>
-                    <Tabs
-                        showErrors={showValidationErrors}
-                        isDataLoading={loadingContacts}
-                        tabs={[
-                            {
-                                label: "Datos RQ",
-                                children: (
-                                    <div className="flex flex-col h-[calc(570px-120px)]">
-                                        <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
-                                            <div className="overflow-y-auto pr-2">
-                                                <div className="space-y-4 flex-1">
-                                                    {/* Título RQ */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Título:</label>
-                                                        <input
-                                                            {...register("titulo")}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                        />
-                                                    </div>
-                                                    {errors.titulo && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.titulo.message}</p>
-                                                    )}
-                                                    {/* Código RQ */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Código RQ:</label>
-                                                        <input
-                                                            {...register("codigoRQ")}
-                                                            disabled={autogenRQ}
-                                                            className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
-                                                        />
-                                                    </div>
-                                                    {errors.codigoRQ && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.codigoRQ.message}</p>
-                                                    )}
+  const circleClass = useMemo(() => {
+    if (totalVacantes > 99) return "w-8 h-8 text-xs";
+    if (totalVacantes > 9) return "w-7 h-7 text-sm";
+    return "w-6 h-6 text-sm";
+  }, [totalVacantes]);
 
-                                                    {/* Auto Gen RQ */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Autogenerar RQ:</label>
-                                                        <input
-                                                            {...register("autogenRQ")}
-                                                            type="checkbox"
-                                                            onChange={(e) => {
-                                                                setAutogenRQ(e.target.checked);
-                                                                setValue("codigoRQ", e.target.checked ? "Autogenerado" : "");
-                                                                clearErrors("codigoRQ");
-                                                            }}
-                                                            className="input-checkbox"
-                                                        />
-                                                    </div>
-                                                    {errors.autogenRQ && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.autogenRQ.message}</p>
-                                                    )}
+  const handleContactAdded = () => {
+    fetchContacts(getValues("idCliente"));
+    setIsModalRQContactOPen(false);
+    setContactToEdit(null);
+    setModalMode("add");
+    setSelectedContacts([]);
+  };
 
-                                                    {/* Fecha de Solicitud */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
-                                                        <input
-                                                            type="date"
-                                                            {...register("fechaSolicitud")}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                        />
-                                                    </div>
-                                                    {errors.fechaSolicitud && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaSolicitud.message}</p>
-                                                    )}
+  const handleContactUpdated = () => {
+    fetchContacts(getValues("idCliente"));
+    setIsModalRQContactOPen(false);
+    setContactToEdit(null);
+    setModalMode("add");
+    setSelectedContacts([]);
+  };
 
-                                                    {/* Descripción */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Descripción:</label>
-                                                        <textarea
-                                                            {...register("descripcion")}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
-                                                        />
-                                                    </div>
-                                                    {errors.descripcion && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.descripcion.message}</p>
-                                                    )}
+  const handleAddContact = () => {
+    setModalMode("add");
+    setContactToEdit(null);
+    setIsModalRQContactOPen(true);
+  };
 
-                                                    {/* Estado */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
-                                                        <select
-                                                            {...register("idEstado", { valueAsNumber: true })}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                        >
-                                                            {estadoOptions.map((option) => (
-                                                                <option key={option.num1} value={option.num1}>
-                                                                    {option.string1}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    {errors.idEstado && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
-                                                    )}
+  const handleEditContact = (contact: ReqContacto) => {
+    setModalMode("edit");
+    setContactToEdit(contact);
+    setIsModalRQContactOPen(true);
+  };
 
-                                                    {/* Fecha Vencimiento */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha Vencimiento:</label>
-                                                        <input type="date" {...register("fechaVencimiento")} id="fechaVencimiento" className="input w-2/3" />
-                                                    </div>
-                                                    {errors.fechaVencimiento && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
-                                                    )}
-                                                </div>
-                                            </div>
+  const hasGestionErrors =
+    errors.duracion?.message !== undefined ||
+    errors.idModalidad?.message !== undefined ||
+    errors.idDuracion?.message !== undefined;
 
-                                            {/* Botones de acción */}
-                                            <div className="flex justify-end space-x-4 mt-6 me-1">
-                                                <button
-                                                    type="submit"
-                                                    className="btn btn-primary"
-                                                >
-                                                    Agregar RQ
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                )
-                            },
-                            {
-                                label: "Cliente",
-                                hasError: errors.idCliente?.message !== undefined,
-                                errorMessage: errors.idCliente?.message,
-                                children: (
-                                    <div className="flex flex-col h-[calc(570px-120px)]">
-                                        {/* Cliente */}
-                                        <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
-                                            <select
-                                                {...register("idCliente", { valueAsNumber: true })}
-                                                onChange={handleClienteChange}
-                                                className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                            >
-                                                {clientes.map((cliente) => (
-                                                    <option key={cliente.idCliente} value={cliente.idCliente}>
-                                                        {cliente.razonSocial}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        {errors.idCliente && (
-                                            <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+  return (
+    <>
+      {(postloading || loadingTarifario) && <Loading overlayMode={true} />}
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1050px] min-h-[570px] overflow-y-auto relative">
+          <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 focus:outline-none"
+          >
+            <img
+              src="/assets/ic_close_x_fmi.svg"
+              alt="icon close"
+              className="w-6 h-6"
+            />
+          </button>
+          <Tabs
+            showErrors={showValidationErrors}
+            isDataLoading={loadingContacts}
+            tabs={[
+              {
+                label: "Datos RQ",
+                children: (
+                  <div className="flex flex-col h-[calc(570px-120px)]">
+                    <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
+                      <div className="overflow-y-auto pr-2">
+                        <div className="space-y-4 flex-1">
+                          {/* Título RQ */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Título:
+                            </label>
+                            <input
+                              {...register("titulo")}
+                              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                            />
+                          </div>
+                          {errors.titulo && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.titulo.message}
+                            </p>
+                          )}
+                          {/* Código RQ */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Código RQ:
+                            </label>
+                            <input
+                              {...register("codigoRQ")}
+                              disabled={autogenRQ}
+                              className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
+                            />
+                          </div>
+                          {errors.codigoRQ && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.codigoRQ.message}
+                            </p>
+                          )}
+
+                          {/* Auto Gen RQ */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Autogenerar RQ:
+                            </label>
+                            <input
+                              {...register("autogenRQ")}
+                              type="checkbox"
+                              onChange={(e) => {
+                                setAutogenRQ(e.target.checked);
+                                setValue(
+                                  "codigoRQ",
+                                  e.target.checked ? "Autogenerado" : "",
+                                );
+                                clearErrors("codigoRQ");
+                              }}
+                              className="input-checkbox"
+                            />
+                          </div>
+                          {errors.autogenRQ && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.autogenRQ.message}
+                            </p>
+                          )}
+
+                          {/* Fecha de Solicitud */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Fecha de Solicitud:
+                            </label>
+                            <input
+                              type="date"
+                              {...register("fechaSolicitud")}
+                              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                            />
+                          </div>
+                          {errors.fechaSolicitud && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.fechaSolicitud.message}
+                            </p>
+                          )}
+
+                          {/* Descripción */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Descripción:
+                            </label>
+                            <textarea
+                              {...register("descripcion")}
+                              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none"
+                            />
+                          </div>
+                          {errors.descripcion && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.descripcion.message}
+                            </p>
+                          )}
+
+                          {/* Estado */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Estado:
+                            </label>
+                            <select
+                              {...register("idEstado", { valueAsNumber: true })}
+                              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                            >
+                              {estadoOptions.map((option) => (
+                                <option key={option.num1} value={option.num1}>
+                                  {option.string1}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          {errors.idEstado && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.idEstado.message}
+                            </p>
+                          )}
+
+                          {/* Fecha Vencimiento */}
+                          <div className="flex items-center">
+                            <label className="w-1/3 text-sm font-medium text-gray-700">
+                              Fecha Vencimiento:
+                            </label>
+                            <input
+                              type="date"
+                              {...register("fechaVencimiento")}
+                              id="fechaVencimiento"
+                              className="input w-2/3"
+                            />
+                          </div>
+                          {errors.fechaVencimiento && (
+                            <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                              {errors.fechaVencimiento.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="flex justify-end space-x-4 mt-6 me-1">
+                        <button type="submit" className="btn btn-primary">
+                          Agregar RQ
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                ),
+              },
+              {
+                label: "Cliente",
+                hasError: errors.idCliente?.message !== undefined,
+                errorMessage: errors.idCliente?.message,
+                children: (
+                  <div className="flex flex-col h-[calc(570px-120px)]">
+                    {/* Cliente */}
+                    <div className="flex items-center">
+                      <label className="w-1/3 text-sm font-medium text-gray-700">
+                        Cliente:
+                      </label>
+                      <select
+                        {...register("idCliente", { valueAsNumber: true })}
+                        onChange={handleClienteChange}
+                        className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                      >
+                        {clientes.map((cliente) => (
+                          <option
+                            key={cliente.idCliente}
+                            value={cliente.idCliente}
+                          >
+                            {cliente.razonSocial}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.idCliente && (
+                      <p className="text-red-500 text-sm mt-1 ml-[33%]">
+                        {errors.idCliente.message}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between my-4">
+                      <h2 className="text-sm font-medium text-gray-700">
+                        Lista de Contactos
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={handleAddContact}
+                        disabled={getValues("idCliente") === 0}
+                        className={`btn text-sm font-medium ${getValues("idCliente") === 0 ? "btn-disabled" : "btn-blue"}`}
+                      >
+                        Añadir contacto
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="table-container">
+                        <div className="table-wrapper">
+                          <table className="table">
+                            <thead>
+                              <tr className="table-header">
+                                <th scope="col" className="table-header-cell">
+                                  ID
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Nombres
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Apellidos
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Celular
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Correo
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Cargo
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Asignado
+                                </th>
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                ></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {contactos.length <= 0 ? (
+                                <tr>
+                                  <td colSpan={8} className="table-empty">
+                                    No hay contactos disponibles.
+                                  </td>
+                                </tr>
+                              ) : (
+                                contactos?.map((contacto) => (
+                                  <tr
+                                    key={contacto.idClienteContacto}
+                                    className="table-row"
+                                  >
+                                    <td className="table-cell">
+                                      {contacto.idClienteContacto}
+                                    </td>
+                                    <td className="table-cell">
+                                      {contacto.nombre}
+                                    </td>
+                                    <td className="table-cell">
+                                      {contacto.apellidoPaterno +
+                                        " " +
+                                        contacto.apellidoMaterno}
+                                    </td>
+                                    <td className="table-cell">
+                                      {contacto.telefono}
+                                    </td>
+                                    <td className="table-cell">
+                                      {contacto.correo}
+                                    </td>
+                                    <td className="table-cell">
+                                      {contacto.cargo}
+                                    </td>
+                                    <td className="table-cell">
+                                      <input
+                                        type="checkbox"
+                                        className="input-checkbox"
+                                        name={`contact-${contacto.idClienteContacto}`}
+                                        id={`contact-${contacto.idClienteContacto}`}
+                                        checked={selectedContacts.includes(
+                                          contacto.idClienteContacto,
                                         )}
+                                        onChange={() =>
+                                          handleContactToggle(
+                                            contacto.idClienteContacto,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className="table-cell">
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleEditContact(contacto)
+                                          }
+                                          className="w-7 h-7"
+                                        >
+                                          <img
+                                            src="/assets/ic_edit.svg"
+                                            alt="edit icon"
+                                          />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                label: (
+                  <p className="flex gap-2">
+                    Vacantes
+                    <span
+                      className={`flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}
+                    >
+                      {totalVacantes}
+                    </span>
+                  </p>
+                ),
+                hasError:
+                  hasVacantesErrors(errors) &&
+                  errors.idCliente?.message === undefined,
+                errorMessage: getVacantesErrorMessage(errors),
+                children: (
+                  <div className="flex flex-col h-[calc(570px-120px)]">
+                    <div className="mb-1 text-end">
+                      <button
+                        type="button"
+                        className="btn btn-blue"
+                        onClick={handleAddVacante}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                    <div className="p-1 flex-1 overflow-y-auto">
+                      <div className="table-container">
+                        <div className="table-wrapper">
+                          <table className="table">
+                            <thead>
+                              <tr className="table-header">
+                                <th scope="col" className="table-header-cell">
+                                  Perfil profesional
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Cantidad
+                                </th>
+                                <th scope="col" className="table-header-cell">
+                                  Tarifa
+                                </th>
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                ></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fields.length <= 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="table-empty">
+                                    No hay vacantes disponibles.
+                                  </td>
+                                </tr>
+                              ) : (
+                                fields.map((field, index) => {
+                                  const availableProfiles =
+                                    getAvailableProfiles(index);
+                                  const currentProfile =
+                                    currentVacantes[index]?.idPerfil;
+                                  const showCurrentProfile =
+                                    currentProfile === 0 ||
+                                    availableProfiles.some(
+                                      (p) => p.idPerfil === currentProfile,
+                                    ) ||
+                                    !tarifario.some(
+                                      (p) => p.idPerfil === currentProfile,
+                                    );
 
-                                        <div className="flex items-center justify-between my-4">
-                                            <h2 className="text-sm font-medium text-gray-700">Lista de Contactos</h2>
-                                            <button
-                                                type="button"
-                                                onClick={handleAddContact}
-                                                disabled={getValues("idCliente") === 0}
-                                                className={`btn text-sm font-medium ${getValues("idCliente") === 0 ? "btn-disabled" : "btn-blue"}`}>
-                                                Añadir contacto
-                                            </button>
-                                        </div>
+                                  const optionsToShow = showCurrentProfile
+                                    ? [...availableProfiles]
+                                    : [
+                                        ...availableProfiles,
+                                        ...tarifario.filter(
+                                          (p) => p.idPerfil === currentProfile,
+                                        ),
+                                      ];
 
-                                        <div className="flex-1 overflow-y-auto">
-                                            <div className="table-container">
-                                                <div className="table-wrapper">
-                                                    <table className="table">
-                                                        <thead>
-                                                            <tr className="table-header">
-                                                                <th scope="col" className="table-header-cell">ID</th>
-                                                                <th scope="col" className="table-header-cell">Nombres</th>
-                                                                <th scope="col" className="table-header-cell">Apellidos</th>
-                                                                <th scope="col" className="table-header-cell">Celular</th>
-                                                                <th scope="col" className="table-header-cell">Correo</th>
-                                                                <th scope="col" className="table-header-cell">Cargo</th>
-                                                                <th scope="col" className="table-header-cell">Asignado</th>
-                                                                <th scope="col" className="table-header-cell"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {contactos.length <= 0 ? (
-                                                                <tr>
-                                                                    <td colSpan={8} className="table-empty">
-                                                                        No hay contactos disponibles.
-                                                                    </td>
-                                                                </tr>
-                                                            ) : (contactos?.map((contacto) => (
-                                                                <tr key={contacto.idClienteContacto} className="table-row">
-                                                                    <td className="table-cell">{contacto.idClienteContacto}</td>
-                                                                    <td className="table-cell">{contacto.nombre}</td>
-                                                                    <td className="table-cell">{contacto.apellidoPaterno + ' ' + contacto.apellidoMaterno}</td>
-                                                                    <td className="table-cell">{contacto.telefono}</td>
-                                                                    <td className="table-cell">{contacto.correo}</td>
-                                                                    <td className="table-cell">{contacto.cargo}</td>
-                                                                    <td className="table-cell">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="input-checkbox"
-                                                                            name={`contact-${contacto.idClienteContacto}`}
-                                                                            id={`contact-${contacto.idClienteContacto}`}
-                                                                            checked={selectedContacts.includes(contacto.idClienteContacto)}
-                                                                            onChange={() => handleContactToggle(contacto.idClienteContacto)}
-                                                                        />
-                                                                    </td>
-                                                                    <td className="table-cell">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => handleEditContact(contacto)}
-                                                                                className="w-7 h-7">
-                                                                                <img src="/assets/ic_edit.svg" alt="edit icon" />
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            ))
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            },
-                            {
-                                label: (
-                                    <p className="flex gap-2">
-                                        Vacantes
-                                        <span className={`flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
-                                            {totalVacantes}
-                                        </span>
-                                    </p>
-                                ),
-                                hasError: hasVacantesErrors(errors) && errors.idCliente?.message === undefined,
-                                errorMessage: getVacantesErrorMessage(errors),
-                                children: (
-                                    <div className="flex flex-col h-[calc(570px-120px)]">
-                                        <div className="mb-1 text-end">
-                                            <button
-                                                type="button"
-                                                className="btn btn-blue"
-                                                onClick={handleAddVacante}
+                                  return (
+                                    <tr key={field.id} className="table-row">
+                                      <td className="table-cell">
+                                        <select
+                                          {...register(
+                                            `lstVacantes.${index}.idPerfil`,
+                                            { valueAsNumber: true },
+                                          )}
+                                          onChange={(e) =>
+                                            handleProfileChange(
+                                              index,
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                                          value={currentProfile}
+                                        >
+                                          <option value={0}>
+                                            Seleccione un perfil
+                                          </option>
+                                          {optionsToShow.map((perfil) => (
+                                            <option
+                                              key={perfil.idPerfil}
+                                              value={perfil.idPerfil}
                                             >
-                                                Agregar
-                                            </button>
-                                        </div>
-                                        <div className="p-1 flex-1 overflow-y-auto">
-                                            <div className="table-container">
-                                                <div className="table-wrapper">
-                                                    <table className="table">
-                                                        <thead>
-                                                            <tr className="table-header">
-                                                                <th scope="col" className="table-header-cell">Perfil profesional</th>
-                                                                <th scope="col" className="table-header-cell">Cantidad</th>
-                                                                <th scope="col" className="table-header-cell">Tarifa</th>
-                                                                <th scope="col" className="table-header-cell"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {fields.length <= 0 ? (
-                                                                <tr>
-                                                                    <td colSpan={4} className="table-empty">
-                                                                        No hay vacantes disponibles.
-                                                                    </td>
-                                                                </tr>
-                                                            ) : (
-                                                                fields.map((field, index) => {
-                                                                    const availableProfiles = getAvailableProfiles(index);
-                                                                    const currentProfile = currentVacantes[index]?.idPerfil;
-                                                                    const showCurrentProfile = currentProfile === 0 ||
-                                                                        availableProfiles.some(p => p.idPerfil === currentProfile) ||
-                                                                        !tarifario.some(p => p.idPerfil === currentProfile);
-
-                                                                    const optionsToShow = showCurrentProfile
-                                                                        ? [...availableProfiles]
-                                                                        : [...availableProfiles, ...tarifario.filter(p => p.idPerfil === currentProfile)];
-
-                                                                    return (
-                                                                        <tr key={field.id} className="table-row">
-                                                                            <td className="table-cell">
-                                                                                <select
-                                                                                    {...register(`lstVacantes.${index}.idPerfil`, { valueAsNumber: true })}
-                                                                                    onChange={(e) => handleProfileChange(index, e.target.value)}
-                                                                                    className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                                                                                    value={currentProfile}
-                                                                                >
-                                                                                    <option value={0}>Seleccione un perfil</option>
-                                                                                    {optionsToShow.map((perfil) => (
-                                                                                        <option key={perfil.idPerfil} value={perfil.idPerfil}>
-                                                                                            {perfil.perfil}
-                                                                                        </option>
-                                                                                    ))}
-                                                                                </select>
-                                                                                {errors.lstVacantes?.[index]?.idPerfil && (
-                                                                                    <p className="text-red-500 text-xs mt-1">
-                                                                                        {errors.lstVacantes[index]?.idPerfil?.message}
-                                                                                    </p>
-                                                                                )}
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                <div className="flex">
-                                                                                    <div className="flex flex-col gap-1 relative">
-                                                                                        <NumberInput<newRQSchemaType>
-                                                                                            register={register}
-                                                                                            control={control}
-                                                                                            name={`lstVacantes.${index}.cantidad`}
-                                                                                            defaultValue={1}
-                                                                                            onChange={(value) => {
-                                                                                                const numValue = Number(value) || 0;
-                                                                                                setCantidadesVacantes(prev => {
-                                                                                                    const newCantidades = [...prev];
-                                                                                                    newCantidades[index] = String(numValue);
-                                                                                                    return newCantidades;
-                                                                                                });
-                                                                                                clearErrors(`lstVacantes.${index}.cantidad`);
-                                                                                            }}
-                                                                                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                                                        />
-                                                                                        {errors.lstVacantes?.[index]?.cantidad && (
-                                                                                            <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
-                                                                                                {errors.lstVacantes[index]?.cantidad?.message}
-                                                                                            </p>
-                                                                                        )}
-                                                                                    </div>
-
-                                                                                </div>
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                <input
-                                                                                    {...register(`lstVacantes.${index}.tarifa`)}
-                                                                                    defaultValue={'S/. -'}
-                                                                                    type="text"
-                                                                                    id="v-tarifa"
-                                                                                    className="input-readonly-text"
-                                                                                    readOnly />
-                                                                            </td>
-                                                                            <td className="table-cell">
-                                                                                <button
-                                                                                    type="button"
-                                                                                    className="ms-4 text-xl text-red-500 hover:text-red-700"
-                                                                                    onClick={() => handleRemoveVacante(index)}
-                                                                                >
-                                                                                    <img src="/assets/ic_remove_fmi.svg" alt="icon remove" className="w-6 h-6" />
-                                                                                </button>
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })
-                                                            )}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            },
-                            {
-                                label: "Archivos",
-                                children: (
-                                    <div className="flex flex-col h-[calc(570px-120px)]">
-                                        {/* Archivos */}
-                                        <div className="mx-4">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-sm font-medium text-gray-700">Archivos elegidos:</label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => document.getElementById("fileInput")?.click()}
-                                                    className="btn btn-text"
-                                                >
-                                                    Elegir archivos
-                                                </button>
-                                            </div>
-
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={handleFileChange}
-                                                className="hidden"
-                                                id="fileInput"
-                                                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                              {perfil.perfil}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        {errors.lstVacantes?.[index]
+                                          ?.idPerfil && (
+                                          <p className="text-red-500 text-xs mt-1">
+                                            {
+                                              errors.lstVacantes[index]
+                                                ?.idPerfil?.message
+                                            }
+                                          </p>
+                                        )}
+                                      </td>
+                                      <td className="table-cell">
+                                        <div className="flex">
+                                          <div className="flex flex-col gap-1 relative">
+                                            <NumberInput<newRQSchemaType>
+                                              register={register}
+                                              control={control}
+                                              name={`lstVacantes.${index}.cantidad`}
+                                              defaultValue={1}
+                                              onChange={(value) => {
+                                                const numValue =
+                                                  Number(value) || 0;
+                                                setCantidadesVacantes(
+                                                  (prev) => {
+                                                    const newCantidades = [
+                                                      ...prev,
+                                                    ];
+                                                    newCantidades[index] =
+                                                      String(numValue);
+                                                    return newCantidades;
+                                                  },
+                                                );
+                                                clearErrors(
+                                                  `lstVacantes.${index}.cantidad`,
+                                                );
+                                              }}
+                                              className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                             />
+                                            {errors.lstVacantes?.[index]
+                                              ?.cantidad && (
+                                              <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                {
+                                                  errors.lstVacantes[index]
+                                                    ?.cantidad?.message
+                                                }
+                                              </p>
+                                            )}
+                                          </div>
                                         </div>
-                                        <div className="mt-2 flex-1 overflow-y-auto">
-                                            {archivos.map((archivo, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
-                                                >
-                                                    <span className="text-sm text-gray-700 truncate flex-1 mr-2">
-                                                        {archivo.name}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveFile(index)}
-                                                        className="text-red-500 hover:text-red-600 focus:outline-none"
-                                                    >
-                                                        <img src="/assets/ic_remove_fmi.svg" alt="icon close" className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {errors.lstArchivos && (
-                                            <p className="text-red-500 text-sm mt-1">{errors.lstArchivos.message}</p>
-                                        )}
-                                    </div>
-                                )
-                            },
-                            {
-                                label: "Gestión",
-                                hasError: hasGestionErrors,
-                                errorMessage: "Completa los campos de gestión",
-                                children: (
-                                    <div className="p-4 space-y-4">
-                                        {/* <div className="flex items-center">
+                                      </td>
+                                      <td className="table-cell">
+                                        <input
+                                          {...register(
+                                            `lstVacantes.${index}.tarifa`,
+                                          )}
+                                          defaultValue={"S/. -"}
+                                          type="text"
+                                          id="v-tarifa"
+                                          className="input-readonly-text"
+                                          readOnly
+                                        />
+                                      </td>
+                                      <td className="table-cell">
+                                        <button
+                                          type="button"
+                                          className="ms-4 text-xl text-red-500 hover:text-red-700"
+                                          onClick={() =>
+                                            handleRemoveVacante(index)
+                                          }
+                                        >
+                                          <img
+                                            src="/assets/ic_remove_fmi.svg"
+                                            alt="icon remove"
+                                            className="w-6 h-6"
+                                          />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                label: "Archivos",
+                children: (
+                  <div className="flex flex-col h-[calc(570px-120px)]">
+                    {/* Archivos */}
+                    <div className="mx-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          Archivos elegidos:
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            document.getElementById("fileInput")?.click()
+                          }
+                          className="btn btn-text"
+                        >
+                          Elegir archivos
+                        </button>
+                      </div>
+
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="fileInput"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx"
+                      />
+                    </div>
+                    <div className="mt-2 flex-1 overflow-y-auto">
+                      {archivos.map((archivo, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
+                        >
+                          <span className="text-sm text-gray-700 truncate flex-1 mr-2">
+                            {archivo.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(index)}
+                            className="text-red-500 hover:text-red-600 focus:outline-none"
+                          >
+                            <img
+                              src="/assets/ic_remove_fmi.svg"
+                              alt="icon close"
+                              className="w-5 h-5"
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {errors.lstArchivos && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.lstArchivos.message}
+                      </p>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                label: "Gestión",
+                hasError: hasGestionErrors,
+                errorMessage: "Completa los campos de gestión",
+                children: (
+                  <div className="p-4 space-y-4">
+                    {/* <div className="flex items-center">
                                             <label className="w-1/3 text-sm font-medium text-gray-700">PPto:</label>
                                             <input
                                                 type="text"
@@ -688,69 +912,78 @@ export const AgregarRQModal = ({ onClose, updateRQData, estadoOptions, clientes 
                                                 disabled
                                             />
                                         </div> */}
-                                        <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Duración:</label>
-                                            <div className="flex gap-4 w-2/3">
-                                                <div className="flex flex-col gap-1">
-                                                    <NumberInput<newRQSchemaType>
-                                                        register={register}
-                                                        control={control}
-                                                        name="duracion"
-                                                        type="float"
-                                                        defaultValue={1}
-                                                        decimalPlaces={1}
-                                                        onChange={() => clearErrors(`duracion`)}
-                                                        className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
-                                                    />
-                                                    {errors.duracion && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.duracion.message}</p>
-                                                    )}
-                                                </div>
-                                                <DropdownForm
-                                                    name="idDuracion"
-                                                    control={control}
-                                                    error={errors.idDuracion}
-                                                    required={false}
-                                                    flex={true}
-                                                    clearErrors={clearErrors}
-                                                    options={duracionRQ.map((duracion) => ({ value: duracion.num1, label: duracion.string1 }))}
-                                                />
-                                            </div>
+                    <div className="flex items-center">
+                      <label className="w-1/3 text-sm font-medium text-gray-700">
+                        Duración:
+                      </label>
+                      <div className="flex gap-4 w-2/3">
+                        <div className="flex flex-col gap-1">
+                          <NumberInput<newRQSchemaType>
+                            register={register}
+                            control={control}
+                            name="duracion"
+                            type="float"
+                            defaultValue={1}
+                            decimalPlaces={1}
+                            onChange={() => clearErrors(`duracion`)}
+                            className="flex-1 max-h-12 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
+                          />
+                          {errors.duracion && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.duracion.message}
+                            </p>
+                          )}
+                        </div>
+                        <DropdownForm
+                          name="idDuracion"
+                          control={control}
+                          error={errors.idDuracion}
+                          required={false}
+                          flex={true}
+                          clearErrors={clearErrors}
+                          options={duracionRQ.map((duracion) => ({
+                            value: duracion.num1,
+                            label: duracion.string1,
+                          }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center">
+                      <label className="w-1/3 text-sm font-medium text-gray-700">
+                        Modalidad:
+                      </label>
+                      <DropdownForm
+                        name="idModalidad"
+                        control={control}
+                        error={errors.idModalidad}
+                        required={false}
+                        flex={true}
+                        clearErrors={clearErrors}
+                        options={modalidadRQ.map((modalidad) => ({
+                          value: modalidad.num1,
+                          label: modalidad.string1,
+                        }))}
+                      />
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
+      </div>
 
-                                        </div>
-                                        <div className="flex items-center">
-                                            <label className="w-1/3 text-sm font-medium text-gray-700">Modalidad:</label>
-                                            <DropdownForm
-                                                name="idModalidad"
-                                                control={control}
-                                                error={errors.idModalidad}
-                                                required={false}
-                                                flex={true}
-                                                clearErrors={clearErrors}
-                                                options={modalidadRQ.map((modalidad) => ({ value: modalidad.num1, label: modalidad.string1 }))}
-                                            />
-                                        </div>
-                                    </div>
-                                )
-                            }
-                        ]}
-                    />
-                </div>
-            </div>
-
-            {
-                isModalRQContactOPen && (
-                    <ModalRQContact
-                        onClose={() => setIsModalRQContactOPen(false)}
-                        RQState="new"
-                        onContactAdded={handleContactAdded}
-                        onContactUpdated={handleContactUpdated}
-                        modalMode={modalMode}
-                        contact={contactToEdit}
-                        idCliente={getValues("idCliente")}
-                    />
-                )
-            }
-        </>
-    );
+      {isModalRQContactOPen && (
+        <ModalRQContact
+          onClose={() => setIsModalRQContactOPen(false)}
+          RQState="new"
+          onContactAdded={handleContactAdded}
+          onContactUpdated={handleContactUpdated}
+          modalMode={modalMode}
+          contact={contactToEdit}
+          idCliente={getValues("idCliente")}
+        />
+      )}
+    </>
+  );
 };

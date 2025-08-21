@@ -304,7 +304,13 @@ export const ModalDetallesRQ = ({
       setRestoreKey((prev) => prev + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requirement, setValue, setValueFiles]);
+  }, [
+    requirement,
+    setValue,
+    setValueFiles,
+    tarifario,
+    setIdClienteForTarifario,
+  ]);
 
   useEffect(() => {
     if (idClienteForTarifario && idClienteForTarifario > 0) {

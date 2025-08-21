@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://api-autfmi.aplicacion2-team.com";
+export const API_BASE_URL = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
 // export const API_BASE_URL = "http://localhost:8081";
 export const TOKEN = "jwt_token";
 

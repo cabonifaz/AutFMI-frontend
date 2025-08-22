@@ -148,18 +148,21 @@ export const ModalDetallesRQ = ({
       setValue(`lstVacantes.${index}.idEstado`, 2);
     }
 
-    setValue(`lstVacantes.${index}.idPerfil`, Number(value));
+    const idPerfil = Number(value);
+
+    setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
 
     // Verificar si hay tarifario disponible
     if (tarifario && tarifario.length > 0) {
-      const tarifa = tarifario.find(
-        (item) => item.idPerfil === Number(value),
-      )?.tarifa;
+      const tarifa =
+        tarifario
+          .find((item) => item.idPerfil === idPerfil)
+          ?.tarifa.toFixed(2) || "-";
 
-      setValue(
-        `lstVacantes.${index}.tarifa`,
-        tarifa ? `S/. ${tarifa.toFixed(2)}` : "S/. -",
-      );
+      const moneda =
+        tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
+
+      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
     } else {
       setValue(`lstVacantes.${index}.tarifa`, "S/. -");
     }
@@ -282,15 +285,23 @@ export const ModalDetallesRQ = ({
       setValueFiles("lstArchivos", archivosFormateados);
 
       const vacantesIniciales = requirement.requerimiento.lstRqVacantes.map(
-        (vacante) => ({
-          idRequerimientoVacante: vacante.idRequerimientoVacante,
-          idPerfil: vacante.idPerfil,
-          cantidad: String(vacante.cantidad),
-          idEstado: 0,
-          tarifa:
-            `S/. ${tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toFixed(2)}` ||
-            "S/. -",
-        }),
+        (vacante) => {
+          const tarifa =
+            tarifario
+              .find((item) => item.idPerfil === vacante.idPerfil)
+              ?.tarifa.toFixed(2) || "-";
+          const moneda =
+            tarifario.find((item) => item.idPerfil === vacante.idPerfil)
+              ?.moneda || "S/.";
+
+          return {
+            idRequerimientoVacante: vacante.idRequerimientoVacante,
+            idPerfil: vacante.idPerfil,
+            cantidad: String(vacante.cantidad),
+            idEstado: 0,
+            tarifa: `${moneda} ${tarifa}`,
+          };
+        },
       );
 
       setValue("lstVacantes", vacantesIniciales);
@@ -448,12 +459,17 @@ export const ModalDetallesRQ = ({
       restoreVacantesList();
     }
     setIsEditingVacantesData((prev) => !prev);
+
     getValues(`lstVacantes`).map((vacante, index) => {
-      setValue(
-        `lstVacantes.${index}.tarifa`,
-        `S/. ${tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toFixed(2)}` ||
-          "S/. -",
-      );
+      const tarifa =
+        tarifario
+          .find((item) => item.idPerfil === vacante.idPerfil)
+          ?.tarifa.toFixed(2) || "-";
+      const moneda =
+        tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
+        "S/.";
+
+      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
     });
   };
 
@@ -897,6 +913,9 @@ export const ModalDetallesRQ = ({
                                     Cantidad
                                   </th>
                                   <th className="table-header-cell">Tarifa</th>
+                                  <th className="table-header-cell">
+                                    Tipo Tarifa
+                                  </th>
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -974,6 +993,15 @@ export const ModalDetallesRQ = ({
                                               p.idPerfil === currentProfile,
                                           ),
                                         ];
+
+                                    const tipoTarifa =
+                                      tarifario.find(
+                                        (item) =>
+                                          item.idPerfil ===
+                                          getValues(
+                                            `lstVacantes.${index}.idPerfil`,
+                                          ),
+                                      )?.tipoTarifa || "-";
 
                                     return (
                                       <tr key={index} className="table-row">
@@ -1104,6 +1132,9 @@ export const ModalDetallesRQ = ({
                                             className="input-readonly-text"
                                             readOnly
                                           />
+                                        </td>
+                                        <td className="table-cell">
+                                          {tipoTarifa}
                                         </td>
                                         <td className="table-cell">
                                           {isEditingVacantesData && (

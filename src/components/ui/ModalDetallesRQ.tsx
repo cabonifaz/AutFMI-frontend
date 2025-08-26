@@ -78,9 +78,16 @@ export const ModalDetallesRQ = ({
   const [originalVacantes, setOriginalVacantes] = useState<Array<any>>([]);
   const [originalCantidades, setOriginalCantidades] = useState<string[]>([]);
   const [restoreKey, setRestoreKey] = useState(0);
+  const [idClienteForTarifario, setIdClienteForTarifario] = useState<
+    number | null
+  >(null);
 
   const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
-  const { tarifario } = useFetchTarifario();
+  const {
+    tarifario,
+    fetchTarifario,
+    loading: loadingTarifario,
+  } = useFetchTarifario();
 
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
@@ -120,6 +127,8 @@ export const ModalDetallesRQ = ({
   };
 
   const getAvailableProfiles = (currentIndex: number) => {
+    if (!tarifario || tarifario.length === 0) return [];
+
     const selectedProfiles = currentVacantes
       .filter((_, index) => index !== currentIndex)
       .map((v) => v.idPerfil)
@@ -138,12 +147,26 @@ export const ModalDetallesRQ = ({
     ) {
       setValue(`lstVacantes.${index}.idEstado`, 2);
     }
-    setValue(`lstVacantes.${index}.idPerfil`, Number(value));
-    setValue(
-      `lstVacantes.${index}.tarifa`,
-      `S/. ${tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toFixed(2)}` ||
-        "S/. -",
-    );
+
+    const idPerfil = Number(value);
+
+    setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
+
+    // Verificar si hay tarifario disponible
+    if (tarifario && tarifario.length > 0) {
+      const tarifa =
+        tarifario
+          .find((item) => item.idPerfil === idPerfil)
+          ?.tarifa.toFixed(2) || "-";
+
+      const moneda =
+        tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
+
+      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+    } else {
+      setValue(`lstVacantes.${index}.tarifa`, "S/. -");
+    }
+
     clearErrors(`lstVacantes.${index}.idPerfil`);
   };
 
@@ -222,6 +245,9 @@ export const ModalDetallesRQ = ({
 
   useEffect(() => {
     if (requirement) {
+      const clienteId = requirement.requerimiento.idCliente;
+      setValue("idCliente", clienteId);
+      setIdClienteForTarifario(clienteId);
       setValue("idCliente", requirement.requerimiento.idCliente);
       setValue("codigoRQ", requirement.requerimiento.codigoRQ);
       setValue("titulo", requirement.requerimiento.titulo);
@@ -259,15 +285,23 @@ export const ModalDetallesRQ = ({
       setValueFiles("lstArchivos", archivosFormateados);
 
       const vacantesIniciales = requirement.requerimiento.lstRqVacantes.map(
-        (vacante) => ({
-          idRequerimientoVacante: vacante.idRequerimientoVacante,
-          idPerfil: vacante.idPerfil,
-          cantidad: String(vacante.cantidad),
-          idEstado: 0,
-          tarifa:
-            `S/. ${tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toFixed(2)}` ||
-            "S/. -",
-        }),
+        (vacante) => {
+          const tarifa =
+            tarifario
+              .find((item) => item.idPerfil === vacante.idPerfil)
+              ?.tarifa.toFixed(2) || "-";
+          const moneda =
+            tarifario.find((item) => item.idPerfil === vacante.idPerfil)
+              ?.moneda || "S/.";
+
+          return {
+            idRequerimientoVacante: vacante.idRequerimientoVacante,
+            idPerfil: vacante.idPerfil,
+            cantidad: String(vacante.cantidad),
+            idEstado: 0,
+            tarifa: `${moneda} ${tarifa}`,
+          };
+        },
       );
 
       setValue("lstVacantes", vacantesIniciales);
@@ -281,7 +315,19 @@ export const ModalDetallesRQ = ({
       setRestoreKey((prev) => prev + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requirement, setValue, setValueFiles]);
+  }, [
+    requirement,
+    setValue,
+    setValueFiles,
+    tarifario,
+    setIdClienteForTarifario,
+  ]);
+
+  useEffect(() => {
+    if (idClienteForTarifario && idClienteForTarifario > 0) {
+      fetchTarifario(idClienteForTarifario);
+    }
+  }, [idClienteForTarifario, fetchTarifario]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -413,12 +459,17 @@ export const ModalDetallesRQ = ({
       restoreVacantesList();
     }
     setIsEditingVacantesData((prev) => !prev);
+
     getValues(`lstVacantes`).map((vacante, index) => {
-      setValue(
-        `lstVacantes.${index}.tarifa`,
-        `S/. ${tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.tarifa.toFixed(2)}` ||
-          "S/. -",
-      );
+      const tarifa =
+        tarifario
+          .find((item) => item.idPerfil === vacante.idPerfil)
+          ?.tarifa.toFixed(2) || "-";
+      const moneda =
+        tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
+        "S/.";
+
+      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
     });
   };
 
@@ -472,7 +523,9 @@ export const ModalDetallesRQ = ({
 
   return (
     <>
-      {(postloading || deleteLoading) && <Loading overlayMode={true} />}
+      {(postloading || deleteLoading || loadingTarifario) && (
+        <Loading overlayMode={true} />
+      )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
@@ -860,6 +913,9 @@ export const ModalDetallesRQ = ({
                                     Cantidad
                                   </th>
                                   <th className="table-header-cell">Tarifa</th>
+                                  <th className="table-header-cell">
+                                    Tipo Tarifa
+                                  </th>
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -938,13 +994,24 @@ export const ModalDetallesRQ = ({
                                           ),
                                         ];
 
+                                    const tipoTarifa =
+                                      tarifario.find(
+                                        (item) =>
+                                          item.idPerfil ===
+                                          getValues(
+                                            `lstVacantes.${index}.idPerfil`,
+                                          ),
+                                      )?.tipoTarifa || "-";
+
                                     return (
                                       <tr key={index} className="table-row">
                                         <td className="table-cell">
                                           <select
                                             {...register(
                                               `lstVacantes.${index}.idPerfil`,
-                                              { valueAsNumber: true },
+                                              {
+                                                valueAsNumber: true,
+                                              },
                                             )}
                                             onChange={(e) =>
                                               handleProfileChange(
@@ -954,10 +1021,15 @@ export const ModalDetallesRQ = ({
                                             }
                                             className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
                                             value={currentProfile}
-                                            disabled={!isEditingVacantesData}
+                                            disabled={
+                                              !isEditingVacantesData ||
+                                              loadingTarifario
+                                            }
                                           >
                                             <option value={0}>
-                                              Seleccione un perfil
+                                              {loadingTarifario
+                                                ? "Cargando perfiles..."
+                                                : "Seleccione un perfil"}
                                             </option>
                                             {optionsToShow.map((perfil) => (
                                               <option
@@ -1060,6 +1132,9 @@ export const ModalDetallesRQ = ({
                                             className="input-readonly-text"
                                             readOnly
                                           />
+                                        </td>
+                                        <td className="table-cell">
+                                          {tipoTarifa}
                                         </td>
                                         <td className="table-cell">
                                           {isEditingVacantesData && (

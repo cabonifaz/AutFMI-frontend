@@ -113,12 +113,16 @@ export const AgregarRQModal = ({
   };
 
   const handleProfileChange = (index: number, value: string) => {
-    setValue(`lstVacantes.${index}.idPerfil`, Number(value));
-    setValue(
-      `lstVacantes.${index}.tarifa`,
-      `S/. ${tarifario.find((item) => item.idPerfil === getValues(`lstVacantes.${index}.idPerfil`))?.tarifa.toFixed(2)}` ||
-        "S/. -",
-    );
+    const idPerfil = Number(value);
+    setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
+
+    const tarifa =
+      tarifario.find((item) => item.idPerfil === idPerfil)?.tarifa.toFixed(2) ||
+      "-";
+    const moneda =
+      tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
+
+    setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
     clearErrors(`lstVacantes.${index}.idPerfil`);
   };
 
@@ -682,6 +686,9 @@ export const AgregarRQModal = ({
                                 <th scope="col" className="table-header-cell">
                                   Tarifa
                                 </th>
+                                <th scope="col" className="table-header-cell">
+                                  Tipo Tarifa
+                                </th>
                                 <th
                                   scope="col"
                                   className="table-header-cell"
@@ -718,6 +725,15 @@ export const AgregarRQModal = ({
                                           (p) => p.idPerfil === currentProfile,
                                         ),
                                       ];
+
+                                  const tipoTarifa =
+                                    tarifario.find(
+                                      (item) =>
+                                        item.idPerfil ===
+                                        getValues(
+                                          `lstVacantes.${index}.idPerfil`,
+                                        ),
+                                    )?.tipoTarifa || "-";
 
                                   return (
                                     <tr key={field.id} className="table-row">
@@ -808,6 +824,9 @@ export const AgregarRQModal = ({
                                           className="input-readonly-text"
                                           readOnly
                                         />
+                                      </td>
+                                      <td className="table-cell">
+                                        <p>{tipoTarifa}</p>
                                       </td>
                                       <td className="table-cell">
                                         <button

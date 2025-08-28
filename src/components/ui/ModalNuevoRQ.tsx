@@ -89,6 +89,7 @@ export const AgregarRQModal = ({
       idEstado: 0,
       lstVacantes: [],
       lstArchivos: [],
+      duracion: "1",
     },
   });
 
@@ -128,7 +129,7 @@ export const AgregarRQModal = ({
 
   const handleAddVacante = () => {
     append({ idPerfil: 0, cantidad: "1" });
-    setCantidadesVacantes((prev) => [...prev, "1"]);
+    setCantidadesVacantes((prev) => [...prev, 1]);
     clearErrors("lstVacantes");
   };
 
@@ -172,7 +173,7 @@ export const AgregarRQModal = ({
     if (selectedClienteId > 0) {
       fetchTarifario(selectedClienteId);
       setValue("lstVacantes", []);
-      setCantidadesVacantes(["0"]);
+      setCantidadesVacantes([]);
     }
   };
 
@@ -272,12 +273,15 @@ export const AgregarRQModal = ({
     return "Revisa los campos de vacantes.";
   };
 
-  const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
+  const [cantidadesVacantes, setCantidadesVacantes] = useState<number[]>([]);
   const [totalVacantes, setTotalVacantes] = useState(0);
 
   useEffect(() => {
     setTotalVacantes(
-      cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0),
+      cantidadesVacantes.reduce(
+        (sum, n) => sum + (Number.isFinite(n) ? n : 0),
+        0,
+      ),
     );
   }, [cantidadesVacantes]);
 
@@ -783,18 +787,33 @@ export const AgregarRQModal = ({
                                               name={`lstVacantes.${index}.cantidad`}
                                               defaultValue={1}
                                               onChange={(value) => {
-                                                const numValue =
-                                                  Number(value) || 0;
-                                                setCantidadesVacantes(
-                                                  (prev) => {
-                                                    const newCantidades = [
-                                                      ...prev,
-                                                    ];
-                                                    newCantidades[index] =
-                                                      String(numValue);
-                                                    return newCantidades;
+                                                const num = Number(value);
+                                                const safe =
+                                                  Number.isFinite(num) &&
+                                                  num >= 0
+                                                    ? num
+                                                    : 0;
+
+                                                // Actualiza RHF (por si tu schema espera number)
+                                                setValue(
+                                                  `lstVacantes.${index}.cantidad`,
+                                                  safe.toString(),
+                                                  {
+                                                    shouldValidate: true,
+                                                    shouldDirty: true,
+                                                    shouldTouch: true,
                                                   },
                                                 );
+
+                                                // 🔧 Y ACTUALIZA TU ARRAY LOCAL EN EL MISMO ÍNDICE
+                                                setCantidadesVacantes(
+                                                  (prev) => {
+                                                    const next = prev.slice();
+                                                    next[index] = safe; // 👈 reemplaza, no hagas push
+                                                    return next;
+                                                  },
+                                                );
+
                                                 clearErrors(
                                                   `lstVacantes.${index}.cantidad`,
                                                 );

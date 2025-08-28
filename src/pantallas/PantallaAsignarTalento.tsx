@@ -786,8 +786,6 @@ const TalentTable: React.FC = () => {
         lstTalentos: talentos,
       };
 
-      console.log(payload);
-
       const response = await apiClientWithToken.post(
         "/fmi/requirement/talents/save",
         payload,

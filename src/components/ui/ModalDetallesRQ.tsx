@@ -523,9 +523,7 @@ export const ModalDetallesRQ = ({
 
   return (
     <>
-      {(postloading || deleteLoading || loadingTarifario) && (
-        <Loading overlayMode={true} />
-      )}
+      {(postloading || deleteLoading) && <Loading overlayMode={true} />}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>

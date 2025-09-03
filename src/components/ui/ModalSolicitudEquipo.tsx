@@ -108,7 +108,7 @@ export const ModalSolicitudEquipo = ({
         clearErrors("fechaEntrega");
       }
     }
-  }, [fechaSolicitud, fechaEntrega, clearErrors]);
+  }, [fechaSolicitud, fechaEntrega, clearErrors, trigger]);
 
   const tipoHardware = watch("tipoHardware");
   const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;

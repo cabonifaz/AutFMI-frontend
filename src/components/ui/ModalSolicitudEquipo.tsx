@@ -16,6 +16,7 @@ import {
 } from "../../utils/config";
 import { useParams } from "../../context/ParamsContext";
 import CheckboxForm from "../forms/CheckboxForm";
+import { format } from "date-fns";
 
 interface Props {
   onClose: () => void;
@@ -54,15 +55,15 @@ export const ModalSolicitudEquipo = ({
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
+    clearErrors,
     watch,
     trigger,
   } = useForm<ModalSolicitudEquipoFormType>({
     resolver: zodResolver(ModalSolicitudEquipoFormSchema),
     mode: "onChange",
     defaultValues: {
-      fechaSolicitud: new Date().toISOString().split("T")[0],
-      fechaEntrega: new Date().toISOString().split("T")[0],
+      fechaSolicitud: format(new Date(), "yyyy-MM-dd"),
+      fechaEntrega: format(new Date(), "yyyy-MM-dd"),
       tipoHardware: tipoHardwareParams?.length
         ? tipoHardwareParams[tipoHardwareParams.length - 1].num1
         : 99,
@@ -90,6 +91,24 @@ export const ModalSolicitudEquipo = ({
   const addNewSoftwareRow = () => {
     append({ producto: "", version: "" });
   };
+
+  // Agregar watchers para las fechas
+  const fechaSolicitud = watch("fechaSolicitud");
+  const fechaEntrega = watch("fechaEntrega");
+
+  // Efecto para validar cuando cambian las fechas
+  useEffect(() => {
+    if (fechaSolicitud && fechaEntrega) {
+      const fechaSolicitudDate = new Date(fechaSolicitud);
+      const fechaEntregaDate = new Date(fechaEntrega);
+
+      if (fechaEntregaDate < fechaSolicitudDate) {
+        trigger("fechaEntrega");
+      } else {
+        clearErrors("fechaEntrega");
+      }
+    }
+  }, [fechaSolicitud, fechaEntrega, clearErrors, trigger]);
 
   const tipoHardware = watch("tipoHardware");
   const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;

@@ -24,12 +24,18 @@ export const newRQSchema = z
       .min(1, "Debe elegir un cliente"),
     titulo: z.string().min(1, "El título es obligatorio"),
     codigoRQ: z.string().optional(),
-    fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
+    fechaSolicitud: z
+      .string({
+        required_error: "La fecha de solicitud es obligatoria",
+      })
+      .min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
     idEstado: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean(),
     fechaVencimiento: z
-      .string()
+      .string({
+        required_error: "La fecha de vencimiento es obligatoria",
+      })
       .min(1, "La fecha de vencimiento es obligatoria"),
     duracion: z
       .string()
@@ -64,9 +70,30 @@ export const newRQSchema = z
       )
       .optional(),
   })
-  .refine((data) => (!data.autogenRQ ? !!data.codigoRQ : true), {
-    message: "El RQ es obligatorio",
-    path: ["codigoRQ"],
+  .superRefine((data, ctx) => {
+    // Validación de autogenRQ
+    if (!data.autogenRQ && !data.codigoRQ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El RQ es obligatorio",
+        path: ["codigoRQ"],
+      });
+    }
+
+    // Validación de fechas (COMO EN TU EQUIPOFORMSCHEMA)
+    if (data.fechaSolicitud && data.fechaVencimiento) {
+      const fechaSolicitud = new Date(data.fechaSolicitud);
+      const fechaVencimiento = new Date(data.fechaVencimiento);
+
+      if (fechaVencimiento < fechaSolicitud) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "La fecha de vencimiento no puede ser menor a la fecha de solicitud",
+          path: ["fechaVencimiento"],
+        });
+      }
+    }
   });
 
 export type newRQSchemaType = z.infer<typeof newRQSchema>;

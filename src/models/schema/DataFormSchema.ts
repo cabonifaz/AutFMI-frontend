@@ -47,9 +47,7 @@ export const DataFormSchema = z
         invalid_type_error: "Campo obligatorio",
       })
       .date("Campo obligatorio"),
-    // cargo: z.string({
-    //     invalid_type_error: "Campo obligatorio",
-    // }).min(1, "Campo obligatorio"),
+    cargo: z.string().optional(),
     remuneracion: z
       .number({
         required_error: "Campo obligatorio",

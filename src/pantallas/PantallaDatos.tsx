@@ -84,6 +84,7 @@ const PantallaDatos = () => {
     const response = await postData("/fmi/talent/save", {
       idTalento: talento.idTalento,
       APELLIDO_PATERNO: talento.apellidoPaterno,
+      cargo: data?.cargo || "",
       ...data,
     });
     if (response.idTipoMensaje === 2) {

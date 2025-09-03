@@ -1,35 +1,50 @@
-import { z } from 'zod';
-import { validDropdown } from './Validations';
+import { z } from "zod";
+import { validDropdown } from "./Validations";
 
-export const EquipoFormSchema = z.object({
-    nombres: z.string({
+export const EquipoFormSchema = z
+  .object({
+    nombres: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "El nombre es requerido" }),
-    apellidoPaterno: z.string({
+      })
+      .min(1, { message: "El nombre es requerido" }),
+    apellidoPaterno: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "El apellido paterno es requerido" }),
+      })
+      .min(1, { message: "El apellido paterno es requerido" }),
     apellidoMaterno: z.string().optional().nullable(),
     idCliente: validDropdown,
     idArea: validDropdown,
-    cargo: z.string({
+    cargo: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "El cargo es requerido" }),
-    fechaSolicitud: z.string({
+      })
+      .min(1, { message: "El cargo es requerido" }),
+    fechaSolicitud: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "La fecha de solicitud es requerida" }),
-    fechaEntrega: z.string({
+      })
+      .min(1, { message: "La fecha de solicitud es requerida" }),
+    fechaEntrega: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "La fecha de entrega es requerida" }),
+      })
+      .min(1, { message: "La fecha de entrega es requerida" }),
 
     // Nuevos campos para selección única
     tipoHardware: validDropdown,
     anexoHardware: validDropdown,
-    celular: z.string({
+    celular: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "Celular es requerido" }),
-    internetMovil: z.string({
+      })
+      .min(1, { message: "Celular es requerido" }),
+    internetMovil: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, { message: "Internet Móvil es requerido" }),
+      })
+      .min(1, { message: "Internet Móvil es requerido" }),
 
     // Mantener para compatibilidad con el backend
     isPc: z.boolean().default(false),
@@ -48,40 +63,52 @@ export const EquipoFormSchema = z.object({
     marca: z.string().optional(),
     accesorios: z.string().optional(),
 
-    // Array de software 
+    // Array de software
     software: z.array(
-        z.object({
-            producto: z.string().optional(),
-            version: z.string().optional()
-        })
-    )
-}).superRefine((data, ctx) => {
+      z.object({
+        producto: z.string().optional(),
+        version: z.string().optional(),
+      }),
+    ),
+  })
+  .refine(
+    (data) => {
+      const fechaSolicitud = new Date(data.fechaSolicitud);
+      const fechaEntrega = new Date(data.fechaEntrega);
+      return fechaEntrega >= fechaSolicitud;
+    },
+    {
+      message: "La fecha de entrega no puede ser menor a la fecha de solicitud",
+      path: ["fechaEntrega"],
+    },
+  )
+  .superRefine((data, ctx) => {
     // Validación condicional para procesador, RAM y disco basada en PC o Laptop
     if (data.tipoHardware === 1 || data.tipoHardware === 2) {
-        if (!data.procesador || data.procesador.trim() === "") {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "El procesador es requerido",
-                path: ["procesador"]
-            });
-        }
+      if (!data.procesador || data.procesador.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El procesador es requerido",
+          path: ["procesador"],
+        });
+      }
 
-        if (!data.ram || data.ram.trim() === "") {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "La RAM es requerida",
-                path: ["ram"]
-            });
-        }
+      if (!data.ram || data.ram.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La RAM es requerida",
+          path: ["ram"],
+        });
+      }
 
-        if (!data.disco || data.disco.trim() === "") {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "El disco duro es requerido",
-                path: ["disco"]
-            });
-        }
+      if (!data.disco || data.disco.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El disco duro es requerido",
+          path: ["disco"],
+        });
+      }
     }
-});
+  });
 
 export type EquipoFormType = z.infer<typeof EquipoFormSchema>;

@@ -99,6 +99,7 @@ export const ModalDetallesRQ = ({
     getValues,
     clearErrors,
     control,
+    setError,
     watch,
     formState: { errors },
   } = useForm<UpdateBaseRQSchemaType>({
@@ -119,6 +120,32 @@ export const ModalDetallesRQ = ({
   });
 
   const currentVacantes = watch("lstVacantes");
+
+  // Agregar watchers para las fechas
+  const fechaSolicitud = watch("fechaSolicitud");
+  const fechaVencimiento = watch("fechaVencimiento");
+
+  // Efecto para validar cuando cambian las fechas
+  useEffect(() => {
+    if (fechaSolicitud && fechaVencimiento) {
+      const fechaSolicitudDate = new Date(fechaSolicitud);
+      const fechaVencimientoDate = new Date(fechaVencimiento);
+
+      if (fechaVencimientoDate < fechaSolicitudDate) {
+        requestAnimationFrame(() => {
+          setError("fechaVencimiento", {
+            type: "manual",
+            message:
+              "La fecha de vencimiento no puede ser menor a la fecha de solicitud",
+          });
+        });
+      } else {
+        requestAnimationFrame(() => {
+          clearErrors("fechaVencimiento");
+        });
+      }
+    }
+  }, [fechaSolicitud, fechaVencimiento, setError, clearErrors]);
 
   const restoreVacantesList = () => {
     setValue("lstVacantes", [...originalVacantes]);

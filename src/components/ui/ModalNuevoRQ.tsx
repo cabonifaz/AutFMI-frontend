@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
 import {
+  Controller,
   SubmitHandler,
   useFieldArray,
   useForm,
@@ -25,6 +26,7 @@ import { DropdownForm } from "../forms";
 import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
 import { useParams } from "../../context/ParamsContext";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
+import { format } from "date-fns";
 
 interface Archivo {
   name: string;
@@ -78,13 +80,15 @@ export const AgregarRQModal = ({
     trigger,
     watch,
     getValues,
+    setError,
     formState: { errors },
   } = useForm<newRQSchemaType>({
     resolver: zodResolver(newRQSchema),
     reValidateMode: "onChange",
+    mode: "onChange",
     defaultValues: {
       idCliente: 0,
-      fechaSolicitud: "",
+      fechaSolicitud: format(new Date(), "yyyy-MM-dd"),
       descripcion: "",
       idEstado: 0,
       lstVacantes: [],
@@ -99,6 +103,32 @@ export const AgregarRQModal = ({
   });
 
   const currentVacantes = watch("lstVacantes");
+
+  // Agregar watchers para las fechas
+  const fechaSolicitud = watch("fechaSolicitud");
+  const fechaVencimiento = watch("fechaVencimiento");
+
+  // Efecto para validar cuando cambian las fechas
+  useEffect(() => {
+    if (fechaSolicitud && fechaVencimiento) {
+      const fechaSolicitudDate = new Date(fechaSolicitud);
+      const fechaVencimientoDate = new Date(fechaVencimiento);
+
+      if (fechaVencimientoDate < fechaSolicitudDate) {
+        requestAnimationFrame(() => {
+          setError("fechaVencimiento", {
+            type: "manual",
+            message:
+              "La fecha de vencimiento no puede ser menor a la fecha de solicitud",
+          });
+        });
+      } else {
+        requestAnimationFrame(() => {
+          clearErrors("fechaVencimiento");
+        });
+      }
+    }
+  }, [fechaSolicitud, fechaVencimiento, setError, clearErrors]);
 
   const getAvailableProfiles = (currentIndex: number) => {
     if (getValues("idCliente") === 0) return [];
@@ -328,7 +358,7 @@ export const AgregarRQModal = ({
     <>
       {(postloading || loadingTarifario) && <Loading overlayMode={true} />}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1050px] min-h-[570px] overflow-y-auto relative">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
           <button
             type="button"
@@ -348,8 +378,11 @@ export const AgregarRQModal = ({
               {
                 label: "Datos RQ",
                 children: (
-                  <div className="flex flex-col h-[calc(570px-120px)]">
-                    <form onSubmit={handleFormSubmit} className="space-y-4 p-1">
+                  <div>
+                    <form
+                      onSubmit={handleFormSubmit}
+                      className="flex flex-col flex-1"
+                    >
                       <div className="overflow-y-auto pr-2">
                         <div className="space-y-4 flex-1">
                           {/* Título RQ */}
@@ -472,8 +505,7 @@ export const AgregarRQModal = ({
                             <input
                               type="date"
                               {...register("fechaVencimiento")}
-                              id="fechaVencimiento"
-                              className="input w-2/3"
+                              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                             />
                           </div>
                           {errors.fechaVencimiento && (

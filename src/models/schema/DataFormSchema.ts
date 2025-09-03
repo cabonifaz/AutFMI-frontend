@@ -1,50 +1,78 @@
 import { z } from "zod";
 import { validDropdown } from "./Validations";
 
-export const DataFormSchema = z.object({
-    nombres: z.string({
+export const DataFormSchema = z
+  .object({
+    nombres: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, "Campo obligatorio"),
-    apellidoPaterno: z.string({
+      })
+      .min(1, "Campo obligatorio"),
+    apellidoPaterno: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, "Campo obligatorio"),
-    apellidoMaterno: z.string({
+      })
+      .min(1, "Campo obligatorio"),
+    apellidoMaterno: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).optional().nullable(),
-    telefono: z.string({
+      })
+      .optional()
+      .nullable(),
+    telefono: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, "Campo obligatorio"),
-    dni: z.string()
-        .min(1, { message: "El Doc. de identidad es requerido" })
-        .max(30, { message: "El Doc. de identidad no puede tener más de 30 caracteres" })
-        .regex(/^\d+$/, { message: "El Doc. de identidad solo puede contener números" }),
+      })
+      .min(1, "Campo obligatorio"),
+    dni: z
+      .string()
+      .min(1, { message: "El Doc. de identidad es requerido" })
+      .max(30, {
+        message: "El Doc. de identidad no puede tener más de 30 caracteres",
+      })
+      .regex(/^\d+$/, {
+        message: "El Doc. de identidad solo puede contener números",
+      }),
     email: z.string().min(1, "Campo obligatorio").email("Correo no válido"),
-    tiempoContrato: z.number({
+    tiempoContrato: z
+      .number({
         required_error: "Campo obligatorio",
-        invalid_type_error: "Debe ser un número"
-    }).min(1, "No válido").nullable(),
+        invalid_type_error: "Debe ser un número",
+      })
+      .min(1, "No válido")
+      .nullable(),
     idTiempoContrato: validDropdown,
-    fechaInicioLabores: z.string({
+    fechaInicioLabores: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).date("Campo obligatorio"),
-    cargo: z.string({
-        invalid_type_error: "Campo obligatorio",
-    }).min(1, "Campo obligatorio"),
-    remuneracion: z.number({
+      })
+      .date("Campo obligatorio"),
+    cargo: z.string().optional(),
+    remuneracion: z
+      .number({
         required_error: "Campo obligatorio",
-        invalid_type_error: "Debe tener 2 decimales"
-    }).min(0, "No puede ser negativo").nullable(),
+        invalid_type_error: "Debe tener 2 decimales",
+      })
+      .min(0, "No puede ser negativo")
+      .nullable(),
     idMoneda: validDropdown,
     idModalidad: validDropdown,
-    ubicacion: z.string({
+    ubicacion: z
+      .string({
         invalid_type_error: "Campo obligatorio",
-    }).min(1, "Campo obligatorio"),
-}).refine((value) => value.remuneracion !== null && value.remuneracion > 0, {
+      })
+      .min(1, "Campo obligatorio"),
+  })
+  .refine((value) => value.remuneracion !== null && value.remuneracion > 0, {
     message: "Debe ser mayor a 0",
-    path: ["remuneracion"]
-}).refine((value) => value.tiempoContrato !== null && value.tiempoContrato > 0, {
-    message: "Debe ser mayor a 0",
-    path: ["tiempoContrato"]
-});
+    path: ["remuneracion"],
+  })
+  .refine(
+    (value) => value.tiempoContrato !== null && value.tiempoContrato > 0,
+    {
+      message: "Debe ser mayor a 0",
+      path: ["tiempoContrato"],
+    },
+  );
 
 export type DataFormType = z.infer<typeof DataFormSchema>;

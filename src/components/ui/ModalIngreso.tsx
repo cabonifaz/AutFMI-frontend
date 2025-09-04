@@ -12,11 +12,15 @@ import {
   UNIDAD,
   MOTIVO_INGRESO,
   HORARIO_TRABAJO,
+  OBJETO_CONTRATO,
+  PROYECTO_SERVICIO,
 } from "../../utils/config";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { sedeSunatList } from "../../models/type/SedeSunatType";
 import { AsignarTalentoType } from "../../models/type/TalentoType";
 import { useEffect } from "react";
+import { getPriorityValueFromParams } from "../../utils/util";
+import { useFetchParams } from "../../hooks/useFetchParams";
 
 interface Props {
   onClose: () => void;
@@ -25,17 +29,36 @@ interface Props {
 }
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
-  const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO}`,
-  );
   const { clientes, loading: clientsLoading } = useFetchClients();
+  const {
+    paramsByMaestro,
+    loading: paramLoading,
+    fetchParams,
+  } = useFetchParams();
+
+  useEffect(() => {
+    fetchParams(
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`,
+    );
+  }, [fetchParams]);
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
-  const horarioTrabajo = paramsByMaestro[HORARIO_TRABAJO]?.find(
-    (item) => item.num1 === 1,
-  )?.string1;
+  const horarioTrabajo =
+    paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const proyectoServicio =
+    paramsByMaestro[PROYECTO_SERVICIO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const objetoContrato =
+    paramsByMaestro[OBJETO_CONTRATO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const defaultUnit = getPriorityValueFromParams(unitValues);
+  const defaultReason = getPriorityValueFromParams(reasonValues);
 
   const {
     control,
@@ -51,9 +74,9 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       idModalidadContrato: currentTalent?.idModalidadContrato || 0,
       nombres: currentTalent?.nombres || "",
       apellidos: currentTalent?.apellidos || "",
-      idArea: currentTalent?.idArea || 0,
+      idArea: defaultUnit || 0,
       idCliente: currentTalent?.idCliente || 0,
-      idMotivo: currentTalent?.idMotivo || 0,
+      idMotivo: defaultReason || 0,
       cargo: currentTalent?.perfil || "",
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
@@ -62,8 +85,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
       fchTerminoContrato: currentTalent?.fchTerminoContrato || "",
-      proyectoServicio: currentTalent?.proyectoServicio || "",
-      objetoContrato: currentTalent?.objetoContrato || "",
+      proyectoServicio: proyectoServicio || "",
+      objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
@@ -75,10 +98,19 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
   });
 
   useEffect(() => {
-    if (horarioTrabajo) {
-      setValue("horario", horarioTrabajo);
-    }
-  }, [horarioTrabajo, setValue]);
+    setValue("horario", horarioTrabajo);
+    setValue("idArea", defaultUnit);
+    setValue("idMotivo", defaultReason);
+    setValue("proyectoServicio", proyectoServicio);
+    setValue("objetoContrato", objetoContrato);
+  }, [
+    horarioTrabajo,
+    setValue,
+    defaultReason,
+    defaultUnit,
+    proyectoServicio,
+    objetoContrato,
+  ]);
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {
@@ -166,6 +198,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       control={control}
                       label="Área"
                       error={errors.idArea}
+                      defaultValue={defaultUnit}
                       options={
                         unitValues?.map((unit) => ({
                           value: unit.num1,
@@ -249,6 +282,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       control={control}
                       label="Motivo de ingreso"
                       error={errors.idMotivo}
+                      defaultValue={defaultReason}
                       options={
                         reasonValues?.map((reason) => ({
                           value: reason.num1,

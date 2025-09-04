@@ -6,7 +6,6 @@ import {
   EntryFormSchema,
   EntryFormType,
 } from "../../models/schema/EntryFormSchema";
-import { useParams } from "../../context/ParamsContext";
 import {
   TIPO_MODALIDAD,
   UNIDAD,
@@ -20,7 +19,7 @@ import {
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { sedeSunatList } from "../../models/type/SedeSunatType";
 import { AsignarTalentoType } from "../../models/type/TalentoType";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getPriorityValueFromParams } from "../../utils/util";
 import { useFetchParams } from "../../hooks/useFetchParams";
 
@@ -83,6 +82,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
+      montoMensual: currentTalent?.montoMensual || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
@@ -142,6 +142,10 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     name: "idModalidadContrato",
   });
 
+  const [enabledSalaryFields, setEnabledSalaryFields] = useState<string[]>([
+    "montoBase",
+  ]);
+
   useEffect(() => {
     if (!watchedModalidad || !modalityValues) return;
 
@@ -156,13 +160,21 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     if (grupo === GROUP_MODALIDAD_LOC_SERVICIOS) {
       setValue("declararSunat", 2, { shouldValidate: true });
       setValue("idSedeDeclarar", 0, { shouldValidate: true });
+      setEnabledSalaryFields(["montoBase"]);
     }
 
     if (grupo === GROUP_MODALIDAD_PLANILLA) {
       setValue("declararSunat", 1, { shouldValidate: true });
       setValue("idSedeDeclarar", 1, { shouldValidate: true });
+      setEnabledSalaryFields([
+        "montoBase",
+        "montoMovilidad",
+        "montoTrimestral",
+        "montoSemestral",
+        "montoMensual",
+      ]);
     }
-  }, [watchedModalidad, modalityValues, setValue]);
+  }, [watchedModalidad, modalityValues, setValue, setEnabledSalaryFields]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -414,6 +426,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       <SalaryStructureForm
                         control={control}
                         setValue={setValue}
+                        enabledFields={enabledSalaryFields}
                         errors={errors}
                         inputs={[
                           {
@@ -425,6 +438,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                           {
                             label: "Monto Movilidad",
                             name: "montoMovilidad",
+                            type: "number",
+                            regex: /^\d*(\.\d{0,2})?$/,
+                          },
+                          {
+                            label: "Monto Mensual",
+                            name: "montoMensual",
                             type: "number",
                             regex: /^\d*(\.\d{0,2})?$/,
                           },

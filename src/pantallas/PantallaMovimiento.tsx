@@ -54,6 +54,7 @@ const PantallaMovimiento = () => {
       idCliente: 0,
       montoBase: 0,
       montoMovilidad: 0,
+      montoMensual: 0,
       montoTrimestral: 0,
       montoSemestral: 0,
       puesto: "",
@@ -179,23 +180,44 @@ const PantallaMovimiento = () => {
             control={control}
             mainLabel="Estructura Salarial"
             setValue={setValue}
+            enabledFields={[
+              "montoBase",
+              "montoMovilidad",
+              "montoMensual",
+              "montoTrimestral",
+              "montoSemestral",
+            ]}
             errors={errors}
             inputs={[
-              { label: "Monto Base", name: "montoBase", type: "number" },
+              {
+                label: "Monto Base",
+                name: "montoBase",
+                type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
+              },
               {
                 label: "Monto Movilidad",
                 name: "montoMovilidad",
                 type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
+              },
+              {
+                label: "Monto Mensual",
+                name: "montoMensual",
+                type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
               },
               {
                 label: "Monto Trimestral",
                 name: "montoTrimestral",
                 type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
               },
               {
                 label: "Monto Semestral",
                 name: "montoSemestral",
                 type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
               },
             ]}
           />

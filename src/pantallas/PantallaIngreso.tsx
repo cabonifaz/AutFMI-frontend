@@ -233,6 +233,12 @@ const PantallaIngreso = () => {
           <SalaryStructureForm
             control={control}
             mainLabel="Estructura Salarial"
+            enabledFields={[
+              "montoBase",
+              "montoMovilidad",
+              "montoTrimestral",
+              "montoSemestral",
+            ]}
             setValue={setValue}
             errors={errors}
             inputs={[
@@ -257,6 +263,12 @@ const PantallaIngreso = () => {
               {
                 label: "Monto Semestral",
                 name: "montoSemestral",
+                type: "number",
+                regex: /^\d*(\.\d{0,2})?$/,
+              },
+              {
+                label: "Monto Mensual",
+                name: "montoMensual",
                 type: "number",
                 regex: /^\d*(\.\d{0,2})?$/,
               },

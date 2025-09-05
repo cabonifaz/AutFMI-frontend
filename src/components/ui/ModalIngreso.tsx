@@ -1,4 +1,4 @@
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { DropdownForm, InputForm, SalaryStructureForm } from "../forms";
 import { Tabs } from "./Tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +6,6 @@ import {
   EntryFormSchema,
   EntryFormType,
 } from "../../models/schema/EntryFormSchema";
-import { useParams } from "../../context/ParamsContext";
 import {
   TIPO_MODALIDAD,
   UNIDAD,
@@ -14,11 +13,13 @@ import {
   HORARIO_TRABAJO,
   OBJETO_CONTRATO,
   PROYECTO_SERVICIO,
+  GROUP_MODALIDAD_LOC_SERVICIOS,
+  GROUP_MODALIDAD_PLANILLA,
 } from "../../utils/config";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { sedeSunatList } from "../../models/type/SedeSunatType";
 import { AsignarTalentoType } from "../../models/type/TalentoType";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getPriorityValueFromParams } from "../../utils/util";
 import { useFetchParams } from "../../hooks/useFetchParams";
 
@@ -81,6 +82,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
+      montoMensual: currentTalent?.montoMensual || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
@@ -97,6 +99,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     },
   });
 
+  // cargar valores por defecto desde parametros
   useEffect(() => {
     setValue("horario", horarioTrabajo);
     setValue("idArea", defaultUnit);
@@ -133,6 +136,45 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       onClose();
     }
   };
+
+  const watchedModalidad = useWatch({
+    control,
+    name: "idModalidadContrato",
+  });
+
+  const [enabledSalaryFields, setEnabledSalaryFields] = useState<string[]>([
+    "montoBase",
+  ]);
+
+  useEffect(() => {
+    if (!watchedModalidad || !modalityValues) return;
+
+    const selectedModality = modalityValues.find(
+      (m) => m.num1 === watchedModalidad,
+    );
+
+    if (!selectedModality) return;
+
+    const grupo = selectedModality.num2;
+
+    if (grupo === GROUP_MODALIDAD_LOC_SERVICIOS) {
+      setValue("declararSunat", 2, { shouldValidate: true });
+      setValue("idSedeDeclarar", 0, { shouldValidate: true });
+      setEnabledSalaryFields(["montoBase"]);
+    }
+
+    if (grupo === GROUP_MODALIDAD_PLANILLA) {
+      setValue("declararSunat", 1, { shouldValidate: true });
+      setValue("idSedeDeclarar", 1, { shouldValidate: true });
+      setEnabledSalaryFields([
+        "montoBase",
+        "montoMovilidad",
+        "montoTrimestral",
+        "montoSemestral",
+        "montoMensual",
+      ]);
+    }
+  }, [watchedModalidad, modalityValues, setValue, setEnabledSalaryFields]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -384,6 +426,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       <SalaryStructureForm
                         control={control}
                         setValue={setValue}
+                        enabledFields={enabledSalaryFields}
                         errors={errors}
                         inputs={[
                           {
@@ -395,6 +438,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                           {
                             label: "Monto Movilidad",
                             name: "montoMovilidad",
+                            type: "number",
+                            regex: /^\d*(\.\d{0,2})?$/,
+                          },
+                          {
+                            label: "Monto Mensual",
+                            name: "montoMensual",
                             type: "number",
                             regex: /^\d*(\.\d{0,2})?$/,
                           },

@@ -120,8 +120,8 @@ const TableRow: React.FC<TableRowProps> = ({
             isAceptado
               ? "bg-green-100 text-green-800"
               : isObservado
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
           }`}
         >
           {talento?.estado || ""}
@@ -133,10 +133,7 @@ const TableRow: React.FC<TableRowProps> = ({
           type="checkbox"
           checked={talento.confirmado || false}
           disabled={
-            isConfirmedFromAPI ||
-            !isAceptado ||
-            disabled ||
-            talento?.idSituacion === 2
+            isConfirmedFromAPI || !isAceptado || disabled // || talento?.idSituacion === 2
           }
           onChange={handleCheckboxChange}
           className={
@@ -153,14 +150,20 @@ const TableRow: React.FC<TableRowProps> = ({
         <button
           onClick={() => onUpdate(talento)}
           disabled={disabled || isConfirmedFromAPI || !isObservado}
-          className={`btn ${!disabled && !isConfirmedFromAPI && isObservado ? "btn-blue" : "btn-disabled"} text-sm`}
+          className={`btn ${
+            !disabled && !isConfirmedFromAPI && isObservado
+              ? "btn-blue"
+              : "btn-disabled"
+          } text-sm`}
         >
           Actualizar
         </button>
         <button
           onClick={() => onRemove(talento.idTalento)}
           disabled={disabled || isConfirmedFromAPI}
-          className={`btn ${disabled || isConfirmedFromAPI ? "btn-disabled" : "btn-red"} text-sm`}
+          className={`btn ${
+            disabled || isConfirmedFromAPI ? "btn-disabled" : "btn-red"
+          } text-sm`}
         >
           Remover
         </button>
@@ -176,7 +179,7 @@ interface TalentoSelectionProps {
   onSelect: (
     talent: AsignarTalentoType,
     perfil: string,
-    idPerfil: number,
+    idPerfil: number
   ) => void;
   isPerfilSet: boolean;
   isSelected: boolean;
@@ -201,7 +204,9 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({
         onSelect(talent, perfil, idPerfil);
       }}
       disabled={isSelected || !isPerfilSet}
-      className={`btn ${isSelected || !isPerfilSet ? "btn-disabled" : "btn-blue"}`}
+      className={`btn ${
+        isSelected || !isPerfilSet ? "btn-disabled" : "btn-blue"
+      }`}
     >
       {isSelected ? "Seleccionado" : "Seleccionar"}
     </button>
@@ -216,7 +221,7 @@ interface SelectionModalProps {
   onSelectTalent: (
     talent: AsignarTalentoType,
     perfil: string,
-    idPerfil: number,
+    idPerfil: number
   ) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
@@ -364,7 +369,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
                 isPerfilSet={idPerfil !== 0}
                 onSelect={onSelectTalent}
                 isSelected={selectedTalents.some(
-                  (t) => t.idTalento === talent.idTalento,
+                  (t) => t.idTalento === talent.idTalento
                 )}
               />
             ))
@@ -430,7 +435,7 @@ const TalentTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [requerimiento, setRequerimiento] = useState<RequerimientoType | null>(
-    null,
+    null
   );
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [dateFormatted, setDateFormatted] = useState("");
@@ -447,22 +452,22 @@ const TalentTable: React.FC = () => {
 
       // Contar confirmados iniciales (desde API)
       const initialConfirmed = talents.filter(
-        (t) => t.isFromAPI && t.confirmado,
+        (t) => t.isFromAPI && t.confirmado
       ).length;
       // Contar confirmados locales (no desde API)
       const localConfirmed = talents.filter(
-        (t) => !t.isFromAPI && t.confirmado,
+        (t) => !t.isFromAPI && t.confirmado
       ).length;
 
       return req.vacantes - initialConfirmed - localConfirmed;
     },
-    [],
+    []
   );
 
   useEffect(() => {
     if (requerimiento) {
       setRemainingVacancies(
-        calculateRemainingVacancies(localTalents, requerimiento),
+        calculateRemainingVacancies(localTalents, requerimiento)
       );
     }
   }, [localTalents, requerimiento, calculateRemainingVacancies]);
@@ -470,7 +475,7 @@ const TalentTable: React.FC = () => {
   // Mostrar y ocultar Toast
   const showToast = (
     message: string,
-    type: "success" | "error" | "warning",
+    type: "success" | "error" | "warning"
   ) => {
     setToastMessage({ message, type });
   };
@@ -484,7 +489,7 @@ const TalentTable: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=true&showContactList=false`,
+        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false&showVacantesList=true&showContactList=false`
       );
 
       if (response.data.idTipoMensaje === 2) {
@@ -524,7 +529,7 @@ const TalentTable: React.FC = () => {
               fchInicioContrato: talent?.fchInicioContrato || "",
               fchTerminoContrato: talent?.fchTerminoContrato || "",
               montoBase: talent?.montoBase || 0,
-            }),
+            })
           );
 
           setLocalTalents(formattedTalents);
@@ -548,7 +553,7 @@ const TalentTable: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/talent/requirement/list?nPag=1&busqueda=${term}`,
+        `/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
       );
 
       if (response.data.idTipoMensaje === 2) {
@@ -581,12 +586,12 @@ const TalentTable: React.FC = () => {
   const handleSelectTalent = async (
     talent: AsignarTalentoType,
     perfil: string,
-    idPerfil: number,
+    idPerfil: number
   ) => {
     try {
       setIsLoading(true);
       const response = await apiClientWithToken.get(
-        `/fmi/requirement/talents/data?idTalento=${talent.idTalento}&idRequerimiento=${idRequerimiento}`,
+        `/fmi/requirement/talents/data?idTalento=${talent.idTalento}&idRequerimiento=${idRequerimiento}`
       );
 
       let formattedTalent: AsignarTalentoType;
@@ -637,7 +642,7 @@ const TalentTable: React.FC = () => {
 
   // Formatear talento con datos básicos
   const formatTalentFromBasicData = (
-    talent: AsignarTalentoType,
+    talent: AsignarTalentoType
   ): AsignarTalentoType => {
     return {
       idTalento: talent.idTalento,
@@ -664,13 +669,13 @@ const TalentTable: React.FC = () => {
   // Manejar cambios en la confirmación
   const handleConfirmChange = (
     talento: AsignarTalentoType,
-    confirm: boolean,
+    confirm: boolean
   ) => {
     // Si intenta confirmar pero no hay vacantes disponibles
     if (confirm && remainingVacancies <= 0) {
       showToast(
         "No hay vacantes disponibles. Ya ha cubierto todas las vacantes.",
-        "error",
+        "error"
       );
       return false;
     }
@@ -685,12 +690,12 @@ const TalentTable: React.FC = () => {
       prev.map((talent) =>
         talent.idTalento === talento.idTalento
           ? { ...talent, confirmado: confirm, isFromAPI: false, ingreso: 0 }
-          : talent,
-      ),
+          : talent
+      )
     );
     showToast(
       `Confirmación cancelada. Vacantes restantes: ${remainingVacancies + 1}`,
-      "warning",
+      "warning"
     );
   };
 
@@ -707,13 +712,13 @@ const TalentTable: React.FC = () => {
   // Verificar confirmación
   const handleConfirmOpen = () => {
     const acceptedTalents = localTalents.filter(
-      (talent) => talent.idEstado === 2,
+      (talent) => talent.idEstado === 2
     );
 
     if (acceptedTalents.length === 0) {
       showToast(
         "Debe seleccionar al menos un talento con estado DATOS COMPLETOS para finalizar.",
-        "error",
+        "error"
       );
       return;
     }
@@ -799,7 +804,7 @@ const TalentTable: React.FC = () => {
 
       const response = await apiClientWithToken.post(
         "/fmi/requirement/talents/save",
-        payload,
+        payload
       );
 
       if (response.data.idTipoMensaje === 2) {
@@ -813,7 +818,7 @@ const TalentTable: React.FC = () => {
       console.error("Error saving talents:", error);
       showToast(
         "Error al guardar los datos. Por favor, intente nuevamente.",
-        "error",
+        "error"
       );
     } finally {
       setIsLoading(false);
@@ -836,7 +841,7 @@ const TalentTable: React.FC = () => {
 
   const handleModalSolicitudEquipoCancel = (talento: AsignarTalentoType) => {
     setLocalTalents((prevTalents) =>
-      prevTalents.map((t) => (t.idTalento === talento.idTalento ? talento : t)),
+      prevTalents.map((t) => (t.idTalento === talento.idTalento ? talento : t))
     );
     setShowModalIngreso(false);
   };
@@ -849,25 +854,25 @@ const TalentTable: React.FC = () => {
     } else {
       setLocalTalents((prevTalents) =>
         prevTalents.map((t) =>
-          t.idTalento === talento.idTalento ? talento : t,
-        ),
+          t.idTalento === talento.idTalento ? talento : t
+        )
       );
 
       showToast(
         `Talento confirmado. Vacantes restantes: ${remainingVacancies - 1}`,
-        "success",
+        "success"
       );
     }
   };
 
   const handleOnConfirmModalSolicitudEquipo = (talento: AsignarTalentoType) => {
     setLocalTalents((prevTalents) =>
-      prevTalents.map((t) => (t.idTalento === talento.idTalento ? talento : t)),
+      prevTalents.map((t) => (t.idTalento === talento.idTalento ? talento : t))
     );
 
     showToast(
       `Talento confirmado. Vacantes restantes: ${remainingVacancies - 1}`,
-      "success",
+      "success"
     );
   };
 
@@ -920,7 +925,14 @@ const TalentTable: React.FC = () => {
               </p>
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Vacantes: </span>
-                {`${requerimiento?.lstRqVacantes?.map((vacante) => `${vacante.cantidad} ${vacante.perfilProfesional}`).join(", ") || "Cargando..."}`}
+                {`${
+                  requerimiento?.lstRqVacantes
+                    ?.map(
+                      (vacante) =>
+                        `${vacante.cantidad} ${vacante.perfilProfesional}`
+                    )
+                    .join(", ") || "Cargando..."
+                }`}
               </p>
             </div>
           </div>
@@ -942,7 +954,9 @@ const TalentTable: React.FC = () => {
             <button
               onClick={handleConfirmOpen}
               disabled={buttonsDisabled}
-              className={`btn ${buttonsDisabled ? "btn-disabled" : "btn-primary"}`}
+              className={`btn ${
+                buttonsDisabled ? "btn-disabled" : "btn-primary"
+              }`}
             >
               Finalizar
             </button>

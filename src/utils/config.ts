@@ -24,6 +24,7 @@ export const MODALIDAD_RQ = "31";
 export const HORARIO_TRABAJO = "34";
 export const PROYECTO_SERVICIO = "36";
 export const OBJETO_CONTRATO = "37";
+export const URLS_BASE = "39";
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;

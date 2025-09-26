@@ -15,6 +15,7 @@ import {
 } from "../../models/schema/AddFileSchema";
 import {
   fileToBase64,
+  formatCoin,
   getFileNameAndExtension,
   getTipoArchivoId,
 } from "../../utils/util";
@@ -197,7 +198,10 @@ export const ModalDetallesRQ = ({
       const moneda =
         tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${formatCoin(Number(tarifa))}`
+      );
     } else {
       setValue(`lstVacantes.${index}.tarifa`, "S/. -");
     }
@@ -331,7 +335,7 @@ export const ModalDetallesRQ = ({
             idPerfil: vacante.idPerfil,
             cantidad: String(vacante.cantidad),
             idEstado: 0,
-            tarifa: `${moneda} ${tarifa}`,
+            tarifa: `${moneda} ${formatCoin(Number(tarifa))}`,
           };
         }
       );
@@ -501,7 +505,10 @@ export const ModalDetallesRQ = ({
         tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
         "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${formatCoin(Number(tarifa))}`
+      );
     });
   };
 
@@ -1178,9 +1185,13 @@ export const ModalDetallesRQ = ({
                                               `lstVacantes.${index}.tarifa`
                                             )}
                                             defaultValue={
-                                              getValues(
-                                                `lstVacantes.${index}.tarifa`
-                                              )?.toString() || "-"
+                                              formatCoin(
+                                                Number(
+                                                  getValues(
+                                                    `lstVacantes.${index}.tarifa`
+                                                  ) || 0
+                                                )
+                                              ) || "-"
                                             }
                                             type="text"
                                             id="v-tarifa"

@@ -36,7 +36,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export const getFileNameAndExtension = (
-  fileName: fileNameType,
+  fileName: fileNameType
 ): { nombreArchivo: string; extensionArchivo: string } => {
   if (!fileName) return { nombreArchivo: "", extensionArchivo: "" };
 
@@ -73,4 +73,31 @@ export const getTipoArchivoId = (extension: string): number => {
     default:
       throw new Error(`Tipo de archivo no soportado: ${extension}`);
   }
+};
+
+export const formatCoin = (coinValue: number): string => {
+  // Check if the input is a valid finite number
+  if (
+    typeof coinValue !== "number" ||
+    !isFinite(coinValue) ||
+    isNaN(coinValue)
+  ) {
+    return "-";
+  }
+
+  // Initialize Intl.NumberFormat with specific options:
+  const formatter = new Intl.NumberFormat("en-US", {
+    // Use 'decimal' style for regular number formatting (not currency symbol)
+    style: "decimal",
+
+    // Ensure there are always exactly 2 digits after the decimal point
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+
+    // Ensure thousand separators are used (this is default behavior for 'en-US',
+    // but explicitly stating it is good practice if needed)
+    useGrouping: true,
+  });
+
+  return formatter.format(coinValue);
 };

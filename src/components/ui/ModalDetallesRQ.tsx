@@ -38,6 +38,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import useDownloadPdf from "../../hooks/useDownloadPdf";
+import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -575,9 +576,16 @@ export const ModalDetallesRQ = ({
     }
   };
 
+  /** Download RQ file */
+  const [isLoading, downloadFile] = useDownloadRqFile();
+
+  const handleDownload = (rqFile: number) => {
+    downloadFile(rqFile);
+  };
+
   return (
     <>
-      {(postloading || deleteLoading || downloadPdfLoading) && (
+      {(postloading || deleteLoading || downloadPdfLoading || isLoading) && (
         <Loading overlayMode={true} />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -1118,7 +1126,6 @@ export const ModalDetallesRQ = ({
                                             <div className="flex flex-col gap-1 relative">
                                               <NumberInput<UpdateBaseRQSchemaType>
                                                 register={register}
-                                                key={`vacante-${index}-${restoreKey}`}
                                                 control={control}
                                                 name={`lstVacantes.${index}.cantidad`}
                                                 defaultValue={Number(
@@ -1286,6 +1293,19 @@ export const ModalDetallesRQ = ({
                             key={index}
                             className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
                           >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDownload(archivo.idRequerimientoArchivo)
+                              }
+                              className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                            >
+                              <img
+                                src="/assets/see_pass.svg"
+                                alt="icon preview"
+                                className="w-5 h-5"
+                              />
+                            </button>
                             <span className="text-sm text-gray-700 truncate flex-1 mr-2">
                               {archivo.name}
                             </span>

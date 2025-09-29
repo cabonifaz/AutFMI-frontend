@@ -36,7 +36,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export const getFileNameAndExtension = (
-  fileName: fileNameType,
+  fileName: fileNameType
 ): { nombreArchivo: string; extensionArchivo: string } => {
   if (!fileName) return { nombreArchivo: "", extensionArchivo: "" };
 
@@ -73,4 +73,61 @@ export const getTipoArchivoId = (extension: string): number => {
     default:
       throw new Error(`Tipo de archivo no soportado: ${extension}`);
   }
+};
+
+export const formatCoin = (coinValue: number): string => {
+  // Check if the input is a valid finite number
+  if (
+    typeof coinValue !== "number" ||
+    !isFinite(coinValue) ||
+    isNaN(coinValue)
+  ) {
+    return "-";
+  }
+
+  // Initialize Intl.NumberFormat with specific options:
+  const formatter = new Intl.NumberFormat("en-US", {
+    // Use 'decimal' style for regular number formatting (not currency symbol)
+    style: "decimal",
+
+    // Ensure there are always exactly 2 digits after the decimal point
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+
+    // Ensure thousand separators are used (this is default behavior for 'en-US',
+    // but explicitly stating it is good practice if needed)
+    useGrouping: true,
+  });
+
+  return formatter.format(coinValue);
+};
+
+export const downloadAnyFile = (file64: string, ext: string) => {
+  // Limpiar la cadena base64
+  const cleanBase64 = file64.replace(/\s/g, "");
+
+  // Decodificamos base64 -> bytes
+  const byteCharacters = atob(cleanBase64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+
+  // Creamos un blob genérico
+  const blob = new Blob([byteArray]);
+
+  // Creamos URL temporal
+  const url = URL.createObjectURL(blob);
+
+  // Simulamos descarga
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `archivo.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Liberamos la URL temporal
+  URL.revokeObjectURL(url);
 };

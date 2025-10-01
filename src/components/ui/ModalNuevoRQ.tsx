@@ -23,7 +23,12 @@ import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
 import { ReqContacto } from "../../models/type/ReqContacto";
 import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
-import { DURACION_RQ, MODALIDAD_RQ } from "../../utils/config";
+import {
+  DURACION_RQ,
+  MODALIDAD_RQ,
+  TIPO_MODAL_MODALIDAD,
+  TIPO_MODALIDAD,
+} from "../../utils/config";
 import { useParams } from "../../context/ParamsContext";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import { format } from "date-fns";
@@ -61,7 +66,9 @@ export const AgregarRQModal = ({
   const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
-  const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+  const { paramsByMaestro } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}`
+  );
   const {
     tarifario,
     fetchTarifario,
@@ -70,6 +77,7 @@ export const AgregarRQModal = ({
 
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
+  const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
 
   const {
     register,
@@ -94,6 +102,9 @@ export const AgregarRQModal = ({
       lstVacantes: [],
       lstArchivos: [],
       duracion: "1",
+      idModalidad: 0,
+      idDuracion: 0,
+      idModalidadFact: [],
     },
   });
 
@@ -139,7 +150,7 @@ export const AgregarRQModal = ({
       .filter((id) => id !== 0);
 
     return tarifario.filter(
-      (perfil) => !selectedProfiles.includes(perfil.idPerfil),
+      (perfil) => !selectedProfiles.includes(perfil.idPerfil)
     );
   };
 
@@ -190,7 +201,7 @@ export const AgregarRQModal = ({
     const selectedClienteId = Number(event.target.value);
     const selectedClienteText =
       clientes.find(
-        (cliente) => cliente.idCliente === Number(selectedClienteId),
+        (cliente) => cliente.idCliente === Number(selectedClienteId)
       )?.razonSocial || "";
     setClienteSeleccionado(selectedClienteText);
     setValue("idCliente", selectedClienteId);
@@ -218,7 +229,7 @@ export const AgregarRQModal = ({
     setSelectedContacts((prev) =>
       prev.includes(contactId)
         ? prev.filter((id) => id !== contactId)
-        : [...prev, contactId],
+        : [...prev, contactId]
     );
   };
 
@@ -232,7 +243,7 @@ export const AgregarRQModal = ({
         data.lstArchivos?.map(async (archivo) => {
           const base64 = await fileToBase64(archivo.file);
           const { nombreArchivo, extensionArchivo } = getFileNameAndExtension(
-            archivo.name,
+            archivo.name
           );
           const idTipoArchivo = getTipoArchivoId(extensionArchivo);
           return {
@@ -241,7 +252,7 @@ export const AgregarRQModal = ({
             extensionArchivo,
             idTipoArchivo,
           };
-        }) || [],
+        }) || []
       );
 
       // 3. Crear el objeto final para enviar
@@ -258,6 +269,7 @@ export const AgregarRQModal = ({
         })),
         lstContactos: selectedContacts.join(","),
         lstArchivos,
+        idModalidadFact: data.idModalidadFact?.join(","),
       };
 
       // 4. Enviar los datos al servidor
@@ -310,8 +322,8 @@ export const AgregarRQModal = ({
     setTotalVacantes(
       cantidadesVacantes.reduce(
         (sum, n) => sum + (Number.isFinite(n) ? n : 0),
-        0,
-      ),
+        0
+      )
     );
   }, [cantidadesVacantes]);
 
@@ -408,7 +420,9 @@ export const AgregarRQModal = ({
                             <input
                               {...register("codigoRQ")}
                               disabled={autogenRQ}
-                              className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${autogenRQ ? "text-zinc-500" : ""}`}
+                              className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] ${
+                                autogenRQ ? "text-zinc-500" : ""
+                              }`}
                             />
                           </div>
                           {errors.codigoRQ && (
@@ -429,7 +443,7 @@ export const AgregarRQModal = ({
                                 setAutogenRQ(e.target.checked);
                                 setValue(
                                   "codigoRQ",
-                                  e.target.checked ? "Autogenerado" : "",
+                                  e.target.checked ? "Autogenerado" : ""
                                 );
                                 clearErrors("codigoRQ");
                               }}
@@ -566,7 +580,11 @@ export const AgregarRQModal = ({
                         type="button"
                         onClick={handleAddContact}
                         disabled={getValues("idCliente") === 0}
-                        className={`btn text-sm font-medium ${getValues("idCliente") === 0 ? "btn-disabled" : "btn-blue"}`}
+                        className={`btn text-sm font-medium ${
+                          getValues("idCliente") === 0
+                            ? "btn-disabled"
+                            : "btn-blue"
+                        }`}
                       >
                         Añadir contacto
                       </button>
@@ -645,11 +663,11 @@ export const AgregarRQModal = ({
                                         name={`contact-${contacto.idClienteContacto}`}
                                         id={`contact-${contacto.idClienteContacto}`}
                                         checked={selectedContacts.includes(
-                                          contacto.idClienteContacto,
+                                          contacto.idClienteContacto
                                         )}
                                         onChange={() =>
                                           handleContactToggle(
-                                            contacto.idClienteContacto,
+                                            contacto.idClienteContacto
                                           )
                                         }
                                       />
@@ -747,10 +765,10 @@ export const AgregarRQModal = ({
                                   const showCurrentProfile =
                                     currentProfile === 0 ||
                                     availableProfiles.some(
-                                      (p) => p.idPerfil === currentProfile,
+                                      (p) => p.idPerfil === currentProfile
                                     ) ||
                                     !tarifario.some(
-                                      (p) => p.idPerfil === currentProfile,
+                                      (p) => p.idPerfil === currentProfile
                                     );
 
                                   const optionsToShow = showCurrentProfile
@@ -758,7 +776,7 @@ export const AgregarRQModal = ({
                                     : [
                                         ...availableProfiles,
                                         ...tarifario.filter(
-                                          (p) => p.idPerfil === currentProfile,
+                                          (p) => p.idPerfil === currentProfile
                                         ),
                                       ];
 
@@ -767,8 +785,8 @@ export const AgregarRQModal = ({
                                       (item) =>
                                         item.idPerfil ===
                                         getValues(
-                                          `lstVacantes.${index}.idPerfil`,
-                                        ),
+                                          `lstVacantes.${index}.idPerfil`
+                                        )
                                     )?.tipoTarifa || "-";
 
                                   return (
@@ -777,12 +795,12 @@ export const AgregarRQModal = ({
                                         <select
                                           {...register(
                                             `lstVacantes.${index}.idPerfil`,
-                                            { valueAsNumber: true },
+                                            { valueAsNumber: true }
                                           )}
                                           onChange={(e) =>
                                             handleProfileChange(
                                               index,
-                                              e.target.value,
+                                              e.target.value
                                             )
                                           }
                                           className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
@@ -834,7 +852,7 @@ export const AgregarRQModal = ({
                                                     shouldValidate: true,
                                                     shouldDirty: true,
                                                     shouldTouch: true,
-                                                  },
+                                                  }
                                                 );
 
                                                 // 🔧 Y ACTUALIZA TU ARRAY LOCAL EN EL MISMO ÍNDICE
@@ -843,11 +861,11 @@ export const AgregarRQModal = ({
                                                     const next = prev.slice();
                                                     next[index] = safe; // 👈 reemplaza, no hagas push
                                                     return next;
-                                                  },
+                                                  }
                                                 );
 
                                                 clearErrors(
-                                                  `lstVacantes.${index}.cantidad`,
+                                                  `lstVacantes.${index}.cantidad`
                                                 );
                                               }}
                                               className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
@@ -867,7 +885,7 @@ export const AgregarRQModal = ({
                                       <td className="table-cell">
                                         <input
                                           {...register(
-                                            `lstVacantes.${index}.tarifa`,
+                                            `lstVacantes.${index}.tarifa`
                                           )}
                                           defaultValue={"S/. -"}
                                           type="text"
@@ -1034,6 +1052,32 @@ export const AgregarRQModal = ({
                           label: modalidad.string1,
                         }))}
                       />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="w-1/3 text-sm font-medium text-gray-700">
+                        Modalidad de facturación:
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {modalidadesFact.map((modalidad) => (
+                          <label
+                            key={modalidad.num1}
+                            className="inline-flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              value={modalidad.num1}
+                              {...register("idModalidadFact")}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                            />
+                            <span>{modalidad.string1}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {errors.idModalidadFact && (
+                        <span className="text-red-500 text-xs">
+                          {errors.idModalidadFact.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ),

@@ -57,6 +57,14 @@ export const newRQSchema = z
         invalid_type_error: "Elija una modalidad",
       })
       .min(1, "Elija una modalidad"),
+    idModalidadFact: z
+      .array(
+        z.coerce.number({
+          required_error: "Elija una modalidad de pago",
+          invalid_type_error: "Elija una modalidad de pago",
+        })
+      )
+      .optional(),
     lstVacantes: z
       .array(vacanteSchema)
       .min(1, "Debe agregar 1 vacante como mínimo"),
@@ -66,7 +74,7 @@ export const newRQSchema = z
           name: z.string(),
           size: z.number(),
           file: z.instanceof(File),
-        }),
+        })
       )
       .optional(),
   })

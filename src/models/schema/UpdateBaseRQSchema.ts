@@ -62,6 +62,14 @@ export const UpdateBaseRQSchema = z
         invalid_type_error: "Elija una modalidad",
       })
       .min(1, "Elija una modalidad"),
+    idModalidadFact: z
+      .array(
+        z.coerce.number({
+          required_error: "Elija una modalidad de pago",
+          invalid_type_error: "Elija una modalidad de pago",
+        })
+      )
+      .optional(),
     fechaVencimiento: z
       .string()
       .min(1, "La fecha de vencimiento es obligatoria"),
@@ -74,7 +82,7 @@ export const UpdateBaseRQSchema = z
           name: z.string(),
           size: z.number(),
           file: z.instanceof(File),
-        }),
+        })
       )
       .optional(),
   })

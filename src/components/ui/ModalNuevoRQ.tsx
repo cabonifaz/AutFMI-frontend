@@ -1,19 +1,14 @@
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { ParamType } from "../../models/type/ParamType";
-import {
-  Controller,
-  SubmitHandler,
-  useFieldArray,
-  useForm,
-  useWatch,
-} from "react-hook-form";
+import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { newRQSchema, newRQSchemaType } from "../../models/schema/NewRQSchema";
 import {
   fileToBase64,
   getFileNameAndExtension,
   getTipoArchivoId,
-} from "../../utils/util";
+  HABILIDADES_TECNICAS,
+} from "../../utils";
 import { usePostHook } from "../../hooks/usePostHook";
 import { ClientType } from "../../models/type/ClientType";
 import { Loading } from "./Loading";
@@ -25,19 +20,24 @@ import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
 import {
   DURACION_RQ,
+  MODAL_ADD_TECH_SKILL,
   MODALIDAD_RQ,
-  TIPO_MODAL_MODALIDAD,
   TIPO_MODALIDAD,
-} from "../../utils/config";
+} from "../../utils";
 import { useParams } from "../../context/ParamsContext";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import { format } from "date-fns";
+import { enqueueSnackbar } from "notistack";
+import { useModal } from "../../context/ModalContext";
+import { BaseSkillProps, TechSkillsModal } from ".";
 
 interface Archivo {
   name: string;
   size: number;
   file: File;
 }
+
+type SkillsPayload = BaseSkillProps & { idPerfil: number };
 
 interface Props {
   onClose: () => void;
@@ -57,6 +57,8 @@ export const AgregarRQModal = ({
   const [clienteSeleccionado, setClienteSeleccionado] = useState("");
   const [autogenRQ, setAutogenRQ] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const { openModal, isModalOpen, closeModal } = useModal();
+
   const {
     contactos,
     loading: loadingContacts,
@@ -66,8 +68,13 @@ export const AgregarRQModal = ({
   const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
-  const { paramsByMaestro } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}`
+  /** Select skills for Vacante*/
+  const [selectedTechSkills, setSelectedTechSkills] = useState<
+    Record<number, SkillsPayload[]>
+  >({});
+  const { paramsByMaestro, refetchParams } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD},
+    ${HABILIDADES_TECNICAS}`
   );
   const {
     tarifario,
@@ -78,6 +85,7 @@ export const AgregarRQModal = ({
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const habilidadesTecnicas = paramsByMaestro[HABILIDADES_TECNICAS] || [];
 
   const {
     register,
@@ -175,8 +183,17 @@ export const AgregarRQModal = ({
   };
 
   const handleRemoveVacante = (index: number) => {
+    const idPerfil = getValues(`lstVacantes.${index}.idPerfil`);
     remove(index);
     setCantidadesVacantes((prev) => prev.filter((_, i) => i !== index));
+    // Eliminar las habilidades usando el idPerfil
+    if (idPerfil && idPerfil !== 0) {
+      setSelectedTechSkills((prev) => {
+        const newSkills = { ...prev };
+        delete newSkills[idPerfil];
+        return newSkills;
+      });
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,6 +272,19 @@ export const AgregarRQModal = ({
         }) || []
       );
 
+      /** Map lstVacantes to VacanteSkill */
+      const lstVacanteSkills = Object.entries(selectedTechSkills).flatMap(
+        ([idPerfilStr, skills]) => {
+          const idPerfil = Number(idPerfilStr);
+          return skills.map((skill) => ({
+            // Backend waits for this structure
+            idPerfil: idPerfil,
+            idSkill: skill?.id,
+            anios: skill?.years,
+          }));
+        }
+      );
+
       // 3. Crear el objeto final para enviar
       const payload = {
         ...data,
@@ -270,6 +300,7 @@ export const AgregarRQModal = ({
         lstContactos: selectedContacts.join(","),
         lstArchivos,
         idModalidadFact: data.idModalidadFact?.join(","),
+        lstVacanteSkills,
       };
 
       // 4. Enviar los datos al servidor
@@ -366,9 +397,74 @@ export const AgregarRQModal = ({
     errors.idModalidad?.message !== undefined ||
     errors.idDuracion?.message !== undefined;
 
+  /**Handle Skills for Vacancy */
+  const [currentProfile, setCurrentProfile] = useState<number | null>();
+
+  const techSkills = habilidadesTecnicas.map((skill) => ({
+    id: skill.num1,
+    label: skill.string1,
+  }));
+
+  const handleOpenModal = (profileId: number) => {
+    if (!profileId || profileId === 0) {
+      enqueueSnackbar({
+        message: "Selecciona un perfil para agregar habilidades técnicas.",
+        variant: "warning",
+      });
+      return;
+    }
+    setCurrentProfile(profileId);
+    openModal(MODAL_ADD_TECH_SKILL);
+  };
+  /**Get initial skills */
+  const getInitialSkills = (profileId: number): SkillsPayload[] => {
+    if (!profileId || profileId === 0) return [];
+    const skills = selectedTechSkills[profileId] || [];
+
+    return skills.map((skill) => ({
+      idPerfil: profileId,
+      id: skill.id,
+      years: skill.years,
+      label: skill?.label || "",
+    }));
+  };
+
+  /** Handle save tech skills */
+
+  const handleSaveTechSkills = (skills: BaseSkillProps[]) => {
+    if (!currentProfile) return;
+    const vacanteSkills: SkillsPayload[] = skills.map((skill) => ({
+      idPerfil: currentProfile,
+      id: skill.id,
+      years: skill.years,
+      label: skill?.label || "",
+    }));
+    setSelectedTechSkills((prev) => ({
+      ...prev,
+      [currentProfile]: vacanteSkills,
+    }));
+  };
+
+  /**Modal Skills close */
+  const handleCloseModalSkills = () => {
+    setCurrentProfile(null);
+    closeModal(MODAL_ADD_TECH_SKILL);
+  };
+
   return (
     <>
       {(postloading || loadingTarifario) && <Loading overlayMode={true} />}
+      {isModalOpen(MODAL_ADD_TECH_SKILL) && (
+        <TechSkillsModal
+          onClose={handleCloseModalSkills}
+          availableSkills={techSkills}
+          onSave={handleSaveTechSkills}
+          initialSkills={getInitialSkills(currentProfile || 0)}
+          refetchAvailableSkills={() => {
+            refetchParams(HABILIDADES_TECNICAS);
+          }}
+        />
+      )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
@@ -745,6 +841,12 @@ export const AgregarRQModal = ({
                                 </th>
                                 <th
                                   scope="col"
+                                  className="table-header-cell text-center"
+                                >
+                                  Otros
+                                </th>
+                                <th
+                                  scope="col"
                                   className="table-header-cell"
                                 ></th>
                               </tr>
@@ -898,15 +1000,44 @@ export const AgregarRQModal = ({
                                         <p>{tipoTarifa}</p>
                                       </td>
                                       <td className="table-cell">
+                                        <div className="flex items-center gap-3 justify-center">
+                                          <button
+                                            type="button"
+                                            className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                            title="Agregar carreras"
+                                          >
+                                            <img
+                                              className="w-6 h-6"
+                                              src="/assets/ic_student.png"
+                                              alt="admin-settings-male"
+                                            />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                            onClick={() => {
+                                              handleOpenModal(currentProfile);
+                                            }}
+                                            title="Agregar habilidades"
+                                          >
+                                            <img
+                                              className="w-6 h-6"
+                                              src="/assets/ic_skills.png"
+                                              alt="admin-settings-male"
+                                            />
+                                          </button>
+                                        </div>
+                                      </td>
+                                      <td className="table-cell">
                                         <button
                                           type="button"
-                                          className="ms-4 text-xl text-red-500 hover:text-red-700"
+                                          className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                           onClick={() =>
                                             handleRemoveVacante(index)
                                           }
                                         >
                                           <img
-                                            src="/assets/ic_remove_fmi.svg"
+                                            src="/assets/ic_remove.png"
                                             alt="icon remove"
                                             className="w-6 h-6"
                                           />

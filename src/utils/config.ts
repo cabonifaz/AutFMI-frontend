@@ -1,4 +1,5 @@
 export const API_BASE_URL = "https://api-autfmi.fractal.com.pe";
+export const BASE_URL_BDT = "https://api-bdt.fractal.com.pe";
 export const TOKEN = "jwt_token";
 
 // PARAMS
@@ -23,6 +24,8 @@ export const HORARIO_TRABAJO = "34";
 export const PROYECTO_SERVICIO = "36";
 export const OBJETO_CONTRATO = "37";
 export const URLS_BASE = "39";
+export const HABILIDADES_TECNICAS = "19";
+export const GRADO_ESTUDIO = "38";
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
@@ -41,3 +44,9 @@ export const MODALIDAD_LOC_SERVICIOS = "RxH";
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
 export const GROUP_MODALIDAD_PLANILLA = 1;
+
+// MODAL CONSTANTS
+export const MODAL_ADD_TECH_SKILL = "add_skill";
+export const MODAL_DETAILS_VAC_SKILLS = "modalDetailsVacSkills";
+export const MODAL_ADD_CAREER = "modalAddCareer";
+export const MODAL_UPDATE_CAREER = "modalUpdateCareer";

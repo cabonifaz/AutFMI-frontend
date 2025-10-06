@@ -1,7 +1,13 @@
-import axios, { AxiosInstance, isAxiosError } from 'axios';
-import { API_BASE_URL, TOKEN } from './config';
-import Cookies from 'js-cookie';
-import { enqueueSnackbar } from 'notistack';
+import axios, {
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  isAxiosError,
+} from "axios";
+import { API_BASE_URL, BASE_URL_BDT, TOKEN } from "./config";
+import Cookies from "js-cookie";
+import { enqueueSnackbar } from "notistack";
+import { isValidToken } from "./util";
 
 const setupInterceptors = (apiClient: AxiosInstance) => {
   apiClient.interceptors.response.use(
@@ -14,28 +20,41 @@ const setupInterceptors = (apiClient: AxiosInstance) => {
 
         switch (status) {
           case 400:
-            enqueueSnackbar('La solicitud es incorrecta. Verifica los datos e inténtalo nuevamente.', { variant: 'error' });
+            enqueueSnackbar(
+              "La solicitud es incorrecta. Verifica los datos e inténtalo nuevamente.",
+              { variant: "error" }
+            );
             break;
           case 401:
-            enqueueSnackbar('Acceso denegado.', { variant: 'error' });
+            enqueueSnackbar("Acceso denegado.", { variant: "error" });
             break;
           case 403:
-            enqueueSnackbar('No tienes permiso para acceder a este recurso.', { variant: 'error' });
+            enqueueSnackbar("No tienes permiso para acceder a este recurso.", {
+              variant: "error",
+            });
             break;
           case 404:
-            enqueueSnackbar('Recurso no encontrado.', { variant: 'error' });
+            enqueueSnackbar("Recurso no encontrado.", { variant: "error" });
             break;
           case 405:
-            enqueueSnackbar('Método no permitido.', { variant: 'error' });
+            enqueueSnackbar("Método no permitido.", { variant: "error" });
             break;
           case 409:
-            enqueueSnackbar('Conflicto con la solicitud. Intenta con otro valor.', { variant: 'error' });
+            enqueueSnackbar(
+              "Conflicto con la solicitud. Intenta con otro valor.",
+              { variant: "error" }
+            );
             break;
           case 429:
-            enqueueSnackbar('Demasiadas solicitudes. Intenta nuevamente más tarde.', { variant: 'error' });
+            enqueueSnackbar(
+              "Demasiadas solicitudes. Intenta nuevamente más tarde.",
+              { variant: "error" }
+            );
             break;
           default:
-            enqueueSnackbar('Ocurrió un error en la solicitud.', { variant: 'error' });
+            enqueueSnackbar("Ocurrió un error en la solicitud.", {
+              variant: "error",
+            });
         }
       }
 
@@ -47,7 +66,7 @@ const setupInterceptors = (apiClient: AxiosInstance) => {
 const apiClientWithToken: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -55,7 +74,7 @@ apiClientWithToken.interceptors.request.use(
   (config) => {
     const token = Cookies.get(TOKEN);
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
@@ -67,11 +86,56 @@ apiClientWithToken.interceptors.request.use(
 const apiClientWithoutToken: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
+const createAxios = (baseURL: string): AxiosInstance => {
+  return axios.create({ baseURL });
+};
+
+const axiosInstanceBDT = createAxios(BASE_URL_BDT); // BDT
+const axiosInstanceBDTNoToken = createAxios(BASE_URL_BDT); // BDT
+
+const setupInterceptorsBDT = (
+  instance: AxiosInstance,
+  configToken: boolean = false
+) => {
+  instance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+      if (configToken) {
+        const token = Cookies.get(TOKEN);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          return config;
+        }
+        return Promise.reject(new Error("Token expirado"));
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      return response;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+};
+
 setupInterceptors(apiClientWithToken);
 setupInterceptors(apiClientWithoutToken);
+setupInterceptorsBDT(axiosInstanceBDT, true);
+setupInterceptorsBDT(axiosInstanceBDTNoToken, false);
 
-export { apiClientWithToken, apiClientWithoutToken };
+export {
+  apiClientWithToken,
+  apiClientWithoutToken,
+  axiosInstanceBDT,
+  axiosInstanceBDTNoToken,
+};

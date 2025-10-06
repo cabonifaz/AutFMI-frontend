@@ -105,7 +105,7 @@ export const ModalDetallesRQ = ({
   >(null);
 
   const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}, ${GRADO_ESTUDIO}`
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}, ${GRADO_ESTUDIO}, ${HABILIDADES_TECNICAS}`
   );
   const {
     tarifario,

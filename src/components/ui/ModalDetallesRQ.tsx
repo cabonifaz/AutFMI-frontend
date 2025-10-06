@@ -37,14 +37,21 @@ import { useParams } from "../../context/ParamsContext";
 import {
   DURACION_RQ,
   ESTADO_ATENDIDO,
+  GRADO_ESTUDIO,
+  HABILIDADES_TECNICAS,
+  MODAL_DETAILS_VAC_SKILLS,
+  MODAL_UPDATE_CAREER,
   MODALIDAD_RQ,
   TIPO_MODALIDAD,
   URLS_BASE,
-} from "../../utils/config";
+} from "../../utils";
 import { enqueueSnackbar } from "notistack";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import useDownloadPdf from "../../hooks/useDownloadPdf";
 import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
+import { useModal } from "../../context/ModalContext";
+import { ModalDetailsVacSkills } from "./ModalDetailVacSkill";
+import { ModalDetailsVacCarreras } from "./ModalUpdateCareer";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -76,6 +83,7 @@ export const ModalDetallesRQ = ({
   const [isEditingVacantesData, setIsEditingVacantesData] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
+  const { isModalOpen, closeModal, openModal } = useModal();
   const { postData, postloading } = usePostHook();
   const {
     requirement,
@@ -96,8 +104,8 @@ export const ModalDetallesRQ = ({
     number | null
   >(null);
 
-  const { paramsByMaestro } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}`
+  const { paramsByMaestro, refetchParams } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}, ${GRADO_ESTUDIO}`
   );
   const {
     tarifario,
@@ -108,6 +116,8 @@ export const ModalDetallesRQ = ({
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const techSkillsParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const {
     register,
@@ -604,10 +614,77 @@ export const ModalDetallesRQ = ({
     downloadFile(rqFile);
   };
 
+  /** Get the initial values  Tech skills for each profile */
+  const [idVac, setIdVac] = useState<number | undefined>();
+  const availableTechSkills = techSkillsParams.map((skill) => ({
+    id: skill.num1,
+    label: skill.string1,
+  }));
+
+  /**Modal Skills close */
+  const handleCloseModalSkills = () => {
+    closeModal(MODAL_DETAILS_VAC_SKILLS);
+    setIdVac(undefined);
+  };
+
+  const handleOpenModal = (idVac: number) => {
+    if (!idVac || idVac === 0) {
+      enqueueSnackbar({
+        message:
+          "Selecciona una y/o guarda vacante para agregar habilidades técnicas.",
+        variant: "warning",
+      });
+      return;
+    }
+    setIdVac(idVac);
+    openModal(MODAL_DETAILS_VAC_SKILLS);
+  };
+
+  /** Handle ModalUpdate Careers */
+  const availableDegrees = paramsDegrees.map((param) => ({
+    id: param.num1,
+    label: param.string1,
+  }));
+
+  const openModalCareers = (idVac: number) => {
+    if (!idVac || idVac === 0) {
+      enqueueSnackbar({
+        message:
+          "Selecciona una y/o guarda vacante para agregar habilidades técnicas.",
+        variant: "warning",
+      });
+      return;
+    }
+    setIdVac(idVac);
+    openModal(MODAL_UPDATE_CAREER);
+  };
+
+  const closeModalCareers = () => {
+    setIdVac(undefined);
+    closeModal(MODAL_UPDATE_CAREER);
+  };
+
   return (
     <>
       {(postloading || deleteLoading || downloadPdfLoading || isLoading) && (
         <Loading overlayMode={true} />
+      )}
+      {isModalOpen(MODAL_DETAILS_VAC_SKILLS) && (
+        <ModalDetailsVacSkills
+          onClose={handleCloseModalSkills}
+          availableSkills={availableTechSkills}
+          refetchAvailableSkills={() =>
+            refetchParams(`${HABILIDADES_TECNICAS}`)
+          }
+          idVac={idVac ?? 0}
+        />
+      )}
+      {isModalOpen(MODAL_UPDATE_CAREER) && (
+        <ModalDetailsVacCarreras
+          idVac={idVac ?? 0}
+          onClose={closeModalCareers}
+          availableDegrees={availableDegrees}
+        />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
@@ -1009,6 +1086,9 @@ export const ModalDetallesRQ = ({
                                   <th className="table-header-cell">
                                     Tipo Tarifa
                                   </th>
+                                  <th className="table-header-cell text-center">
+                                    Otros
+                                  </th>
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -1230,18 +1310,54 @@ export const ModalDetallesRQ = ({
                                         <td className="table-cell">
                                           {tipoTarifa}
                                         </td>
+                                        <td className="table-cell text-center relative group">
+                                          <div className="flex items-center gap-3 justify-center">
+                                            <button
+                                              type="button"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              title="Agregar carreras"
+                                              onClick={() => {
+                                                const idVacante =
+                                                  field.idRequerimientoVacante;
+                                                openModalCareers(idVacante);
+                                              }}
+                                            >
+                                              <img
+                                                className="w-6 h-6"
+                                                src="/assets/ic_student.png"
+                                                alt="admin-settings-male"
+                                              />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              title="Agregar habilidades"
+                                              onClick={() => {
+                                                const idVacante =
+                                                  field.idRequerimientoVacante;
+                                                handleOpenModal(idVacante);
+                                              }}
+                                            >
+                                              <img
+                                                src="/assets/ic_skills.png"
+                                                alt="icon add"
+                                                className="w-6 h-6"
+                                              />
+                                            </button>
+                                          </div>
+                                        </td>
                                         <td className="table-cell">
                                           {isEditingVacantesData && (
                                             <button
                                               type="button"
                                               disabled={!isEditingVacantesData}
-                                              className="ms-4 text-xl w-fit"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               onClick={() =>
                                                 handleRemoveVacante(index)
                                               }
                                             >
                                               <img
-                                                src="/assets/ic_remove_fmi.svg"
+                                                src="/assets/ic_remove.png"
                                                 alt="icon remove"
                                                 className="w-6 h-6"
                                               />

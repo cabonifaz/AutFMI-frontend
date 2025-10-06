@@ -131,3 +131,38 @@ export const downloadAnyFile = (file64: string, ext: string) => {
   // Liberamos la URL temporal
   URL.revokeObjectURL(url);
 };
+
+export const isValidToken = (token?: string): boolean => {
+  if (!token) return false;
+
+  const decodedToken = decodeJwt(token);
+  if (!decodedToken) {
+    localStorage.removeItem("token");
+    return false;
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  if (decodedToken.exp && decodedToken.exp > currentTime) {
+    return true;
+  }
+
+  localStorage.removeItem("token");
+  return false;
+};
+
+export const decodeJwt = (token: string): any => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (err) {
+    console.error("Error decoding token:", err);
+    return null;
+  }
+};

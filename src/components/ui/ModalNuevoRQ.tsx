@@ -7,7 +7,9 @@ import {
   fileToBase64,
   getFileNameAndExtension,
   getTipoArchivoId,
+  GRADO_ESTUDIO,
   HABILIDADES_TECNICAS,
+  MODAL_ADD_CAREER,
 } from "../../utils";
 import { usePostHook } from "../../hooks/usePostHook";
 import { ClientType } from "../../models/type/ClientType";
@@ -30,6 +32,7 @@ import { format } from "date-fns";
 import { enqueueSnackbar } from "notistack";
 import { useModal } from "../../context/ModalContext";
 import { BaseSkillProps, TechSkillsModal } from ".";
+import { AddCareerModal, CareerProps } from "./ModalAddCareer";
 
 interface Archivo {
   name: string;
@@ -72,9 +75,13 @@ export const AgregarRQModal = ({
   const [selectedTechSkills, setSelectedTechSkills] = useState<
     Record<number, SkillsPayload[]>
   >({});
+  /**Select career for Vacante */
+  const [selectedCareers, setSelectedCareers] = useState<
+    Record<number, CareerProps[]>
+  >({});
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD},
-    ${HABILIDADES_TECNICAS}`
+    ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO}`
   );
   const {
     tarifario,
@@ -86,6 +93,7 @@ export const AgregarRQModal = ({
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
   const habilidadesTecnicas = paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const {
     register,
@@ -285,6 +293,18 @@ export const AgregarRQModal = ({
         }
       );
 
+      // map selected skills @done
+      const mappedCareers = Object.entries(selectedCareers).flatMap(
+        ([idPerfilStr, careers]) => {
+          const idPerfil = Number(idPerfilStr);
+          return careers.map((c) => ({
+            idPerfil: idPerfil,
+            carrera: c.label,
+            idGrado: c.degreeId,
+          }));
+        }
+      );
+
       // 3. Crear el objeto final para enviar
       const payload = {
         ...data,
@@ -301,6 +321,7 @@ export const AgregarRQModal = ({
         lstArchivos,
         idModalidadFact: data.idModalidadFact?.join(","),
         lstVacanteSkills,
+        lstCarreras: mappedCareers,
       };
 
       // 4. Enviar los datos al servidor
@@ -451,6 +472,47 @@ export const AgregarRQModal = ({
     closeModal(MODAL_ADD_TECH_SKILL);
   };
 
+  /**
+   * Control ModalAddCareer
+   */
+  const [careerProfile, setCareerProfile] = useState<number | null>(null);
+
+  const availableDegrees = paramsDegrees.map((param) => ({
+    id: param.num1,
+    label: param.string1,
+  }));
+
+  const openModalAddCareer = (careerProfile: number) => {
+    setCareerProfile(careerProfile);
+    if (!careerProfile || careerProfile === 0) {
+      const msg = "Selecciona una vacante para continuar";
+      enqueueSnackbar({ message: msg, variant: "warning" });
+      return;
+    }
+    openModal(MODAL_ADD_CAREER);
+  };
+
+  const closeModalAddCareer = () => {
+    setCareerProfile(null);
+    closeModal(MODAL_ADD_CAREER);
+  };
+
+  const handleSaveCarrers = (careers: CareerProps[]) => {
+    if (!careerProfile) return;
+
+    setSelectedCareers((prev) => ({
+      ...prev,
+      [careerProfile]: careers,
+    }));
+    setCareerProfile(null);
+  };
+
+  const getInialCareers = (careerProfile: number): CareerProps[] => {
+    if (!careerProfile || careerProfile === 0) return [];
+
+    return selectedCareers[careerProfile] || [];
+  };
+
   return (
     <>
       {(postloading || loadingTarifario) && <Loading overlayMode={true} />}
@@ -463,6 +525,14 @@ export const AgregarRQModal = ({
           refetchAvailableSkills={() => {
             refetchParams(HABILIDADES_TECNICAS);
           }}
+        />
+      )}
+      {isModalOpen(MODAL_ADD_CAREER) && (
+        <AddCareerModal
+          degreeOptions={availableDegrees}
+          initialCareers={getInialCareers(careerProfile || 0)}
+          onSave={handleSaveCarrers}
+          onClose={closeModalAddCareer}
         />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -1005,6 +1075,9 @@ export const AgregarRQModal = ({
                                             type="button"
                                             className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                             title="Agregar carreras"
+                                            onClick={() =>
+                                              openModalAddCareer(currentProfile)
+                                            }
                                           >
                                             <img
                                               className="w-6 h-6"

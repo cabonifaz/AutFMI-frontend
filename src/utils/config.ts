@@ -31,6 +31,7 @@ export const PROYECTO_SERVICIO = "36";
 export const OBJETO_CONTRATO = "37";
 export const URLS_BASE = "39";
 export const HABILIDADES_TECNICAS = "19";
+export const GRADO_ESTUDIO = "38";
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
@@ -53,3 +54,5 @@ export const GROUP_MODALIDAD_PLANILLA = 1;
 // MODAL CONSTANTS
 export const MODAL_ADD_TECH_SKILL = "add_skill";
 export const MODAL_DETAILS_VAC_SKILLS = "modalDetailsVacSkills";
+export const MODAL_ADD_CAREER = "modalAddCareer";
+export const MODAL_UPDATE_CAREER = "modalUpdateCareer";

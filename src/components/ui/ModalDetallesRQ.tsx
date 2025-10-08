@@ -42,6 +42,7 @@ import {
   MODAL_DETAILS_VAC_SKILLS,
   MODAL_UPDATE_CAREER,
   MODALIDAD_RQ,
+  TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
   URLS_BASE,
 } from "../../utils";
@@ -58,6 +59,7 @@ interface Archivo {
   name: string;
   size: number;
   file: File;
+  idTipoArchivoRq?: number;
 }
 
 interface Props {
@@ -114,8 +116,10 @@ export const ModalDetallesRQ = ({
     number | null
   >(null);
 
+  // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}, ${GRADO_ESTUDIO}, ${HABILIDADES_TECNICAS}`
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${URLS_BASE}, ${TIPO_MODALIDAD}, 
+    ${GRADO_ESTUDIO}, ${HABILIDADES_TECNICAS},  ${TIPO_ARCHIVOS_RQ}`
   );
   const {
     tarifario,
@@ -129,6 +133,11 @@ export const ModalDetallesRQ = ({
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
+  const fileTypes = paramsByMaestro[TIPO_ARCHIVOS_RQ] || [];
+  const fileOptions = fileTypes.map((type) => ({
+    id: type.num1,
+    label: type.string1,
+  }));
 
   const {
     register,
@@ -314,13 +323,18 @@ export const ModalDetallesRQ = ({
     return "Revisa los campos de vacantes.";
   };
 
-  const { handleSubmit: handleSubmitFiles, setValue: setValueFiles } =
-    useForm<AddFilesSchemaType>({
-      resolver: zodResolver(addFilesSchema),
-      defaultValues: {
-        lstArchivos: [],
-      },
-    });
+  const {
+    handleSubmit: handleSubmitFiles,
+    setValue: setValueFiles,
+    getValues: getValuesFiles,
+    register: registerFile,
+    formState: { errors: fileErrors },
+  } = useForm<AddFilesSchemaType>({
+    resolver: zodResolver(addFilesSchema),
+    defaultValues: {
+      lstArchivos: [],
+    },
+  });
 
   useEffect(() => {
     if (requirement) {
@@ -360,10 +374,19 @@ export const ModalDetallesRQ = ({
           name: archivo.nombreArchivo,
           size: 0,
           file: new File([], archivo.nombreArchivo),
+          idTipoArchivoRq: archivo.idTipoArchivoRq,
         }));
 
       setArchivos(archivosFormateados);
       setValueFiles("lstArchivos", archivosFormateados);
+
+      // Asegura que cada campo individual también esté sincronizado
+      archivosFormateados.forEach((archivo, index) => {
+        setValueFiles(
+          `lstArchivos.${index}.idTipoArchivoRq`,
+          archivo.idTipoArchivoRq
+        );
+      });
 
       const vacantesIniciales =
         requirement.requerimiento.lstRqVacantes.map((vacante) => {
@@ -421,16 +444,23 @@ export const ModalDetallesRQ = ({
           name: file.name,
           size: file.size,
           file,
+          idTipoArchivoRq: 0,
         })
       );
 
+      const currentFormArchivos = getValuesFiles("lstArchivos") || [];
       setArchivos((prevArchivos) => [
         ...prevArchivos,
         ...nuevosArchivos,
       ]);
-      setValueFiles("lstArchivos", nuevosArchivos, {
-        shouldValidate: true,
-      });
+      setValueFiles(
+        "lstArchivos",
+        [...currentFormArchivos, ...nuevosArchivos],
+        {
+          shouldValidate: true,
+        }
+      );
+      event.target.value = "";
     }
   };
 
@@ -489,6 +519,7 @@ export const ModalDetallesRQ = ({
             nombreArchivo,
             extensionArchivo,
             idTipoArchivo,
+            idTipoArchivoRQ: archivo.idTipoArchivoRq,
           };
         }) || []
       );
@@ -1609,7 +1640,7 @@ export const ModalDetallesRQ = ({
                               className="text-blue-500 hover:text-blue-600 focus:outline-none"
                             >
                               <img
-                                src="/assets/see_pass.svg"
+                                src="/assets/ic_preview_file.png"
                                 alt="icon preview"
                                 className="w-5 h-5"
                               />
@@ -1622,6 +1653,70 @@ export const ModalDetallesRQ = ({
                                 Nuevo
                               </span>
                             )}
+                            <div className="flex flex-col">
+                              <select
+                                {...registerFile(
+                                  `lstArchivos.${index}.idTipoArchivoRq`,
+                                  {
+                                    valueAsNumber: true,
+                                  }
+                                )}
+                                onChange={(e) => {
+                                  const value = Number(
+                                    e.target.value
+                                  );
+
+                                  // Actualiza react-hook-form
+                                  setValueFiles(
+                                    `lstArchivos.${index}.idTipoArchivoRq`,
+                                    value,
+                                    {
+                                      shouldValidate: true,
+                                    }
+                                  );
+
+                                  // Actualiza el estado local
+                                  setArchivos((prev) => {
+                                    const updated = [...prev];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      idTipoArchivoRq: value,
+                                    };
+                                    return updated;
+                                  });
+                                }}
+                                value={
+                                  getValuesFiles(
+                                    `lstArchivos.${index}.idTipoArchivoRq`
+                                  ) || 0
+                                }
+                                className="w-60 px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-400 cursor-pointer"
+                                disabled={
+                                  archivo.idRequerimientoArchivo !== 0
+                                }
+                              >
+                                <option value={0} disabled>
+                                  Elija un tipo
+                                </option>
+                                {fileOptions.map((option) => (
+                                  <option
+                                    value={option.id}
+                                    key={option.id}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              {fileErrors.lstArchivos?.[index]
+                                ?.idTipoArchivoRq && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    fileErrors.lstArchivos?.[index]
+                                      ?.idTipoArchivoRq?.message
+                                  }
+                                </p>
+                              )}
+                            </div>
                             <button
                               type="button"
                               onClick={() =>
@@ -1633,7 +1728,7 @@ export const ModalDetallesRQ = ({
                               className="text-red-500 hover:text-red-600 focus:outline-none"
                             >
                               <img
-                                src="/assets/ic_remove_fmi.svg"
+                                src="/assets/ic_remove.png"
                                 alt="icon close"
                                 className="w-5 h-5"
                               />

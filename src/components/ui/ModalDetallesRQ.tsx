@@ -1251,6 +1251,10 @@ export const ModalDetallesRQ = ({
                                   </tr>
                                 ) : (
                                   fields.map((field, index) => {
+                                    const tarifa =
+                                      currentVacantes?.[index]
+                                        .tarifa || 0;
+
                                     if (field.idEstado === 3) {
                                       return (
                                         <tr
@@ -1472,15 +1476,7 @@ export const ModalDetallesRQ = ({
                                             {...register(
                                               `lstVacantes.${index}.tarifa`
                                             )}
-                                            defaultValue={
-                                              formatCoin(
-                                                Number(
-                                                  getValues(
-                                                    `lstVacantes.${index}.tarifa`
-                                                  ) || 0
-                                                )
-                                              ) || "-"
-                                            }
+                                            value={tarifa}
                                             type="text"
                                             id="v-tarifa"
                                             className="input-readonly-text"

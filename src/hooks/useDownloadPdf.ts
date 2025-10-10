@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useSnackbar } from "notistack";
-import { apiClientWithToken } from "../utils/apiClient";
+import {
+  apiClientWithToken,
+  axiosInstanceBDT,
+} from "../utils/apiClient";
 import { DownloadPDFResponse } from "../models/response/DownloadPDFResponse";
 import { PDFDataType } from "../models/type/PDFDataType";
 
@@ -37,7 +40,9 @@ const useDownloadPdf = () => {
             URL.revokeObjectURL(url);
           }; */
         } else {
-          console.error(`Failed to open tab for file: ${file.nombreArchivo}`);
+          console.error(
+            `Failed to open tab for file: ${file.nombreArchivo}`
+          );
         }
       }, index * 500);
     });
@@ -46,14 +51,17 @@ const useDownloadPdf = () => {
   const fetchAndOpenPdf = async (url: string) => {
     setLoading(true);
     try {
-      const response = await apiClientWithToken.get<DownloadPDFResponse>(url);
+      const response =
+        await axiosInstanceBDT.get<DownloadPDFResponse>(url);
 
       const { result, lstArchivos } = response.data;
 
       /** Si de la API de BDT es idMensaje */
       if ((result as any)?.idMensaje === 2) {
         const { archivo } = (response as any)?.data;
-        openPdfFilesInNewTab([{ nombreArchivo: "cv", archivoB64: archivo }]);
+        openPdfFilesInNewTab([
+          { nombreArchivo: "cv", archivoB64: archivo },
+        ]);
         return;
       }
 

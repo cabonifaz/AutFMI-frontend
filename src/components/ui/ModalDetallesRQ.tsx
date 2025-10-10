@@ -71,6 +71,10 @@ interface Props {
   clientes: ClientType[];
 }
 
+// @marker helpers
+const notifyWarning = (message: string) =>
+  enqueueSnackbar({ message, variant: "warning" });
+
 export const ModalDetallesRQ = ({
   onClose,
   updateRQData,
@@ -692,6 +696,31 @@ export const ModalDetallesRQ = ({
     const url = `${bdtUrl}/bdt/talent/file?fileId=${requirement?.requerimiento.lstRqTalento[talentIndex].idCvFile}`;
     if (url) {
       fetchAndOpenPdf(url);
+    }
+  };
+
+  /**Handle Download CVs Fractal */
+  const handleDownloadCVLang = (
+    talentIndex: number,
+    lang: "ES" | "EN"
+  ) => {
+    if (!requirement?.requerimiento.lstRqTalento[talentIndex]) {
+      notifyWarning("No se encontró el talento seleccionado");
+      return;
+    }
+
+    const talent =
+      requirement.requerimiento.lstRqTalento[talentIndex];
+    const fileId = lang === "ES" ? talent.idCVEs : talent.idCVEn;
+
+    if (fileId && fileId !== 0) {
+      fetchAndOpenPdf(`bdt/talent/file?fileId=${fileId}`);
+    } else {
+      notifyWarning(
+        `El talento no tiene CV Fractal en ${
+          lang === "ES" ? "Español" : "Inglés"
+        }`
+      );
     }
   };
 
@@ -1840,19 +1869,52 @@ export const ModalDetallesRQ = ({
                                       className="table-row"
                                     >
                                       <td className="text-center">
-                                        <button
-                                          type="button"
-                                          className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
-                                          onClick={() =>
-                                            handleDownloadCV(index)
-                                          }
-                                        >
-                                          <img
-                                            src="/assets/see_pass.svg"
-                                            alt="icon eye"
-                                            className="w-5 h-5"
-                                          />
-                                        </button>
+                                        <div className="flex gap-3 items-center justify-center">
+                                          <button
+                                            title="CV Español"
+                                            onClick={() =>
+                                              handleDownloadCVLang(
+                                                index,
+                                                "ES"
+                                              )
+                                            }
+                                          >
+                                            <img
+                                              src="/assets/ic_flag_es.png"
+                                              alt="icon eye"
+                                              className="w-5 h-5"
+                                            />
+                                          </button>
+                                          <button
+                                            title="CV Inglés"
+                                            onClick={() =>
+                                              handleDownloadCVLang(
+                                                index,
+                                                "EN"
+                                              )
+                                            }
+                                          >
+                                            <img
+                                              src="/assets/ic_flag_usa.png"
+                                              alt="icon eye"
+                                              className="w-5 h-5"
+                                            />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
+                                            title="CV propio"
+                                            onClick={() =>
+                                              handleDownloadCV(index)
+                                            }
+                                          >
+                                            <img
+                                              src="/assets/ic_resume.png"
+                                              alt="icon eye"
+                                              className="w-5 h-5"
+                                            />
+                                          </button>
+                                        </div>
                                       </td>
                                       <td className="table-cell">
                                         {talento.nombresTalento}{" "}

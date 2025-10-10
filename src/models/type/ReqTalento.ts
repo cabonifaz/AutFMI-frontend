@@ -12,4 +12,6 @@ export type ReqTalento = {
   idPerfil: number;
   perfil: string;
   idCvFile: number;
+  idCVEs?: number;
+  idCVEn?: number;
 };

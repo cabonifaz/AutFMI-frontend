@@ -237,6 +237,7 @@ export const ModalDetailsVacSkills = ({
           </h2>
           <div className="flex justify-end my-2">
             <button
+              type="button"
               className="btn btn-outline-blue flex gap-2 items-center"
               onClick={changeEditMode}
             >
@@ -305,6 +306,7 @@ export const ModalDetailsVacSkills = ({
                   </div>
 
                   <button
+                    type="button"
                     className="text-red-500 hover:text-red-700 ml-3"
                     title="Eliminar habilidad"
                     disabled={modalMode !== MODAL_MODES.EDIT}

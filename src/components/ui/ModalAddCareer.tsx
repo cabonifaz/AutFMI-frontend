@@ -141,6 +141,7 @@ export const AddCareerModal = ({
                   </div>
 
                   <button
+                    type="button"
                     className="text-red-500 hover:text-red-700 ml-3"
                     title="Eliminar carrera"
                     onClick={() => handleRemoveCareer(career.label)}

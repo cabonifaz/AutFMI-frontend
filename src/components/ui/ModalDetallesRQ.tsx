@@ -256,7 +256,7 @@ export const ModalDetallesRQ = ({
   const handleAddVacante = () => {
     append({
       idPerfil: 0,
-      cantidad: "1",
+      cantidad: 1,
       idEstado: 1,
       idRequerimientoVacante: 0,
     });
@@ -285,8 +285,6 @@ export const ModalDetallesRQ = ({
       update(index, {
         ...vacante,
         idEstado: 3,
-        idPerfil: 0,
-        cantidad: "0",
       });
 
       setCantidadesVacantes((prev) => {
@@ -362,10 +360,7 @@ export const ModalDetallesRQ = ({
           "yyyy-MM-dd"
         )
       );
-      setValue(
-        "duracion",
-        String(requirement.requerimiento.duracion)
-      );
+      setValue("duracion", requirement.requerimiento.duracion);
       setValue("idDuracion", requirement.requerimiento.idDuracion);
       setValue("idModalidad", requirement.requerimiento.idModalidad);
       setValue("descripcion", requirement.requerimiento.descripcion);
@@ -406,7 +401,7 @@ export const ModalDetallesRQ = ({
           return {
             idRequerimientoVacante: vacante.idRequerimientoVacante,
             idPerfil: vacante.idPerfil,
-            cantidad: String(vacante.cantidad),
+            cantidad: vacante.cantidad,
             idEstado: 0,
             tarifa: `${moneda} ${formatCoin(Number(tarifa))}`,
           };

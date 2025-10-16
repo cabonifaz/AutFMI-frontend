@@ -119,7 +119,7 @@ export const TabVacancies = ({
       return;
     }
 
-    append({ idPerfil: 0, cantidad: 1 });
+    append({ idPerfil: 0, cantidad: 1, tarifaFinal: 0 });
     setCantidadesVacantes((prev) => [...prev, 1]);
     clearErrors("lstVacantes");
   };
@@ -175,6 +175,12 @@ export const TabVacancies = ({
     const moneda =
       tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
       "S/.";
+
+    const tarifaFinal =
+      tarifario.find((item) => item.idPerfil === idPerfil)?.tarifa ||
+      0;
+
+    setValue(`lstVacantes.${index}.tarifaFinal`, tarifaFinal);
 
     setValue(
       `lstVacantes.${index}.tarifa`,
@@ -330,6 +336,9 @@ export const TabVacancies = ({
                       Tarifa
                     </th>
                     <th scope="col" className="table-header-cell">
+                      Tarifa Final
+                    </th>
+                    <th scope="col" className="table-header-cell">
                       Tipo Tarifa
                     </th>
                     <th
@@ -423,7 +432,7 @@ export const TabVacancies = ({
                           </td>
                           <td className="table-cell">
                             <div className="flex">
-                              <div className="flex flex-col gap-1 relative">
+                              <div className="flex flex-col gap-1 relative w-32">
                                 <NumberInputV2<newRQSchemaType>
                                   control={control}
                                   name={`lstVacantes.${index}.cantidad`}
@@ -449,9 +458,31 @@ export const TabVacancies = ({
                               )}`}
                               type="text"
                               id="v-tarifa"
-                              className="input-readonly-text"
+                              className="input-readonly-text w-32"
                               readOnly
                             />
+                          </td>
+                          <td className="table-cell">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold">
+                                {`${
+                                  tarifario.find(
+                                    (t) =>
+                                      t.idPerfil === currentProfile
+                                  )?.moneda || "S/."
+                                }`}
+                              </span>
+                              <div className="flex flex-col gap-1 relative">
+                                <NumberInputV2<newRQSchemaType>
+                                  control={control}
+                                  name={`lstVacantes.${index}.tarifaFinal`}
+                                  error={
+                                    errors.lstVacantes?.[index]
+                                      ?.tarifaFinal?.message
+                                  }
+                                />
+                              </div>
+                            </div>
                           </td>
                           <td className="table-cell">
                             <p>{tipoTarifa}</p>

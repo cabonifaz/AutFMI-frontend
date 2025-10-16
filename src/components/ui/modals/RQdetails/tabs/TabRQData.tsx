@@ -1,67 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../../models/schema/UpdateBaseRQSchema";
-import { RequirementResponse } from "../../../../../models/response/RequirementResponse";
 
-import { formatISODate } from "../../../../../utils/date.utils";
 import { ParamType } from "../../../../../models/type/ParamType";
 
 interface TabProps {
-  rqId: number;
-  requirement?: RequirementResponse;
   rqStates: ParamType[];
   isEditing: boolean;
-  fetchRequirement: () => void;
-  setIsEditing: (value: boolean) => void;
+  handleToggleEdit: () => void;
 }
 
 export const TabRQData = ({
-  requirement,
   rqStates,
   isEditing,
-  setIsEditing,
+  handleToggleEdit: handleEdit,
 }: TabProps) => {
-  const rq = requirement?.requerimiento;
-
   const {
     register,
     formState: { errors },
-    setValue,
     setError,
     clearErrors,
     watch,
   } = useFormContext<UpdateBaseRQSchemaType>();
-  const [initialValues, setInitialValues] = useState<
-    Partial<UpdateBaseRQSchemaType>
-  >({});
-
-  useEffect(() => {
-    if (rq) {
-      const mappedValues: Partial<UpdateBaseRQSchemaType> = {
-        codigoRQ: rq.codigoRQ,
-        titulo: rq.titulo,
-        descripcion: rq.descripcion,
-        idEstadoRQ: rq.idEstado,
-        fechaSolicitud: formatISODate(rq.fechaSolicitud),
-        fechaVencimiento: formatISODate(rq.fechaVencimiento),
-      };
-
-      // Set form values
-      (
-        Object.keys(mappedValues) as (keyof typeof mappedValues)[]
-      ).forEach((key) => {
-        setValue(
-          key,
-          mappedValues[
-            key
-          ] as UpdateBaseRQSchemaType[keyof UpdateBaseRQSchemaType]
-        );
-      });
-
-      // Set reference snapshot
-      setInitialValues(mappedValues);
-    }
-  }, [rq]);
 
   // Agregar watchers para las fechas
   const fchSolcitud = watch("fechaSolicitud");
@@ -87,24 +47,6 @@ export const TabRQData = ({
       }
     }
   }, [fchSolcitud, fchVencimiento]);
-
-  // @marker handlers
-  const handleEdit = () => {
-    if (isEditing) {
-      (
-        Object.keys(initialValues) as (keyof typeof initialValues)[]
-      ).forEach((key) => {
-        setValue(
-          key,
-          initialValues[
-            key
-          ] as UpdateBaseRQSchemaType[keyof UpdateBaseRQSchemaType],
-          { shouldValidate: false }
-        );
-      });
-    }
-    setIsEditing(!isEditing);
-  };
 
   return (
     <>

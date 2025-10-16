@@ -8,6 +8,10 @@ const vacanteSchema = z.object({
     .number()
     .min(1, "La cantidad no puede ser menor a 1"),
   tarifa: z.string().optional().nullable(),
+  tarifaFinal: z.coerce
+    .number()
+    .min(0, "La tarifa final no puede ser menor a 0")
+    .optional(),
 });
 
 // Subschema: Skills por vacante

@@ -4,15 +4,33 @@ const vacanteSchema = z.object({
   idPerfil: z
     .number({ invalid_type_error: "Debe seleccionar un perfil" })
     .min(1, "Debe seleccionar un perfil"),
-  cantidad: z
-    .string()
-    .refine((val) => val.trim() !== "", {
-      message: "La cantidad es obligatoria",
-    })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad debe ser mayor a 0",
-    }),
+  cantidad: z.coerce
+    .number()
+    .min(1, "La cantidad no puede ser menor a 1"),
   tarifa: z.string().optional().nullable(),
+  tarifaFinal: z.coerce
+    .number()
+    .min(0, "La tarifa final no puede ser menor a 0")
+    .optional(),
+});
+
+// Subschema: Skills por vacante
+const vacanteSkillSchema = z.object({
+  idPerfil: z.number(),
+  idSkill: z.number(),
+  anios: z.coerce
+    .number({
+      invalid_type_error: "Los años deben ser un número",
+    })
+    .min(0)
+    .optional(),
+});
+
+// Subschema: Carreras por vacante
+const vacanteCareerSchema = z.object({
+  idPerfil: z.number(),
+  carrera: z.string().min(1, "La carrera es obligatoria"),
+  idGrado: z.number().min(1, "Debe elegir un grado"),
 });
 
 export const newRQSchema = z
@@ -37,14 +55,9 @@ export const newRQSchema = z
         required_error: "La fecha de vencimiento es obligatoria",
       })
       .min(1, "La fecha de vencimiento es obligatoria"),
-    duracion: z
-      .string()
-      .refine((val) => val.trim() !== "", {
-        message: "La duración es obligatoria",
-      })
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-        message: "La duración debe ser mayor a 0",
-      }),
+    duracion: z.coerce
+      .number()
+      .min(1, "La duración no puede ser menor a 1"),
     idDuracion: z
       .number({
         required_error: "Elija una duración",
@@ -68,6 +81,13 @@ export const newRQSchema = z
     lstVacantes: z
       .array(vacanteSchema)
       .min(1, "Debe agregar 1 vacante como mínimo"),
+
+    // Control de vacantes y carreras
+    lstVacanteSkills: z.array(vacanteSkillSchema).optional(),
+    lstCarreras: z.array(vacanteCareerSchema).optional(),
+
+    lstContactos: z.array(z.number()).optional(),
+
     lstArchivos: z
       .array(
         z.object({

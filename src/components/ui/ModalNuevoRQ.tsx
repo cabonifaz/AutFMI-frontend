@@ -44,8 +44,8 @@ import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import { format } from "date-fns";
 import { enqueueSnackbar } from "notistack";
 import { useModal } from "../../context/ModalContext";
-import { BaseSkillProps, TechSkillsModal } from ".";
 import { AddCareerModal, CareerProps } from "./ModalAddCareer";
+import { BaseSkillProps, TechSkillsModal } from "./ModalAddTechSkill";
 
 interface Archivo {
   name: string;
@@ -143,7 +143,7 @@ export const AgregarRQModal = ({
       idEstado: 0,
       lstVacantes: [],
       lstArchivos: [],
-      duracion: "1",
+      duracion: 1,
       idModalidad: 0,
       idDuracion: 0,
       idModalidadFact: [],
@@ -213,7 +213,7 @@ export const AgregarRQModal = ({
   };
 
   const handleAddVacante = () => {
-    append({ idPerfil: 0, cantidad: "1" });
+    append({ idPerfil: 0, cantidad: 1 });
     setCantidadesVacantes((prev) => [...prev, 1]);
     clearErrors("lstVacantes");
   };
@@ -1157,7 +1157,7 @@ export const AgregarRQModal = ({
                                                     : 0;
 
                                                 // Actualiza RHF (por si tu schema espera number)
-                                                setValue(
+                                                /* setValue(
                                                   `lstVacantes.${index}.cantidad`,
                                                   safe.toString(),
                                                   {
@@ -1166,7 +1166,7 @@ export const AgregarRQModal = ({
                                                     shouldDirty: true,
                                                     shouldTouch: true,
                                                   }
-                                                );
+                                                ); */
 
                                                 // 🔧 Y ACTUALIZA TU ARRAY LOCAL EN EL MISMO ÍNDICE
                                                 setCantidadesVacantes(

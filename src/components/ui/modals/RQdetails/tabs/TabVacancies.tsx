@@ -31,7 +31,7 @@ interface TabProps {
   availableTechSkills: { id: number; label: string }[];
   availableDegrees: { id: number; label: string }[];
   fetchRequirement: () => void;
-  setIsEditing: (value: boolean) => void;
+  handleToggleEdit: () => void;
   refetchParams: (maestro: string) => void;
 }
 
@@ -42,23 +42,14 @@ export const TabVacancies = ({
   availableTechSkills,
   availableDegrees,
   fetchRequirement,
-  setIsEditing,
+  handleToggleEdit,
   refetchParams,
 }: TabProps) => {
   // @marker base states
-  const [vacQuant, setVacQuant] = useState<string[]>([]);
-  const [originQuant, setOriginQuant] = useState<string[]>([]);
+  const [, setVacQuant] = useState<string[]>([]);
+  const [originQuant] = useState<string[]>([]);
   const { closeModal, isModalOpen, openModal } = useModal();
   const [idVac, setIdVac] = useState<number | undefined>();
-  const [initialVacancies, setInitialVacancies] = useState<
-    ReqVacante[]
-  >([]);
-
-  useEffect(() => {
-    if (vacancies && vacancies.length > 0) {
-      setInitialVacancies(JSON.parse(JSON.stringify(vacancies)));
-    }
-  }, [vacancies]);
 
   // @marker form handlers
   const {
@@ -69,7 +60,6 @@ export const TabVacancies = ({
     clearErrors,
     watch,
     control,
-    reset,
   } = useFormContext<UpdateBaseRQSchemaType>();
 
   const { fields, append, remove, update } = useFieldArray({
@@ -142,6 +132,12 @@ export const TabVacancies = ({
         tariff.find((item) => item.idPerfil === idPerfil)?.moneda ||
         "S/.";
 
+      const tarifaFinal =
+        tariff.find((item) => item.idPerfil === idPerfil)?.tarifa ||
+        0;
+
+      setValue(`lstVacantes.${index}.tarifaFinal`, tarifaFinal);
+
       setValue(
         `lstVacantes.${index}.tarifa`,
         `${moneda} ${Utils.formatCoin(Number(tarifa))}`
@@ -151,18 +147,6 @@ export const TabVacancies = ({
     }
 
     clearErrors(`lstVacantes.${index}.idPerfil`);
-  };
-
-  //@marker handlers
-  const handleEdit = () => {
-    if (isEditing) {
-      reset({
-        ...getValues(),
-        lstVacantes: initialVacancies,
-      });
-    }
-
-    setIsEditing(!isEditing);
   };
 
   const handleAddVacancy = () => {
@@ -175,6 +159,7 @@ export const TabVacancies = ({
     setVacQuant((prev) => [...prev, "1"]);
     clearErrors("lstVacantes");
   };
+
   const handleRemoveVacante = (index: number) => {
     const vacancies = getValues("lstVacantes").filter(
       (vacante) => vacante.idEstado !== VacanteEstado.ELIMINADO
@@ -222,6 +207,24 @@ export const TabVacancies = ({
     return vacancy.totalHabilidades;
   };
 
+  const finalTariffChange = (value: string, index: number) => {
+    const key =
+      `lstVacantes.${index}.tarifaFinal` as keyof UpdateBaseRQSchemaType;
+    const numValue = Number(value) || 0;
+    const vacancy = getValues(`lstVacantes.${index}`);
+    if (
+      vacancy.idRequerimientoVacante > 0 &&
+      vacancy.idEstado === VacanteEstado.INICIAL
+    ) {
+      setValue(
+        `lstVacantes.${index}.idEstado`,
+        VacanteEstado.ACTUALIZADO
+      );
+      setValue(key, numValue);
+    }
+    clearErrors(key);
+  };
+
   // @marker skills modal
   /**Modal Skills close */
   const handleCloseModalSkills = () => {
@@ -231,11 +234,9 @@ export const TabVacancies = ({
   };
   const handleOpenModal = (idVac: number) => {
     if (!idVac || idVac === 0) {
-      enqueueSnackbar({
-        message:
-          "Selecciona una y/o guarda la vacante para agregar habilidades técnicas.",
-        variant: "warning",
-      });
+      showWarningSnack(
+        "Selecciona una y/o guarda la vacante para agregar habilidades técnicas."
+      );
       return;
     }
     setIdVac(idVac);
@@ -251,11 +252,9 @@ export const TabVacancies = ({
 
   const openModalCareers = (idVac: number) => {
     if (!idVac || idVac === 0) {
-      enqueueSnackbar({
-        message:
-          "Selecciona una y/o guarda vacante para agregar habilidades técnicas.",
-        variant: "warning",
-      });
+      showWarningSnack(
+        "Selecciona una y/o guarda vacante para agregar habilidades técnicas."
+      );
       return;
     }
     setIdVac(idVac);
@@ -285,7 +284,7 @@ export const TabVacancies = ({
         <div className="flex items-center justify-between my-2">
           <button
             type="button"
-            onClick={handleEdit}
+            onClick={handleToggleEdit}
             className="focus:outline-none ms-2"
           >
             <img
@@ -319,8 +318,11 @@ export const TabVacancies = ({
                     <th className="table-header-cell">Cantidad</th>
 
                     <th className="table-header-cell">Tarifa</th>
-
+                    <th className="table-header-cell">
+                      Tarifa final
+                    </th>
                     <th className="table-header-cell">Tipo tarifa</th>
+
                     <th className="table-header-cell text-center">
                       Otros
                     </th>
@@ -452,7 +454,7 @@ export const TabVacancies = ({
                           </td>
                           <td className="table-cell">
                             <div className="flex">
-                              <div className="flex flex-col gap-1 relative">
+                              <div className="flex flex-col gap-1 relative w-32 ">
                                 <NumberInput<UpdateBaseRQSchemaType>
                                   register={register}
                                   control={control}
@@ -527,9 +529,41 @@ export const TabVacancies = ({
                               }
                               type="text"
                               id="v-tarifa"
-                              className="input-readonly-text"
+                              className="input-readonly-text w-32"
                               readOnly
                             />
+                          </td>
+                          <td className="table-cell">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold">
+                                {`${
+                                  tariff.find(
+                                    (t) =>
+                                      t.idPerfil === currentProfile
+                                  )?.moneda || "S/."
+                                }`}
+                              </span>
+                              <div className="flex flex-col gap-1 relative">
+                                <NumberInput<UpdateBaseRQSchemaType>
+                                  control={control}
+                                  name={`lstVacantes.${index}.tarifaFinal`}
+                                  disabled={!isEditing}
+                                  register={register}
+                                  onChange={(v) =>
+                                    finalTariffChange(v, index)
+                                  }
+                                />
+                                {errors.lstVacantes?.[index]
+                                  ?.tarifaFinal && (
+                                  <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                    {
+                                      errors.lstVacantes[index]
+                                        ?.tarifaFinal?.message
+                                    }
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </td>
 
                           <td className="table-cell">{tipoTarifa}</td>

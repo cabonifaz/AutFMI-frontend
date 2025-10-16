@@ -148,6 +148,7 @@ export const ModalRQCreate = ({
       const lstVacantes = data.lstVacantes.map((vacante) => ({
         idPerfil: Number(vacante.idPerfil),
         cantidad: Number(vacante.cantidad),
+        tarifaFinal: vacante.tarifaFinal,
       }));
 
       const lstVacanteSkills = data.lstVacanteSkills || [];

@@ -7,4 +7,5 @@ export interface ReqVacante {
   totalCarreras: number;
   totalHabilidades: number;
   tarifaFinal?: number;
+  tarifaInicial?: number;
 }

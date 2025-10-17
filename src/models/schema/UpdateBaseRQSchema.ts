@@ -9,6 +9,7 @@ const vacanteSchema = z
       .min(1, "La cantidad no puede ser menor a 1"),
     idEstado: z.number(),
     tarifa: z.string().optional().nullable(),
+    tarifaInicial: z.coerce.string().optional(),
     tarifaFinal: z.coerce
       .number()
       .min(0, "La tarifa no puede ser negativa")

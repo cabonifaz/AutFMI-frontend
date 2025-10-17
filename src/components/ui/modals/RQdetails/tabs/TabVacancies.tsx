@@ -142,6 +142,10 @@ export const TabVacancies = ({
         `lstVacantes.${index}.tarifa`,
         `${moneda} ${Utils.formatCoin(Number(tarifa))}`
       );
+      setValue(
+        `lstVacantes.${index}.tarifaInicial`,
+        `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      );
     } else {
       setValue(`lstVacantes.${index}.tarifa`, "S/. -");
     }
@@ -155,6 +159,7 @@ export const TabVacancies = ({
       cantidad: 1,
       idEstado: VacanteEstado.NUEVO,
       idRequerimientoVacante: 0,
+      tarifaInicial: "-",
     });
     setVacQuant((prev) => [...prev, "1"]);
     clearErrors("lstVacantes");
@@ -317,7 +322,10 @@ export const TabVacancies = ({
                     </th>
                     <th className="table-header-cell">Cantidad</th>
 
-                    <th className="table-header-cell">Tarifa</th>
+                    <th className="table-header-cell">Tarifa Act.</th>
+                    <th className="table-header-cell">
+                      Tarifa inicial
+                    </th>
                     <th className="table-header-cell">
                       Tarifa final
                     </th>
@@ -534,8 +542,28 @@ export const TabVacancies = ({
                             />
                           </td>
                           <td className="table-cell">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-bold">
+                            <input
+                              {...register(
+                                `lstVacantes.${index}.tarifaInicial`
+                              )}
+                              defaultValue={
+                                Utils.formatCoin(
+                                  Number(
+                                    getValues(
+                                      `lstVacantes.${index}.tarifaInicial`
+                                    )
+                                  )
+                                )?.toString() || "-"
+                              }
+                              type="text"
+                              id="v-tarifa"
+                              className="input-readonly-text w-32"
+                              readOnly
+                            />
+                          </td>
+                          <td className="table-cell">
+                            <div className=" flex items-center justify-between gap-2">
+                              <span>
                                 {`${
                                   tariff.find(
                                     (t) =>
@@ -543,7 +571,7 @@ export const TabVacancies = ({
                                   )?.moneda || "S/."
                                 }`}
                               </span>
-                              <div className="flex flex-col gap-1 relative">
+                              <div className="w-32 flex flex-col gap-1 relative">
                                 <NumberInput<UpdateBaseRQSchemaType>
                                   control={control}
                                   name={`lstVacantes.${index}.tarifaFinal`}

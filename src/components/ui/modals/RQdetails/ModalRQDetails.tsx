@@ -142,6 +142,7 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
+          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
           tarifaFinal: v.tarifaFinal || 0,
           tarifa:
             tarifa === "-"
@@ -225,6 +226,7 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
+          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
           tarifaFinal: v.tarifaFinal || 0,
           tarifa:
             tarifa === "-"
@@ -328,7 +330,7 @@ export const ModalRQDetails = ({
     <>
       {(reqLoading || postloading) && <Loading overlayMode />}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] min-h-[570px] overflow-y-auto relative">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
             <CloseModalButton onClick={onClose} />

@@ -70,6 +70,35 @@ export const TabManagment = ({
             />
           </div>
         </div>
+        <div className="flex items-center mb-6">
+          <label className="w-1/3 text-sm font-medium text-gray-700">
+            Duración de contrato:
+          </label>
+          <div className="flex gap-4 w-2/3">
+            <div className="flex flex-col gap-1">
+              <NumberInputV2<UpdateBaseRQSchemaType>
+                control={control}
+                name="contrato.duration"
+                isDisabled={!isEditing}
+                error={errors?.contrato?.duration?.message}
+              />
+            </div>
+            <DropdownForm
+              name="contrato.idDuration"
+              control={control}
+              error={errors.contrato?.idDuration}
+              required={false}
+              flex={true}
+              allowEmpty
+              allowEmptyMessage="No definido"
+              disabled={!isEditing}
+              options={rqDurationOptions.map((d) => ({
+                value: d.num1,
+                label: d.string1,
+              }))}
+            />
+          </div>
+        </div>
 
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">

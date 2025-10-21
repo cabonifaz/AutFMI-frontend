@@ -33,6 +33,22 @@ const vacanteSchema = z
     }
   });
 
+const contrato = z
+  .object({
+    idDuration: z.coerce
+      .number({
+        invalid_type_error: "Debe elegir una duración de contrato",
+      })
+      .min(1, "Debe elegir una duración de contrato"),
+
+    duration: z.coerce
+      .number({
+        invalid_type_error: "La duración debe ser un número",
+      })
+      .min(1, "La duración no puede ser menor a 1"),
+  })
+  .optional();
+
 export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
@@ -65,6 +81,9 @@ export const UpdateBaseRQSchema = z
         })
       )
       .optional(),
+
+    contrato: contrato,
+
     fechaVencimiento: z
       .string()
       .min(1, "La fecha de vencimiento es obligatoria"),

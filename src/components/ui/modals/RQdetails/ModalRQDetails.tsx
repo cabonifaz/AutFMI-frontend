@@ -94,6 +94,7 @@ export const ModalRQDetails = ({
       idModalidadFact: [],
       lstVacantes: [],
       lstArchivos: [],
+      contrato: undefined,
     },
   });
 
@@ -167,6 +168,8 @@ export const ModalRQDetails = ({
         .map((m: string) => Number(m.trim()))
         .filter((m: any) => !isNaN(m));
 
+      const { idDuracionContrato, duracionContrato } = req;
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -185,6 +188,10 @@ export const ModalRQDetails = ({
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
         idModalidadFact: factModes,
+        contrato: {
+          idDuration: idDuracionContrato || undefined,
+          duration: duracionContrato || undefined,
+        },
       });
     }
   }, [res, reset]);
@@ -196,10 +203,6 @@ export const ModalRQDetails = ({
       fetchTarifario(clientId);
     }
   }, [res]);
-
-  useEffect(() => {
-    console.log("errors", methods.formState.errors);
-  }, [methods.formState.errors]);
 
   const handleToggleEdit = () => {
     const req = res?.requerimiento;
@@ -251,6 +254,9 @@ export const ModalRQDetails = ({
         .map((m: string) => Number(m.trim()))
         .filter((m: any) => !isNaN(m));
 
+      // Duración de contrato
+      const { idDuracionContrato, duracionContrato } = req;
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -269,6 +275,10 @@ export const ModalRQDetails = ({
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
         idModalidadFact: factModes,
+        contrato: {
+          idDuration: idDuracionContrato,
+          duration: duracionContrato,
+        },
       });
     }
 
@@ -297,6 +307,11 @@ export const ModalRQDetails = ({
           tarifaFinal: vacante.tarifaFinal,
         }));
 
+      // Flat duración de contrato
+      const { contrato } = data;
+      const idDuracionContrato = contrato?.idDuration;
+      const duracionContrato = contrato?.duration;
+
       const payload = {
         ...cleanData,
         idRequerimiento: rqId,
@@ -306,6 +321,8 @@ export const ModalRQDetails = ({
         duracion: Number(data.duracion),
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
+        idDuracionContrato: idDuracionContrato,
+        duracionContrato: duracionContrato,
       };
 
       const response = await postData(

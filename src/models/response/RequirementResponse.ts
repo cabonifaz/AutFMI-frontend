@@ -24,5 +24,7 @@ export type RequirementResponse = {
     lstRqVacantes: ReqVacante[];
     lstRqContactos: ReqContacto[];
     modalidadFact: string;
+    idDuracionContrato?: number;
+    duracionContrato?: number;
   };
 };

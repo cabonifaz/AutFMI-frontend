@@ -115,6 +115,10 @@ export const ModalRQCreate = ({
       idDuracion: 0,
       idModalidad: 0,
       idModalidadFact: [],
+      contrato: {
+        duracionContrato: 1,
+        idDuracionContrato: 0,
+      },
     },
   });
 
@@ -157,6 +161,9 @@ export const ModalRQCreate = ({
       const client = clients.find((c) => c.idCliente === idCliente);
       const contacts = data.lstContactos?.join(",") || "";
 
+      // Flat de duración de contrato
+      const { idDuracionContrato, duracionContrato } = data.contrato;
+
       // 3. Crear el objeto final para enviar
       const payload = {
         ...data,
@@ -172,6 +179,8 @@ export const ModalRQCreate = ({
           modalidadFact === "" ? undefined : modalidadFact,
         lstVacanteSkills,
         lstCarreras: lstCareers,
+        idDuracionContrato: idDuracionContrato,
+        duracionContrato: duracionContrato,
       };
 
       // 4. Enviar los datos al servidor

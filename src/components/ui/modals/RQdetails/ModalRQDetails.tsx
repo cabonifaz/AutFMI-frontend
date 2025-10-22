@@ -94,6 +94,7 @@ export const ModalRQDetails = ({
       idModalidadFact: [],
       lstVacantes: [],
       lstArchivos: [],
+      contrato: undefined,
     },
   });
 
@@ -142,6 +143,7 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
+          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
           tarifaFinal: v.tarifaFinal || 0,
           tarifa:
             tarifa === "-"
@@ -166,6 +168,8 @@ export const ModalRQDetails = ({
         .map((m: string) => Number(m.trim()))
         .filter((m: any) => !isNaN(m));
 
+      const { idDuracionContrato, duracionContrato } = req;
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -184,6 +188,10 @@ export const ModalRQDetails = ({
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
         idModalidadFact: factModes,
+        contrato: {
+          idDuration: idDuracionContrato || undefined,
+          duration: duracionContrato || undefined,
+        },
       });
     }
   }, [res, reset]);
@@ -195,10 +203,6 @@ export const ModalRQDetails = ({
       fetchTarifario(clientId);
     }
   }, [res]);
-
-  useEffect(() => {
-    console.log("errors", methods.formState.errors);
-  }, [methods.formState.errors]);
 
   const handleToggleEdit = () => {
     const req = res?.requerimiento;
@@ -225,6 +229,7 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
+          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
           tarifaFinal: v.tarifaFinal || 0,
           tarifa:
             tarifa === "-"
@@ -249,6 +254,9 @@ export const ModalRQDetails = ({
         .map((m: string) => Number(m.trim()))
         .filter((m: any) => !isNaN(m));
 
+      // Duración de contrato
+      const { idDuracionContrato, duracionContrato } = req;
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -267,6 +275,10 @@ export const ModalRQDetails = ({
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
         idModalidadFact: factModes,
+        contrato: {
+          idDuration: idDuracionContrato,
+          duration: duracionContrato,
+        },
       });
     }
 
@@ -295,6 +307,11 @@ export const ModalRQDetails = ({
           tarifaFinal: vacante.tarifaFinal,
         }));
 
+      // Flat duración de contrato
+      const { contrato } = data;
+      const idDuracionContrato = contrato?.idDuration;
+      const duracionContrato = contrato?.duration;
+
       const payload = {
         ...cleanData,
         idRequerimiento: rqId,
@@ -304,6 +321,8 @@ export const ModalRQDetails = ({
         duracion: Number(data.duracion),
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
+        idDuracionContrato: idDuracionContrato,
+        duracionContrato: duracionContrato,
       };
 
       const response = await postData(
@@ -328,7 +347,7 @@ export const ModalRQDetails = ({
     <>
       {(reqLoading || postloading) && <Loading overlayMode />}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] min-h-[570px] overflow-y-auto relative">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
             <CloseModalButton onClick={onClose} />

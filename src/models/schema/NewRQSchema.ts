@@ -33,6 +33,20 @@ const vacanteCareerSchema = z.object({
   idGrado: z.number().min(1, "Debe elegir un grado"),
 });
 
+// Subchema: Duración de contrato
+const contrato = z.object({
+  idDuracionContrato: z
+    .number({
+      invalid_type_error: "Debe elegir una duración de contrato",
+    })
+    .min(1, "Debe elegir una duración de contrato"),
+  duracionContrato: z.coerce
+    .number({
+      invalid_type_error: "La duración debe ser un número",
+    })
+    .min(1, "La duración no puede ser menor a 1"),
+});
+
 export const newRQSchema = z
   .object({
     idCliente: z
@@ -58,6 +72,9 @@ export const newRQSchema = z
     duracion: z.coerce
       .number()
       .min(1, "La duración no puede ser menor a 1"),
+
+    // Duracón de contrato
+    contrato: contrato,
     idDuracion: z
       .number({
         required_error: "Elija una duración",

@@ -19,6 +19,8 @@ interface Props {
   disabled?: boolean;
   clearErrorsFrom?: string[];
   defaultValue?: number;
+  allowEmpty?: boolean;
+  allowEmptyMessage?: string;
 }
 
 const DropdownForm = ({
@@ -34,8 +36,11 @@ const DropdownForm = ({
   clearErrors,
   clearErrorsFrom,
   defaultValue,
+  allowEmpty = false,
+  allowEmptyMessage = "Elige una opción",
 }: Props) => {
   const safeDefault = useMemo(() => {
+    if (allowEmpty) return undefined;
     if (!options || options.length === 0) return 0;
     const found = options.find((opt) => opt.value === defaultValue);
     return found ? found.value : options[0].value;
@@ -43,11 +48,17 @@ const DropdownForm = ({
 
   return (
     <>
-      <div className={`${flex ? "flex-1" : "flex flex-1 gap-4 items-center"}`}>
+      <div
+        className={`${
+          flex ? "flex-1" : "flex flex-1 gap-4 items-center"
+        }`}
+      >
         {label && (
           <label
             htmlFor={name}
-            className={`text-nowrap ${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}
+            className={`text-nowrap ${
+              word_wrap ? "w-[11rem]" : "min-w-[11rem]"
+            }`}
           >
             {label}
             {required && <span className="text-red-400">*</span>}
@@ -61,7 +72,10 @@ const DropdownForm = ({
               <select
                 id={name}
                 {...field}
-                value={field.value ?? safeDefault}
+                value={
+                  field.value ??
+                  (allowEmpty ? undefined : safeDefault)
+                }
                 onChange={(e) => {
                   field.onChange(Number(e.target.value));
                   if (clearErrors) {
@@ -74,7 +88,7 @@ const DropdownForm = ({
                 disabled={disabled}
                 className="input w-full h-12 disabled:text-gray-400"
               >
-                <option value={0}>Elige una opción</option>
+                <option value={0}>{allowEmptyMessage}</option>
                 {options.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}

@@ -115,6 +115,7 @@ export const ModalRQCreate = ({
       idDuracion: 0,
       idModalidad: 0,
       idModalidadFact: [],
+      tieneDuracion: true,
       contrato: {
         duracionContrato: 1,
         idDuracionContrato: 0,

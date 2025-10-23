@@ -73,7 +73,8 @@ export const newRQSchema = z
       .min(1, "La fecha de vencimiento es obligatoria"),
     duracion: z.coerce
       .number()
-      .min(1, "La duración no puede ser menor a 1"),
+      .min(1, "La duración no puede ser menor a 1")
+      .optional(),
 
     // Duracón de contrato
     contrato: contrato,
@@ -82,7 +83,8 @@ export const newRQSchema = z
         required_error: "Elija una duración",
         invalid_type_error: "Elija una duración",
       })
-      .min(1, "elige una duración"),
+      .min(1, "elige una duración")
+      .optional(),
     idModalidad: z
       .number({
         required_error: "Elija una modalidad",
@@ -104,6 +106,9 @@ export const newRQSchema = z
     // Control de vacantes y carreras
     lstVacanteSkills: z.array(vacanteSkillSchema).optional(),
     lstCarreras: z.array(vacanteCareerSchema).optional(),
+
+    // Tiene duración
+    tieneDuracion: z.boolean(),
 
     lstContactos: z.array(z.number()).optional(),
 
@@ -146,6 +151,23 @@ export const newRQSchema = z
           path: ["fechaVencimiento"],
         });
       }
+    }
+
+    // Validación de duración
+    if (data.tieneDuracion && !data.duracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["duracion"],
+      });
+    }
+
+    if (data.tieneDuracion && !data.idDuracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["idDuracion"],
+      });
     }
   });
 

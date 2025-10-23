@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../../models/schema/NewRQSchema";
 import { DropdownForm } from "../../../../forms";
 import { ParamType } from "../../../../../models/type/ParamType";
@@ -19,38 +19,113 @@ export const TabManagement = ({
     register,
     formState: { errors },
     control,
+    setValue,
     clearErrors,
   } = useFormContext<newRQSchemaType>();
 
+  const handleDurationChange = (checked: boolean) => {
+    if (!checked) {
+      clearErrors(["duracion", "idDuracion"]);
+      setValue("duracion", undefined);
+      setValue("idDuracion", undefined);
+    }
+  };
+
   return (
     <>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 overflow-scroll">
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
-            Duración de RQ:
+            Tiene duración:
           </label>
-          <div className="flex gap-4 w-2/3">
-            <div className="flex flex-col gap-1">
-              <NumberInputV2<newRQSchemaType>
-                control={control}
-                name="duracion"
-                error={errors?.duracion?.message}
-              />
-            </div>
-            <DropdownForm
-              name="idDuracion"
+
+          <div className="flex items-center gap-4 w-2/3">
+            <Controller
+              name="tieneDuracion"
               control={control}
-              error={errors.idDuracion}
-              required={false}
-              flex={true}
-              clearErrors={clearErrors}
-              options={rqDuration.map((d) => ({
-                value: d.num1,
-                label: d.string1,
-              }))}
+              render={({ field }) => (
+                <>
+                  <label className="inline-flex items-center cursor-pointer relative">
+                    <input
+                      type="checkbox"
+                      checked={field.value || false}
+                      onChange={(e) => {
+                        field.onChange(e.target.checked);
+                        handleDurationChange(e.target.checked);
+                      }}
+                      className="sr-only peer"
+                      aria-label="Tiene duración"
+                    />
+                    {/* Fondo del switch */}
+                    <div
+                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                        field.value ? "bg-blue-600" : "bg-gray-200"
+                      }`}
+                    />
+                    {/* Bolita deslizante */}
+                    <span
+                      className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${
+                        field.value
+                          ? "translate-x-5"
+                          : "translate-x-0"
+                      }`}
+                    />
+                  </label>
+
+                  {/* Texto visible usando field.value directamente */}
+                  <span className="text-sm text-gray-700">
+                    {field.value
+                      ? "Tiene duración"
+                      : "No tiene duración"}
+                  </span>
+                </>
+              )}
             />
+
+            {errors.tieneDuracion && (
+              <span className="text-red-500 text-xs ml-3">
+                {errors.tieneDuracion.message}
+              </span>
+            )}
           </div>
         </div>
+        <Controller
+          name="tieneDuracion"
+          control={control}
+          render={({ field }) => (
+            <>
+              {field.value && (
+                <div className="flex items-center">
+                  <label className="w-1/3 text-sm font-medium text-gray-700">
+                    Duración de RQ:
+                  </label>
+                  <div className="flex gap-4 w-2/3">
+                    <div className="flex flex-col gap-1">
+                      <NumberInputV2<newRQSchemaType>
+                        control={control}
+                        name="duracion"
+                        error={errors?.duracion?.message}
+                      />
+                    </div>
+                    <DropdownForm
+                      name="idDuracion"
+                      control={control}
+                      error={errors.idDuracion}
+                      required={false}
+                      flex={true}
+                      allowEmpty={true}
+                      clearErrors={clearErrors}
+                      options={rqDuration.map((d) => ({
+                        value: d.num1,
+                        label: d.string1,
+                      }))}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        />
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
             Duración de contrato:
@@ -66,7 +141,7 @@ export const TabManagement = ({
             <DropdownForm
               name="contrato.idDuracionContrato"
               control={control}
-              error={errors.contrato?.idDuracionContrato}
+              error={errors?.contrato?.idDuracionContrato}
               required={false}
               flex={true}
               clearErrors={clearErrors}

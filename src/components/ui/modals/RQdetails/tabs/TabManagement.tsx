@@ -10,6 +10,7 @@ import { NumberInputV2 } from "../../../../forms/NumberInputV2";
 import { UpdateBaseRQSchemaType } from "../../../../../models/schema/UpdateBaseRQSchema";
 import { BillingTable } from "../../../BillingTable";
 import { RQFacturacionGrupoModalidad } from "../../../../../models/type/RQFacturacion";
+import { set } from "date-fns";
 
 interface TabProps {
   rqDurationOptions: ParamType[];
@@ -41,9 +42,16 @@ export const TabManagment = ({
 
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
-      setValue("duracion", undefined);
-      setValue("idDuracion", undefined);
+      /**
+       * Valores en 1 para evitar
+       * errores de validación cuando no tiene duración
+       */
+      setValue("duracion", 1);
+      setValue("idDuracion", 1);
       clearErrors(["duracion", "idDuracion"]);
+    } else {
+      setValue("duracion", 1);
+      setValue("idDuracion", 0);
     }
   };
 

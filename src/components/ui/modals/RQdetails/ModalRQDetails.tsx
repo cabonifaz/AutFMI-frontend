@@ -170,10 +170,19 @@ export const ModalRQDetails = ({
 
       const { idDuracionContrato, duracionContrato } = req;
 
+      // Determinar si tiene duración basado en los valores de duracion e idDuracion
+      const hasDuration = !!(
+        req.duracion &&
+        req.duracion > 0 &&
+        req.idDuracion &&
+        req.idDuracion > 0
+      );
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
         descripcion: req.descripcion ?? "",
+        tieneDuracion: hasDuration,
         idDuracion: req.idDuracion,
         fechaSolicitud: req.fechaSolicitud
           ? formatISODate(req.fechaSolicitud)
@@ -257,10 +266,19 @@ export const ModalRQDetails = ({
       // Duración de contrato
       const { idDuracionContrato, duracionContrato } = req;
 
+      // Determinar si tiene duración basado en los valores de duracion e idDuracion
+      const hasDuration = !!(
+        req.duracion &&
+        req.duracion > 0 &&
+        req.idDuracion &&
+        req.idDuracion > 0
+      );
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
         descripcion: req.descripcion ?? "",
+        tieneDuracion: hasDuration,
         idDuracion: req.idDuracion,
         fechaSolicitud: req.fechaSolicitud
           ? formatISODate(req.fechaSolicitud)

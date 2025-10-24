@@ -2,6 +2,7 @@ import { ReqArchivo } from "../type/ReqArchivo";
 import { ReqContacto } from "../type/ReqContacto";
 import { ReqTalento } from "../type/ReqTalento";
 import { ReqVacante } from "../type/ReqVacante";
+import { RQFacturacion } from "../type/RQFacturacion";
 
 export type RequirementResponse = {
   idTipoMensaje: number;
@@ -26,5 +27,6 @@ export type RequirementResponse = {
     modalidadFact: string;
     idDuracionContrato?: number;
     duracionContrato?: number;
+    lstRqFacturacion: RQFacturacion[];
   };
 };

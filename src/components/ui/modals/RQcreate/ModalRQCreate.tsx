@@ -120,6 +120,7 @@ export const ModalRQCreate = ({
         duracionContrato: 1,
         idDuracionContrato: 0,
       },
+      lstFacturacion: [],
     },
   });
 

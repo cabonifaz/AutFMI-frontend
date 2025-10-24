@@ -49,6 +49,33 @@ const contrato = z.object({
     .min(1, "La duración no puede ser menor a 1"),
 });
 
+const rqFacturacionSchema = z.object({
+  idModalidad: z.coerce.number().default(0),
+  idGrupoModalidad: z.coerce.number().default(0),
+  declaraSunat: z.coerce.boolean().default(false),
+  sedeSunat: z.string().default("sede-principal"),
+  montoBase: z.coerce
+    .number()
+    .min(0, "El monto base no puede ser negativo")
+    .default(0),
+  montoMovilidad: z.coerce
+    .number()
+    .min(0, "El monto de movilidad no puede ser negativo")
+    .default(0),
+  montoMensual: z.coerce
+    .number()
+    .min(0, "El monto mensual no puede ser negativo")
+    .default(0),
+  montoTrimestral: z.coerce
+    .number()
+    .min(0, "El monto trimestral no puede ser negativo")
+    .default(0),
+  montoSemestral: z.coerce
+    .number()
+    .min(0, "El monto semestral no puede ser negativo")
+    .default(0),
+});
+
 export const newRQSchema = z
   .object({
     idCliente: z
@@ -111,6 +138,9 @@ export const newRQSchema = z
     tieneDuracion: z.boolean(),
 
     lstContactos: z.array(z.number()).optional(),
+
+    // Array de facturación por modalidades seleccionadas
+    lstFacturacion: z.array(rqFacturacionSchema).optional(),
 
     lstArchivos: z
       .array(

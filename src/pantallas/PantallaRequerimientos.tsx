@@ -8,8 +8,6 @@ import { DateFilter } from "../components/ui/DateFilter";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
 import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
-import { AgregarRQModal } from "../components/ui/ModalNuevoRQ";
-import { ModalDetallesRQ } from "../components/ui/ModalDetallesRQ";
 import { RequirementItem } from "../models/type/RequirementItemType";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";

@@ -24,6 +24,7 @@ const vacanteSkillSchema = z.object({
     })
     .min(0)
     .optional(),
+  isOptional: z.boolean(),
 });
 
 // Subschema: Carreras por vacante
@@ -31,6 +32,7 @@ const vacanteCareerSchema = z.object({
   idPerfil: z.number(),
   carrera: z.string().min(1, "La carrera es obligatoria"),
   idGrado: z.number().min(1, "Debe elegir un grado"),
+  isOptional: z.boolean(),
 });
 
 // Subchema: Duración de contrato
@@ -45,6 +47,33 @@ const contrato = z.object({
       invalid_type_error: "La duración debe ser un número",
     })
     .min(1, "La duración no puede ser menor a 1"),
+});
+
+const rqFacturacionSchema = z.object({
+  idModalidad: z.coerce.number().default(0),
+  idGrupoModalidad: z.coerce.number().default(0),
+  declaraSunat: z.coerce.boolean().default(false),
+  sedeSunat: z.string().default("sede-principal"),
+  montoBase: z.coerce
+    .number()
+    .min(0, "El monto base no puede ser negativo")
+    .default(0),
+  montoMovilidad: z.coerce
+    .number()
+    .min(0, "El monto de movilidad no puede ser negativo")
+    .default(0),
+  montoMensual: z.coerce
+    .number()
+    .min(0, "El monto mensual no puede ser negativo")
+    .default(0),
+  montoTrimestral: z.coerce
+    .number()
+    .min(0, "El monto trimestral no puede ser negativo")
+    .default(0),
+  montoSemestral: z.coerce
+    .number()
+    .min(0, "El monto semestral no puede ser negativo")
+    .default(0),
 });
 
 export const newRQSchema = z
@@ -71,7 +100,8 @@ export const newRQSchema = z
       .min(1, "La fecha de vencimiento es obligatoria"),
     duracion: z.coerce
       .number()
-      .min(1, "La duración no puede ser menor a 1"),
+      .min(1, "La duración no puede ser menor a 1")
+      .optional(),
 
     // Duracón de contrato
     contrato: contrato,
@@ -80,7 +110,8 @@ export const newRQSchema = z
         required_error: "Elija una duración",
         invalid_type_error: "Elija una duración",
       })
-      .min(1, "elige una duración"),
+      .min(1, "elige una duración")
+      .optional(),
     idModalidad: z
       .number({
         required_error: "Elija una modalidad",
@@ -103,7 +134,13 @@ export const newRQSchema = z
     lstVacanteSkills: z.array(vacanteSkillSchema).optional(),
     lstCarreras: z.array(vacanteCareerSchema).optional(),
 
+    // Tiene duración
+    tieneDuracion: z.boolean(),
+
     lstContactos: z.array(z.number()).optional(),
+
+    // Array de facturación por modalidades seleccionadas
+    lstFacturacion: z.array(rqFacturacionSchema).optional(),
 
     lstArchivos: z
       .array(
@@ -144,6 +181,23 @@ export const newRQSchema = z
           path: ["fechaVencimiento"],
         });
       }
+    }
+
+    // Validación de duración
+    if (data.tieneDuracion && !data.duracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["duracion"],
+      });
+    }
+
+    if (data.tieneDuracion && !data.idDuracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["idDuracion"],
+      });
     }
   });
 

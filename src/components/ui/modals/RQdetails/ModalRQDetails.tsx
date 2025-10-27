@@ -31,6 +31,7 @@ import {
   GRADO_ESTUDIO,
   TIPO_ARCHIVOS_RQ,
 } from "../../../../utils";
+import { data } from "react-router-dom";
 
 interface ModalProps {
   rqId: number;
@@ -98,7 +99,7 @@ export const ModalRQDetails = ({
     },
   });
 
-  const { reset } = methods;
+  const { reset, formState } = methods;
 
   // @marker requirement
   const {
@@ -170,11 +171,35 @@ export const ModalRQDetails = ({
 
       const { idDuracionContrato, duracionContrato } = req;
 
+      // Determinar si tiene duración basado en los valores de duracion e idDuracion
+      const hasDuration = !!(
+        req.duracion &&
+        req.duracion > 0 &&
+        req.idDuracion &&
+        req.idDuracion > 0
+      );
+
+      // Mapear facturación
+      const mappedFacturacion =
+        req.lstRqFacturacion?.map((f) => ({
+          idModalidad: f.idModalidad ?? 0,
+          idGrupoModalidad: f.idGrupoModalidad ?? 0,
+          declaraSunat: Boolean(f.declaraSunat),
+          sedeSunat: f.sedeSunat ?? "sede-principal",
+          montoBase: Number(f.montoBase ?? 0),
+          montoMovilidad: Number(f.montoMovilidad ?? 0),
+          montoMensual: Number(f.montoMensual ?? 0),
+          montoTrimestral: Number(f.montoTrimestral ?? 0),
+          montoSemestral: Number(f.montoSemestral ?? 0),
+          idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
+        })) ?? [];
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
         descripcion: req.descripcion ?? "",
-        idDuracion: req.idDuracion,
+        tieneDuracion: hasDuration,
+
         fechaSolicitud: req.fechaSolicitud
           ? formatISODate(req.fechaSolicitud)
           : "",
@@ -183,7 +208,9 @@ export const ModalRQDetails = ({
           : "",
         idEstadoRQ: req.idEstado ?? 0,
         idCliente: req.idCliente ?? 0,
-        duracion: req.duracion ?? 0,
+        // Duración condicional
+        idDuracion: hasDuration ? req.idDuracion : 1,
+        duracion: hasDuration ? req.duracion : 1,
         lstVacantes: mappedVacancies,
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
@@ -192,6 +219,7 @@ export const ModalRQDetails = ({
           idDuration: idDuracionContrato || undefined,
           duration: duracionContrato || undefined,
         },
+        lstFacturacion: mappedFacturacion,
       });
     }
   }, [res, reset]);
@@ -203,6 +231,11 @@ export const ModalRQDetails = ({
       fetchTarifario(clientId);
     }
   }, [res]);
+
+  // @remove
+  useEffect(() => {
+    console.log("Error: ", formState.errors);
+  }, [formState.errors]);
 
   const handleToggleEdit = () => {
     const req = res?.requerimiento;
@@ -257,11 +290,35 @@ export const ModalRQDetails = ({
       // Duración de contrato
       const { idDuracionContrato, duracionContrato } = req;
 
+      // Determinar si tiene duración basado en los valores de duracion e idDuracion
+      const hasDuration = !!(
+        req.duracion &&
+        req.duracion > 0 &&
+        req.idDuracion &&
+        req.idDuracion > 0
+      );
+
+      // Mapear facturación
+      const mappedFacturacion =
+        req.lstRqFacturacion?.map((f) => ({
+          idModalidad: f.idModalidad ?? 0,
+          idGrupoModalidad: f.idGrupoModalidad ?? 0,
+          declaraSunat: Boolean(f.declaraSunat),
+          sedeSunat: f.sedeSunat ?? "sede-principal",
+          montoBase: Number(f.montoBase ?? 0),
+          montoMovilidad: Number(f.montoMovilidad ?? 0),
+          montoMensual: Number(f.montoMensual ?? 0),
+          montoTrimestral: Number(f.montoTrimestral ?? 0),
+          montoSemestral: Number(f.montoSemestral ?? 0),
+          idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
+        })) ?? [];
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
         descripcion: req.descripcion ?? "",
-        idDuracion: req.idDuracion,
+        tieneDuracion: hasDuration,
+
         fechaSolicitud: req.fechaSolicitud
           ? formatISODate(req.fechaSolicitud)
           : "",
@@ -270,7 +327,9 @@ export const ModalRQDetails = ({
           : "",
         idEstadoRQ: req.idEstado ?? 0,
         idCliente: req.idCliente ?? 0,
-        duracion: req.duracion ?? 0,
+        // Duración condicional
+        idDuracion: hasDuration ? req.idDuracion : 1,
+        duracion: hasDuration ? req.duracion : 1,
         lstVacantes: mappedVacancies,
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
@@ -279,6 +338,7 @@ export const ModalRQDetails = ({
           idDuration: idDuracionContrato,
           duration: duracionContrato,
         },
+        lstFacturacion: mappedFacturacion,
       });
     }
 
@@ -312,13 +372,19 @@ export const ModalRQDetails = ({
       const idDuracionContrato = contrato?.idDuration;
       const duracionContrato = contrato?.duration;
 
+      // Map duration
+      const { tieneDuracion } = data;
+
       const payload = {
         ...cleanData,
         idRequerimiento: rqId,
         idCliente: idCliente,
         cliente: res?.requerimiento.cliente,
         estado: data.idEstadoRQ,
-        duracion: Number(data.duracion),
+        idDuracion: tieneDuracion
+          ? Number(data.idDuracion)
+          : undefined,
+        duracion: tieneDuracion ? Number(data.duracion) : undefined,
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
         idDuracionContrato: idDuracionContrato,

@@ -87,7 +87,32 @@ const useDownloadPdf = () => {
     }
   };
 
-  return { fetchAndOpenPdf, loading };
+  const fetchAndOpenPdfFMI = async (url: string) => {
+    setLoading(true);
+    try {
+      const response =
+        await apiClientWithToken.get<DownloadPDFResponse>(url);
+
+      const { result, lstArchivos } = response.data;
+
+      if (result.idTipoMensaje !== 2) {
+        enqueueSnackbar(result.mensaje, { variant: "warning" });
+        return;
+      }
+
+      if (lstArchivos.length === 0) {
+        enqueueSnackbar(result.mensaje, { variant: "warning" });
+        return;
+      }
+
+      openPdfFilesInNewTab(lstArchivos);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { fetchAndOpenPdf, loading, fetchAndOpenPdfFMI };
 };
 
 export default useDownloadPdf;

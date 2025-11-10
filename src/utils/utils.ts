@@ -229,19 +229,19 @@ export class Utils {
     return { nombreArchivo, extensionArchivo };
   };
 
-  static getTipoArchivoId = (extension: string): number => {
-    switch (extension.toLowerCase()) {
-      case "pdf":
-        return TipoArchivo.PDF;
-      case "doc":
-      case "docx":
-        return TipoArchivo.WORD;
-      case "xls":
-      case "xlsx":
-        return TipoArchivo.EXCEL;
-      default:
-        throw new Error(`Tipo de archivo no soportado: ${extension}`);
-    }
+  static getTipoArchivoId = (
+    extension: string,
+    paramsFiles: ParamType[]
+  ): number => {
+    const matchedParam = paramsFiles.find(
+      (param) =>
+        param.string2.toLowerCase() === extension.toLowerCase()
+    );
+
+    if (matchedParam) return matchedParam.num1;
+    else
+      throw new Error(`Tipo de archivo no soportado: ${extension}, 
+        pida al administrador que lo agregue a la lista de tipos de archivo. En parámetros.`);
   };
 
   static formatDateToDMY = (dateString: string): string => {

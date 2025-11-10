@@ -33,6 +33,7 @@ export const URLS_BASE = "39";
 export const HABILIDADES_TECNICAS = "19";
 export const GRADO_ESTUDIO = "38";
 export const TIPO_ARCHIVOS_RQ = "41";
+export const TIPO_ARCHIVO = "17";
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;

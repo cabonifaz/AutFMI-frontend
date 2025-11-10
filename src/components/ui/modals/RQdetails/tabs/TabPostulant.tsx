@@ -61,8 +61,8 @@ export const TabPostulant = ({
     <>
       {downloadPdfLoading && <Loading overlayMode />}
 
-      <>
-        <div className="text-end">
+      <div className="flex flex-col h-[calc(570px-120px)]">
+        <div className="text-end flex-shrink-0">
           {rqState !== ESTADO_ATENDIDO && (
             <button
               type="button"
@@ -73,130 +73,126 @@ export const TabPostulant = ({
             </button>
           )}
         </div>
-        <div className="p-1 custom-scroll">
-          <div className="table-container custom-scroll">
-            <div className="table-wrapper custom-scroll">
-              <table className="table custom-scroll">
-                <thead>
-                  <tr className="table-header">
-                    <th
-                      scope="col"
-                      className="table-header-cell text-center"
-                    >
-                      CV
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Nombres y apellidos
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Doc. Identidad
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Celular
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Correo
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Situación
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Estado
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Perfil
-                    </th>
+
+        <div className="flex-1 overflow-auto custom-scroll min-h-0">
+          <table className="table w-full">
+            <thead className="sticky top-0 bg-white z-10">
+              <tr className="table-header">
+                <th
+                  scope="col"
+                  className="table-header-cell text-center"
+                >
+                  CV
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Nombres y apellidos
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Doc. Identidad
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Celular
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Correo
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Situación
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Estado
+                </th>
+                <th scope="col" className="table-header-cell">
+                  Perfil
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {talents.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="table-empty">
+                    No hay postulantes disponibles.
+                  </td>
+                </tr>
+              ) : (
+                talents.map((t, index) => (
+                  <tr key={index} className="table-row">
+                    <td className="text-center">
+                      <div className="flex gap-3 items-center justify-center">
+                        <button
+                          type="button"
+                          title="CV Español"
+                          onClick={() =>
+                            handleDownloadCVLang(index, "ES")
+                          }
+                        >
+                          <img
+                            src="/assets/ic_flag_es.png"
+                            alt="icon eye"
+                            className="w-5 h-5"
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          title="CV Inglés"
+                          onClick={() =>
+                            handleDownloadCVLang(index, "EN")
+                          }
+                        >
+                          <img
+                            src="/assets/ic_flag_usa.png"
+                            alt="icon eye"
+                            className="w-5 h-5"
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
+                          title="CV propio"
+                          onClick={() => handleDownloadCV(index)}
+                        >
+                          <img
+                            src="/assets/ic_resume.png"
+                            alt="icon eye"
+                            className="w-5 h-5"
+                          />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      {t.nombresTalento} {t.apellidosTalento}
+                    </td>
+                    <td className="table-cell">{t.dni}</td>
+                    <td className="table-cell">{t.celular}</td>
+                    <td className="table-cell">{t.email}</td>
+                    <td className="table-cell">{t.situacion}</td>
+                    <td className="table-cell">
+                      <span
+                        className={`badge ${
+                          t.estado?.toUpperCase() ===
+                          "DATOS COMPLETOS"
+                            ? "badge-green"
+                            : t.estado?.toUpperCase() === "OBSERVADO"
+                            ? "badge-yellow"
+                            : ""
+                        }`}
+                      >
+                        {(
+                          t.estado ||
+                          (t.idEstado === 1
+                            ? "DATOS COMPLETOS"
+                            : "OBSERVADO")
+                        ).toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="table-cell">{t.perfil}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {talents.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="table-empty">
-                        No hay postulantes disponibles.
-                      </td>
-                    </tr>
-                  ) : (
-                    talents.map((t, index) => (
-                      <tr key={index} className="table-row">
-                        <td className="text-center">
-                          <div className="flex gap-3 items-center justify-center">
-                            <button
-                              type="button"
-                              title="CV Español"
-                              onClick={() =>
-                                handleDownloadCVLang(index, "ES")
-                              }
-                            >
-                              <img
-                                src="/assets/ic_flag_es.png"
-                                alt="icon eye"
-                                className="w-5 h-5"
-                              />
-                            </button>
-                            <button
-                              type="button"
-                              title="CV Inglés"
-                              onClick={() =>
-                                handleDownloadCVLang(index, "EN")
-                              }
-                            >
-                              <img
-                                src="/assets/ic_flag_usa.png"
-                                alt="icon eye"
-                                className="w-5 h-5"
-                              />
-                            </button>
-                            <button
-                              type="button"
-                              className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
-                              title="CV propio"
-                              onClick={() => handleDownloadCV(index)}
-                            >
-                              <img
-                                src="/assets/ic_resume.png"
-                                alt="icon eye"
-                                className="w-5 h-5"
-                              />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="table-cell">
-                          {t.nombresTalento} {t.apellidosTalento}
-                        </td>
-                        <td className="table-cell">{t.dni}</td>
-                        <td className="table-cell">{t.celular}</td>
-                        <td className="table-cell">{t.email}</td>
-                        <td className="table-cell">{t.situacion}</td>
-                        <td className="table-cell">
-                          <span
-                            className={`badge ${
-                              t.estado?.toUpperCase() ===
-                              "DATOS COMPLETOS"
-                                ? "badge-green"
-                                : t.estado?.toUpperCase() ===
-                                  "OBSERVADO"
-                                ? "badge-yellow"
-                                : ""
-                            }`}
-                          >
-                            {(
-                              t.estado ||
-                              (t.idEstado === 1
-                                ? "DATOS COMPLETOS"
-                                : "OBSERVADO")
-                            ).toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="table-cell">{t.perfil}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      </>
+      </div>
     </>
   );
 };

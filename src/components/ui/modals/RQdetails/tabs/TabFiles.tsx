@@ -12,6 +12,7 @@ import {
   AddFilesSchemaType,
   addFilesSchema,
 } from "../../../../../models/schema/AddFileSchema";
+import { allowedFileExtensions } from "../../../../../utils/file.utils";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -25,6 +26,7 @@ interface Archivo {
 interface TabProps {
   rqId: number;
   fileOptions: ParamType[];
+  extensionTypes: ParamType[];
   initialFiles: any[];
   fetchRequirement: () => void;
 }
@@ -32,10 +34,12 @@ interface TabProps {
 export const TabFiles = ({
   rqId,
   fileOptions,
+  extensionTypes,
   initialFiles,
   fetchRequirement,
 }: TabProps) => {
   // @marker base state
+  const allowExt = allowedFileExtensions(extensionTypes);
   const [files, setFiles] = useState<Archivo[]>(initialFiles);
   const { deleteData, deleteLoading } = useDeleteHook();
   const hasNewFiles = files.some(
@@ -94,8 +98,10 @@ export const TabFiles = ({
         const base64 = await Utils.fileToBase64(archivo.file);
         const { nombreArchivo, extensionArchivo } =
           Utils.getFileNameAndExtension(archivo.name);
-        const idTipoArchivo =
-          Utils.getTipoArchivoId(extensionArchivo);
+        const idTipoArchivo = Utils.getTipoArchivoId(
+          extensionArchivo,
+          extensionTypes
+        );
         return {
           string64: base64,
           nombreArchivo,
@@ -196,7 +202,7 @@ export const TabFiles = ({
             onChange={handleFileChange}
             className="hidden"
             id="fileInput"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
+            accept={allowExt}
           />
 
           {/* Lista de archivos */}

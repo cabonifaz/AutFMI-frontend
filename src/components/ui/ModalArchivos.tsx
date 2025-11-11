@@ -33,7 +33,7 @@ export const ModalArchivos = ({
   const handleSolicitudEquipoClick = () => {
     if (talento) {
       fetchAndOpenPdfFMI(
-        `${solicitudEquipoUrl}?idSolicitudEquipo=${talento.idEquipoSolicitud}`
+        `${solicitudEquipoUrl}?idTalento=${talento.idTalento}`
       );
     }
   };

@@ -16,6 +16,12 @@ export const MovementFormSchema = z
     apellidoMaterno: z.string().optional().nullable(),
     idArea: validDropdown,
     idCliente: z.number().optional(),
+    idMoneda: z.coerce
+      .number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Campo obligatorio",
+      })
+      .min(1, "Elija un tipo de moneda"),
     montoBase: z.number({
       required_error: "Campo obligatorio",
       invalid_type_error: "Monto base debe tener 2 decimales",

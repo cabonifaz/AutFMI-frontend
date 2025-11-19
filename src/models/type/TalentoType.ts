@@ -8,6 +8,8 @@ export type TalentoType = {
   modalidad: string;
 };
 
+export type EmployeeType = TalentoType & { idActivo: number };
+
 export interface AsignarTalentoType {
   idTalento: number;
   nombres: string;

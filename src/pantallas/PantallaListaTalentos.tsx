@@ -1,11 +1,14 @@
-import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useTalentos from "../hooks/useTalentos";
 import { PantallaWrapper } from "./PantallaWrapper";
 import { useMenu } from "../context/MenuContext";
 import { Loading } from "../components/ui/Loading";
 import { TalentoType } from "../models/type/TalentoType";
 import { ModalArchivos } from "../components/ui/ModalArchivos";
+import { useModal } from "../context/ModalContext";
+import { MD_EMPLOYEE_DETALS } from "../utils";
+import { MDEmployeeDetails } from "../components/ui/modals/MDEmployeeDetails";
 
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
@@ -31,6 +34,33 @@ const PantallaListaTalentos = () => {
       setCurrentPage(1);
     }
   };
+
+  const { isModalOpen, closeModal, openModal } = useModal();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const openEmployeeDetails = (talentId: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("talentId", talentId.toString(10));
+    setSearchParams(newParams);
+    openModal(MD_EMPLOYEE_DETALS);
+  };
+
+  const closeEmployeeDetails = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("talentId");
+    setSearchParams(newParams);
+    if (isModalOpen(MD_EMPLOYEE_DETALS)) {
+      closeModal(MD_EMPLOYEE_DETALS);
+    }
+  };
+
+  useEffect(() => {
+    const talentId = searchParams.get("talentId");
+
+    if (talentId && !isModalOpen(MD_EMPLOYEE_DETALS)) {
+      openModal(MD_EMPLOYEE_DETALS);
+    }
+  }, [searchParams]);
 
   const handleKeyPress = (
     event: React.KeyboardEvent<HTMLInputElement>
@@ -74,6 +104,11 @@ const PantallaListaTalentos = () => {
         />
       )}
       {loading && <Loading overlayMode={true} />}
+
+      {isModalOpen(MD_EMPLOYEE_DETALS) && (
+        <MDEmployeeDetails onClose={closeEmployeeDetails} />
+      )}
+
       <PantallaWrapper>
         <div className="p-2">
           <div className="mb-3 flex gap-2 md:gap-4">
@@ -163,7 +198,21 @@ const PantallaListaTalentos = () => {
                             </button>
                           </div>
                         </td>
-                        {talento.idActivo == 1 ? (
+                        <td>
+                          <button
+                            className="w-12 rounded-lg hover:bg-slate-200 p-2"
+                            aria-label="Detalles talento"
+                            onClick={() =>
+                              openEmployeeDetails(talento.idTalento)
+                            }
+                          >
+                            <img
+                              src="assets/ic_details.png"
+                              alt="Icono detalles"
+                            />
+                          </button>
+                        </td>
+                        {/* {talento.idActivo == 1 ? (
                           <td className="py-5 lg:px-4 flex flex-col md:flex-row md:justify-center *:w-[90%] *:md:w-fit gap-2 justify-center">
                             <button
                               className={`btn btn-orange`}
@@ -206,7 +255,7 @@ const PantallaListaTalentos = () => {
                           <td className="table-cell text-center text-sm">
                             No hay acciones
                           </td>
-                        )}
+                        )} */}
                       </tr>
                     ))}
                   </tbody>

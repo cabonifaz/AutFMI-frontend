@@ -59,7 +59,13 @@ useEffect(() => {
                   <Table>
                     <thead>
                       <tr>
+                        <Th>ID</Th>
+                        <Th>Talento</Th>
                         <Th>Objeto</Th>
+                        <Th>Área</Th>
+                        <Th>Cliente</Th>
+                        <Th>RQ</Th>
+                        <Th>Título RQ</Th>
                         <Th>Inicio</Th>
                         <Th>Fin</Th>
                         <Th>Monto</Th>
@@ -67,18 +73,36 @@ useEffect(() => {
                         <Th center>Acción</Th>
                       </tr>
                     </thead>
+
                     <tbody>
-                      {details?.contracts?.map((c, i) => (
-                        <tr key={i} className="hover:bg-gray-50 transition-colors">
+                      {details?.contracts?.map((c) => (
+                        <tr
+                          key={c.contractId}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <Td>{c.contractId}</Td>
+                          <Td>{c.talentName}</Td>
                           <Td>{c.contractObject}</Td>
-                          <Td>{c.startDate}</Td>
-                          <Td>{c.endDate}</Td>
-                          <Td>{c.baseAmount}</Td>
+                          <Td>{c.area}</Td>
+                          <Td>{c.client}</Td>
+                          <Td>{c.rqCode}</Td>
+                          <Td>{c.rqTitle}</Td>
+                          <Td center>{c.startDate}</Td>
+                          <Td center>{c.endDate}</Td>
+                          <Td right>{c.baseAmount}</Td>
+
                           <Td>
-                            <span className={c.status === "ACTIVO" ? "text-green-600 font-semibold" : "text-gray-500"}>
+                            <span
+                              className={
+                                c.status === "ACTIVO"
+                                  ? "text-green-600 font-semibold"
+                                  : "text-gray-500"
+                              }
+                            >
                               {c.status}
                             </span>
                           </Td>
+
                           <Td center>
                             {c.status === "ACTIVO" && (
                               <button

@@ -10,6 +10,7 @@ import { useModal } from "../context/ModalContext";
 import { MD_EMPLOYEE_DETALS } from "../utils";
 import { MDEmployeeDetails } from "../components/ui/modals/MDEmployeeDetails";
 
+
 const PantallaListaTalentos = () => {
   const navigate = useNavigate();
   const { toggleMenu } = useMenu();
@@ -37,13 +38,16 @@ const PantallaListaTalentos = () => {
 
   const { isModalOpen, closeModal, openModal } = useModal();
   const [searchParams, setSearchParams] = useSearchParams();
-  const talentIdSeleccionado = searchParams.get("talentId");
 
-  const openEmployeeDetails = (talentId: number) => {
+  /*const openEmployeeDetails = (talentId: number) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("talentId", talentId.toString(10));
     setSearchParams(newParams);
     openModal(MD_EMPLOYEE_DETALS);
+  };*/
+  const openEmployeeDetails = (talento: TalentoType) => {
+  setCurrentTalent(talento);
+  openModal(MD_EMPLOYEE_DETALS);
   };
 
   const closeEmployeeDetails = () => {
@@ -106,13 +110,12 @@ const PantallaListaTalentos = () => {
       )}
       {loading && <Loading overlayMode={true} />}
 
-      {isModalOpen(MD_EMPLOYEE_DETALS) && talentIdSeleccionado && (
-        <MDEmployeeDetails 
-          onClose={closeEmployeeDetails} 
-          talentId={Number(talentIdSeleccionado)} 
+      {isModalOpen(MD_EMPLOYEE_DETALS) && currentTalent && (
+        <MDEmployeeDetails
+          onClose={closeEmployeeDetails}
+          talento={currentTalent}
         />
       )}
-
       <PantallaWrapper>
         <div className="p-2">
           <div className="mb-3 flex gap-2 md:gap-4">
@@ -203,19 +206,17 @@ const PantallaListaTalentos = () => {
                           </div>
                         </td>
                         <td>
-                          <button
-                            className="w-12 rounded-lg hover:bg-slate-200 p-2"
-                            aria-label="Detalles talento"
-                            onClick={() =>
-                              openEmployeeDetails(talento.idTalento)
-                            }
-                          >
-                            <img
-                              src="assets/ic_details.png"
-                              alt="Icono detalles"
-                            />
-                          </button>
-                        </td>
+                            <button
+                              className="w-12 rounded-lg hover:bg-slate-200 p-2"
+                              aria-label="Detalles talento"
+                              onClick={() => openEmployeeDetails(talento)}
+                            >
+                              <img
+                                src="assets/ic_details.png"
+                                alt="Icono detalles"
+                              />
+                            </button>
+                          </td>
                         {/* {talento.idActivo == 1 ? (
                           <td className="py-5 lg:px-4 flex flex-col md:flex-row md:justify-center *:w-[90%] *:md:w-fit gap-2 justify-center">
                             <button

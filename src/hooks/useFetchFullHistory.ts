@@ -5,7 +5,7 @@ import { EmployeeResponseDetail } from "../models/response/EmployeeDetailRespons
 export const useFetchEmployeeDetails = () => {
   const [details, setDetails] = useState<EmployeeResponseDetail>();
   const [loading, setLoading] = useState<boolean>(false);
-  const fetchClients = async (talentId: number) => {
+  const fetchTalent = async (talentId: number) => {
     setLoading(true);
     try {
       const response =
@@ -23,5 +23,5 @@ export const useFetchEmployeeDetails = () => {
       setLoading(false);
     }
   };
-  return { details, loading, fetchClients };
+  return { details, loading, fetchTalent };
 };

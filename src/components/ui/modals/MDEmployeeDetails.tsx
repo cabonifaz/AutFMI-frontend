@@ -2,18 +2,32 @@ import { useEffect } from "react";
 import { useFetchEmployeeDetails } from "../../../hooks/useFetchFullHistory";
 import { CloseModalButton } from "../CloseModalButton";
 import { Tabs } from "../Tabs";
+import { useNavigate } from "react-router-dom";
+import { TalentoType } from "../../../models/type/TalentoType";
 
 interface MDProps {
   onClose: () => void;
-  talentId: number;
+  talento: TalentoType;
 }
 
-export const MDEmployeeDetails = ({ onClose, talentId }: MDProps) => {
-  const { details, loading, fetchClients } = useFetchEmployeeDetails();
+export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
+  const navigate = useNavigate();
+  const { details, loading, fetchTalent } = useFetchEmployeeDetails();
 
-  useEffect(() => {
-    fetchClients(talentId);
-  }, [talentId]);
+useEffect(() => {
+  fetchTalent(talento.idTalento);
+}, [talento.idTalento]);
+
+  const handleTerminate = (contract: any) => {
+    navigate("/formCese", {
+      state: {
+        talento: {
+          ...talento,
+          modalidad: contract.modalidad ?? talento.modalidad,
+        },
+      },
+    });
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -45,24 +59,37 @@ export const MDEmployeeDetails = ({ onClose, talentId }: MDProps) => {
                   <Table>
                     <thead>
                       <tr>
-                        <>
-                          <Th>Objeto</Th>
-                          <Th>Inicio</Th>
-                          <Th>Fin</Th>
-                          <Th>Monto</Th>
-                          <Th>Estado</Th>
-                        </>
+                        <Th>Objeto</Th>
+                        <Th>Inicio</Th>
+                        <Th>Fin</Th>
+                        <Th>Monto</Th>
+                        <Th>Estado</Th>
+                        <Th center>Acción</Th>
                       </tr>
                     </thead>
                     <tbody>
                       {details?.contracts?.map((c, i) => (
-                        <tr key={i}>
-                        <Td>{c.contractObject}</Td>
-                        <Td>{c.startDate}</Td>
-                        <Td>{c.endDate}</Td>
-                        <Td>{c.baseAmount}</Td>
-                        <Td>{c.status}</Td>
-                      </tr>
+                        <tr key={i} className="hover:bg-gray-50 transition-colors">
+                          <Td>{c.contractObject}</Td>
+                          <Td>{c.startDate}</Td>
+                          <Td>{c.endDate}</Td>
+                          <Td>{c.baseAmount}</Td>
+                          <Td>
+                            <span className={c.status === "ACTIVO" ? "text-green-600 font-semibold" : "text-gray-500"}>
+                              {c.status}
+                            </span>
+                          </Td>
+                          <Td center>
+                            {c.status === "ACTIVO" && (
+                              <button
+                                onClick={() => handleTerminate(c)}
+                                className="bg-red-500 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-md transition-colors duration-200 cursor-pointer shadow-sm font-medium"
+                              >
+                                Finalizar
+                              </button>
+                            )}
+                          </Td>
+                        </tr>
                       ))}
                     </tbody>
                   </Table>
@@ -227,4 +254,5 @@ const Td = ({
   >
     {children}
   </td>
-);
+)
+

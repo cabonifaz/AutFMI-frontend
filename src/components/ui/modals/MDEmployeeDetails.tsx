@@ -49,7 +49,6 @@ export const MDEmployeeDetails = ({ onClose, talentId }: MDProps) => {
                           <Th>Objeto</Th>
                           <Th>Inicio</Th>
                           <Th>Fin</Th>
-                          <Th>Moneda</Th>
                           <Th>Monto</Th>
                           <Th>Estado</Th>
                         </>
@@ -61,7 +60,6 @@ export const MDEmployeeDetails = ({ onClose, talentId }: MDProps) => {
                         <Td>{c.contractObject}</Td>
                         <Td>{c.startDate}</Td>
                         <Td>{c.endDate}</Td>
-                        <Td>{c.currency}</Td>
                         <Td>{c.baseAmount}</Td>
                         <Td>{c.status}</Td>
                       </tr>

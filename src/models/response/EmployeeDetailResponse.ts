@@ -18,8 +18,7 @@ export interface Contract {
   contractObject: string;
   startDate: string; // dd/MM/yyyy
   endDate: string; // dd/MM/yyyy
-  currency: string;
-  baseAmount: number;
+  baseAmount: string;
   status: "ACTIVO" | "FINALIZADO";
 }
 export interface Movement {

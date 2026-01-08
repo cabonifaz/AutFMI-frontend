@@ -37,6 +37,7 @@ const PantallaListaTalentos = () => {
 
   const { isModalOpen, closeModal, openModal } = useModal();
   const [searchParams, setSearchParams] = useSearchParams();
+  const talentIdSeleccionado = searchParams.get("talentId");
 
   const openEmployeeDetails = (talentId: number) => {
     const newParams = new URLSearchParams(searchParams);
@@ -105,8 +106,11 @@ const PantallaListaTalentos = () => {
       )}
       {loading && <Loading overlayMode={true} />}
 
-      {isModalOpen(MD_EMPLOYEE_DETALS) && (
-        <MDEmployeeDetails onClose={closeEmployeeDetails} />
+      {isModalOpen(MD_EMPLOYEE_DETALS) && talentIdSeleccionado && (
+        <MDEmployeeDetails 
+          onClose={closeEmployeeDetails} 
+          talentId={Number(talentIdSeleccionado)} 
+        />
       )}
 
       <PantallaWrapper>

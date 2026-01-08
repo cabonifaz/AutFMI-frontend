@@ -4,7 +4,8 @@ export interface EmployeeResponseDetail {
   detalleMensaje: string | null;
   talentId: number | null;
   names: string;
-  fullName: string;
+  lastname: string;
+  surname: string;
   email: string;
   documentNumber: string;
   description: string;
@@ -14,16 +15,16 @@ export interface EmployeeResponseDetail {
   terminations: Termination[];
 }
 export interface Contract {
-  contractId: number;         // ID_CONTRATO
-  talentName: string;        // NOMBRES_TALENTO
-  contractObject: string;    // OBJETO_CONTRATO
-  areaId: number;            // ID_AREA
-  area: string;              // AREA
-  client: string;            // CLIENTE
-  rqCode: string;            // CODIGO_RQ
-  rqTitle: string;           // TITULO_RQ
-  startDate: string;         // dd/MM/yyyy
-  endDate: string;           // dd/MM/yyyy
+  contractId: number; // ID_CONTRATO
+  talentName: string; // NOMBRES_TALENTO
+  contractObject: string; // OBJETO_CONTRATO
+  areaId: number; // ID_AREA
+  area: string; // AREA
+  client: string; // CLIENTE
+  rqCode: string; // CODIGO_RQ
+  rqTitle: string; // TITULO_RQ
+  startDate: string; // dd/MM/yyyy
+  endDate: string; // dd/MM/yyyy
   baseAmount: string;
   status: "ACTIVO" | "FINALIZADO";
 }

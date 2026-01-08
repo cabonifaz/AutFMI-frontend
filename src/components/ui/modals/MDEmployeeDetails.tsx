@@ -14,9 +14,9 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
   const navigate = useNavigate();
   const { details, loading, fetchTalent } = useFetchEmployeeDetails();
 
-useEffect(() => {
-  fetchTalent(talento.idTalento);
-}, [talento.idTalento]);
+  useEffect(() => {
+    fetchTalent(talento.idTalento);
+  }, [talento.idTalento]);
 
   const handleTerminate = (contract: any) => {
     navigate("/formCese", {
@@ -44,10 +44,23 @@ useEffect(() => {
               label: "Datos personales",
               children: (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                  <InfoCard label="Nombre completo" value={details?.fullName} />
+                  <InfoCard
+                    label="Nombre completo"
+                    value={[
+                      details?.names,
+                      details?.lastname,
+                      details?.surname,
+                    ].join(" ")}
+                  />
                   <InfoCard label="Correo" value={details?.email} />
-                  <InfoCard label="Documento" value={details?.documentNumber} />
-                  <InfoCard label="Descripción" value={details?.description} />
+                  <InfoCard
+                    label="Documento"
+                    value={details?.documentNumber}
+                  />
+                  <InfoCard
+                    label="Descripción"
+                    value={details?.description}
+                  />
                 </div>
               ),
             },
@@ -227,9 +240,17 @@ useEffect(() => {
 
 // COMPONENTES REUTILIZABLES
 
-const InfoCard = ({ label, value }: { label: string; value?: string }) => (
+const InfoCard = ({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string;
+}) => (
   <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-    <span className="text-xs text-sky-700 font-semibold">{label}</span>
+    <span className="text-xs text-sky-700 font-semibold">
+      {label}
+    </span>
     <p className="text-sm mt-1">{value || "-"}</p>
   </div>
 );
@@ -278,5 +299,4 @@ const Td = ({
   >
     {children}
   </td>
-)
-
+);

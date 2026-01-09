@@ -11,7 +11,6 @@ import { MOTIVO_CESE, UNIDAD } from "../utils/config";
 import { DropdownForm, InputForm } from "../components/forms";
 import BackButton from "../components/ui/BackButton";
 import { Loading } from "../components/ui/Loading";
-import { useFetchClients } from "../hooks/useFetchClients";
 import { useParams } from "../context/ParamsContext";
 import { format } from "date-fns";
 import {
@@ -30,7 +29,6 @@ const PantallaCese = () => {
 
   const { postData, postloading } = usePostHook();
 
-  const { clientes, loading: clientsLoading } = useFetchClients();
   const { paramsByMaestro, loading: paramLoading } = useParams(
     `${UNIDAD},${MOTIVO_CESE}`
   );
@@ -53,7 +51,6 @@ const PantallaCese = () => {
       apellidoPaterno: "",
       apellidoMaterno: "",
       idArea: 0,
-      idCliente: 0,
       idMotivo: 0,
       fchCese: format(new Date(), "yyyy-MM-dd"),
     },
@@ -61,26 +58,18 @@ const PantallaCese = () => {
 
   useEffect(() => {
     if (employeeDetails) {
+      console.log("Talent ID:", employeeDetails.talentId);
       reset({
         nombres: employeeDetails.names,
         apellidoPaterno: employeeDetails.lastname,
         apellidoMaterno: employeeDetails.surname,
         idArea: contract.areaId,
-        idCliente: 0,
       });
     }
   }, [employeeDetails, reset]);
 
   const onSubmit: SubmitHandler<OutFormType> = async (data) => {
-    let cliente = "";
     let area = "";
-
-    if (data?.idCliente && data.idCliente !== 0) {
-      cliente =
-        clientes.find(
-          (cliente) => cliente.idCliente === data?.idCliente
-        )?.razonSocial || "";
-    }
 
     if (data.idArea !== 0) {
       area =
@@ -93,7 +82,7 @@ const PantallaCese = () => {
       {
         idTalento: employeeDetails.talentId,
         area: area,
-        cliente: cliente,
+        contractId: contract.contractId,
         ...data,
       }
     );
@@ -105,7 +94,7 @@ const PantallaCese = () => {
 
   return (
     <>
-      {(paramLoading || postloading || clientsLoading) && (
+      {(paramLoading || postloading) && (
         <Loading overlayMode={true} />
       )}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">

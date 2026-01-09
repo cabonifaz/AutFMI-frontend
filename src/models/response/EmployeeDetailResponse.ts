@@ -2,7 +2,7 @@ export interface EmployeeResponseDetail {
   idTipoMensaje: number;
   mensaje: string;
   detalleMensaje: string | null;
-  talentId: number | null;
+  talentId: number;
   names: string;
   lastname: string;
   surname: string;

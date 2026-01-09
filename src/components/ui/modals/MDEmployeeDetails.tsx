@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFetchEmployeeDetails } from "../../../hooks/useFetchFullHistory";
 import { CloseModalButton } from "../CloseModalButton";
 import { Tabs } from "../Tabs";
 import { useNavigate } from "react-router-dom";
 import { TalentoType } from "../../../models/type/TalentoType";
+import { Contract } from "../../../models/response/EmployeeDetailResponse";
 
 interface MDProps {
   onClose: () => void;
@@ -18,13 +19,11 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
     fetchTalent(talento.idTalento);
   }, [talento.idTalento]);
 
-  const handleTerminate = (contract: any) => {
+  const handleTerminate = (contract: Contract) => {
     navigate("/formCese", {
       state: {
-        talento: {
-          ...talento,
-          modalidad: contract.modalidad ?? talento.modalidad,
-        },
+        employeeDetails: details,
+        contract: contract,
       },
     });
   };
@@ -73,7 +72,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                     <thead>
                       <tr>
                         <Th>ID</Th>
-                        <Th>Talento</Th>
+                        <Th>Modalidad</Th>
                         <Th>Objeto</Th>
                         <Th>Área</Th>
                         <Th>Cliente</Th>
@@ -94,7 +93,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <Td>{c.contractId}</Td>
-                          <Td>{c.talentName}</Td>
+                          <Td>{c.contractType}</Td>
                           <Td>{c.contractObject}</Td>
                           <Td>{c.area}</Td>
                           <Td>{c.client}</Td>

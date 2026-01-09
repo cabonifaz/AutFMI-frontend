@@ -1,31 +1,38 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { TalentoType } from "../models/type/TalentoType";
-import { OutFormSchema, OutFormType } from "../models/schema/OutFormSchema";
+import {
+  OutFormSchema,
+  OutFormType,
+} from "../models/schema/OutFormSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { usePostHook } from "../hooks/usePostHook";
-import { MODALIDAD_LOC_SERVICIOS, MOTIVO_CESE, UNIDAD } from "../utils/config";
+import { MOTIVO_CESE, UNIDAD } from "../utils/config";
 import { DropdownForm, InputForm } from "../components/forms";
 import BackButton from "../components/ui/BackButton";
-import useFetchEmpleado from "../hooks/useFetchEmpleado";
 import { Loading } from "../components/ui/Loading";
 import { useFetchClients } from "../hooks/useFetchClients";
 import { useParams } from "../context/ParamsContext";
 import { format } from "date-fns";
+import {
+  Contract,
+  EmployeeResponseDetail,
+} from "../models/response/EmployeeDetailResponse";
 
 const PantallaCese = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento } = (location.state as { talento: TalentoType }) || {};
+  const { employeeDetails, contract } =
+    (location.state as {
+      employeeDetails: EmployeeResponseDetail;
+      contract: Contract;
+    }) || {};
 
   const { postData, postloading } = usePostHook();
-  const { employee, loading: employeeLoading } = useFetchEmpleado(
-    talento.idTalento,
-  );
+
   const { clientes, loading: clientsLoading } = useFetchClients();
   const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${UNIDAD},${MOTIVO_CESE}`,
+    `${UNIDAD},${MOTIVO_CESE}`
   );
 
   const unitValues = paramsByMaestro[UNIDAD];
@@ -53,16 +60,16 @@ const PantallaCese = () => {
   });
 
   useEffect(() => {
-    if (employee) {
+    if (employeeDetails) {
       reset({
-        nombres: employee.nombres || "",
-        apellidoPaterno: employee.apellidoPaterno || "",
-        apellidoMaterno: employee.apellidoMaterno || "",
-        idArea: employee.idArea || 0,
-        idCliente: employee.idCliente || 0,
+        nombres: employeeDetails.names,
+        apellidoPaterno: employeeDetails.lastname,
+        apellidoMaterno: employeeDetails.surname,
+        idArea: contract.areaId,
+        idCliente: 0,
       });
     }
-  }, [employee, reset]);
+  }, [employeeDetails, reset]);
 
   const onSubmit: SubmitHandler<OutFormType> = async (data) => {
     let cliente = "";
@@ -70,21 +77,26 @@ const PantallaCese = () => {
 
     if (data?.idCliente && data.idCliente !== 0) {
       cliente =
-        clientes.find((cliente) => cliente.idCliente === data?.idCliente)
-          ?.razonSocial || "";
+        clientes.find(
+          (cliente) => cliente.idCliente === data?.idCliente
+        )?.razonSocial || "";
     }
 
     if (data.idArea !== 0) {
       area =
-        unitValues?.find((area) => area.num1 === data.idArea)?.string1 || "";
+        unitValues?.find((area) => area.num1 === data.idArea)
+          ?.string1 || "";
     }
 
-    const response = await postData("/fmi/employee/contractTermination", {
-      idTalento: talento.idTalento,
-      area: area,
-      cliente: cliente,
-      ...data,
-    });
+    const response = await postData(
+      "/fmi/employee/contractTermination",
+      {
+        idTalento: employeeDetails.talentId,
+        area: area,
+        cliente: cliente,
+        ...data,
+      }
+    );
 
     if (response.idTipoMensaje === 2) {
       goBack();
@@ -93,11 +105,14 @@ const PantallaCese = () => {
 
   return (
     <>
-      {(paramLoading || postloading || employeeLoading || clientsLoading) && (
+      {(paramLoading || postloading || clientsLoading) && (
         <Loading overlayMode={true} />
       )}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-8"
+        >
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />
@@ -139,22 +154,6 @@ const PantallaCese = () => {
             required={true}
           />
 
-          {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (
-            <DropdownForm
-              name="idCliente"
-              control={control}
-              label="Cliente"
-              error={errors.idCliente}
-              options={
-                clientes?.map((client) => ({
-                  value: client.idCliente,
-                  label: client.razonSocial,
-                })) || []
-              }
-              required={true}
-            />
-          )}
-
           {/* CESE */}
           <DropdownForm
             name="idMotivo"
@@ -190,7 +189,9 @@ const PantallaCese = () => {
             </button>
             <button
               type="submit"
-              className={`btn ${isDirty ? "btn-primary" : "btn-disabled"}`}
+              className={`btn ${
+                isDirty ? "btn-primary" : "btn-disabled"
+              }`}
               disabled={!isDirty}
             >
               Guardar

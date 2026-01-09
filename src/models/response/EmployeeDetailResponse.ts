@@ -19,6 +19,8 @@ export interface Contract {
   talentName: string; // NOMBRES_TALENTO
   contractObject: string; // OBJETO_CONTRATO
   areaId: number; // ID_AREA
+  contractTypeId: number;
+  contractType: string;
   area: string; // AREA
   client: string; // CLIENTE
   rqCode: string; // CODIGO_RQ

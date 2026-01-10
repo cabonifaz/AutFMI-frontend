@@ -56,13 +56,15 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                     label="Documento"
                     value={details?.documentNumber}
                   />
-                  <InfoCard
-                    label="Descripción"
-                    value={details?.description}
-                  />
+                  <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                    <InfoCard
+                      label="Descripción"
+                      value={details?.description}
+                    />
+                  </div>
                 </div>
               ),
-            },
+      },
 
             {
               label: "Contratos",
@@ -209,9 +211,13 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                     <thead>
                       <tr>
                         <>
-                          <Th>Fecha</Th>
+                          <Th center>Fecha</Th>
                           <Th>Motivo</Th>
                           <Th>Cliente</Th>
+                          <Th>ID RQ</Th>
+                          <Th>Título RQ</Th>
+                          <Th>Código RQ</Th>
+                          <Th>ID_Contrato</Th>
                         </>
                       </tr>
                     </thead>
@@ -221,7 +227,11 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                           <>
                             <Td center>{t.terminationDate}</Td>
                             <Td>{t.terminationReason}</Td>
-                            <Td>{t.client}</Td>
+                            <Td>{t.client || "-"}</Td>
+                            <Td>{t.requirementId || "-"}</Td>
+                            <Td>{t.requirementTitle || "-"}</Td>
+                            <Td>{t.requirementCode || "-"}</Td>
+                            <Td>{t.idContract || "-"}</Td>
                           </>
                         </tr>
                       ))}
@@ -261,25 +271,12 @@ const SectionCard = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Table = ({ children }: { children: React.ReactNode }) => (
-  <table className="w-full text-sm border border-gray-200 border-collapse">
-    {children}
-  </table>
-);
-
-const Th = ({
-  children,
-  center,
-}: {
-  children: React.ReactNode;
-  center?: boolean;
-}) => (
-  <th
-    className={`p-2 bg-sky-50 text-sky-700 font-semibold border border-gray-200 ${
-      center ? "text-center" : "text-left"
-    }`}
-  >
-    {children}
-  </th>
+  <div className="overflow-x-auto w-full border border-gray-200 rounded-md">
+    <table className="w-full text-sm border-collapse min-w-max"> 
+      {/* min-w-max obliga a la tabla a expandirse segun su contenido */}
+      {children}
+    </table>
+  </div>
 );
 
 const Td = ({
@@ -292,10 +289,26 @@ const Td = ({
   right?: boolean;
 }) => (
   <td
-    className={`p-2 border border-gray-200 ${
+    className={`p-2 border border-gray-200 whitespace-nowrap ${
       center ? "text-center" : right ? "text-right" : "text-left"
     }`}
   >
     {children}
   </td>
+);
+
+const Th = ({
+  children,
+  center,
+}: {
+  children: React.ReactNode;
+  center?: boolean;
+}) => (
+  <th
+    className={`p-2 bg-sky-50 text-sky-700 font-semibold border border-gray-200 whitespace-nowrap ${
+      center ? "text-center" : "text-left"
+    }`}
+  >
+    {children}
+  </th>
 );

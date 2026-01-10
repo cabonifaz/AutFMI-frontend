@@ -51,4 +51,8 @@ export interface Termination {
   terminationDate?: string; // dd/MM/yyyy
   terminationReason?: string;
   client?: string;
+  requirementId?: number;
+  requirementTitle?: string;
+  requirementCode?: string;
+  idContract?: number;
 }

@@ -5,6 +5,10 @@ import { Tabs } from "../Tabs";
 import { useNavigate } from "react-router-dom";
 import { TalentoType } from "../../../models/type/TalentoType";
 import { Contract } from "../../../models/response/EmployeeDetailResponse";
+import { Utils } from "../../../utils/formatters";
+
+import { InfoCard } from "../../ui/InfoCard";
+import { Table, Th, Td, SectionCard } from "../../ui/TableComponents";
 
 interface MDProps {
   onClose: () => void;
@@ -100,7 +104,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                           <Td>{c.area}</Td>
                           <Td>{c.client}</Td>
                           <Td>{c.rqCode}</Td>
-                          <Td>{c.rqTitle}</Td>
+                          <Td title={c.rqTitle}>{Utils.truncateText(c.rqTitle, 15)}</Td>
                           <Td center>{c.startDate}</Td>
                           <Td center>{c.endDate}</Td>
                           <Td right>{c.baseAmount}</Td>
@@ -214,10 +218,8 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                           <Th center>Fecha</Th>
                           <Th>Motivo</Th>
                           <Th>Cliente</Th>
-                          <Th>ID RQ</Th>
                           <Th>Título RQ</Th>
                           <Th>Código RQ</Th>
-                          <Th>ID_Contrato</Th>
                         </>
                       </tr>
                     </thead>
@@ -228,10 +230,8 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                             <Td center>{t.terminationDate}</Td>
                             <Td>{t.terminationReason}</Td>
                             <Td>{t.client || "-"}</Td>
-                            <Td>{t.requirementId || "-"}</Td>
-                            <Td>{t.requirementTitle || "-"}</Td>
+                            <Td title={t.requirementTitle}>{Utils.truncateText(t.requirementTitle, 15)}</Td>
                             <Td>{t.requirementCode || "-"}</Td>
-                            <Td>{t.idContract || "-"}</Td>
                           </>
                         </tr>
                       ))}
@@ -247,68 +247,3 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
   );
 };
 
-// COMPONENTES REUTILIZABLES
-
-const InfoCard = ({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string;
-}) => (
-  <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-    <span className="text-xs text-sky-700 font-semibold">
-      {label}
-    </span>
-    <p className="text-sm mt-1">{value || "-"}</p>
-  </div>
-);
-
-const SectionCard = ({ children }: { children: React.ReactNode }) => (
-  <div className="mt-4 border border-sky-200 rounded-lg p-4 bg-white">
-    {children}
-  </div>
-);
-
-const Table = ({ children }: { children: React.ReactNode }) => (
-  <div className="overflow-x-auto w-full border border-gray-200 rounded-md">
-    <table className="w-full text-sm border-collapse min-w-max"> 
-      {/* min-w-max obliga a la tabla a expandirse segun su contenido */}
-      {children}
-    </table>
-  </div>
-);
-
-const Td = ({
-  children,
-  center,
-  right,
-}: {
-  children: React.ReactNode;
-  center?: boolean;
-  right?: boolean;
-}) => (
-  <td
-    className={`p-2 border border-gray-200 whitespace-nowrap ${
-      center ? "text-center" : right ? "text-right" : "text-left"
-    }`}
-  >
-    {children}
-  </td>
-);
-
-const Th = ({
-  children,
-  center,
-}: {
-  children: React.ReactNode;
-  center?: boolean;
-}) => (
-  <th
-    className={`p-2 bg-sky-50 text-sky-700 font-semibold border border-gray-200 whitespace-nowrap ${
-      center ? "text-center" : "text-left"
-    }`}
-  >
-    {children}
-  </th>
-);

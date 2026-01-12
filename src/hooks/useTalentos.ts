@@ -1,48 +1,66 @@
-import { useState, useEffect, useCallback } from 'react';
-import { TalentoType } from '../models/type/TalentoType';
-import { useSnackbar } from 'notistack';
-import { apiClientWithToken } from '../utils/apiClient';
-import { TalentosResponse } from '../models/response/TalentosResponse';
+import { useState, useEffect, useCallback } from "react";
+import { EmployeeType } from "../models/type/TalentoType";
+import { useSnackbar } from "notistack";
+import { apiClientWithToken } from "../utils/apiClient";
+import { EmployeesResponse } from "../models/response/EmployeesResponse";
 
 const useTalentos = () => {
-    const [talentos, setTalentos] = useState<TalentoType[]>([]);
-    const [totalElementos, setTotalElementos] = useState(0);
-    const [totalPaginas, setTotalPaginas] = useState(0);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [emptyList, setEmptyList] = useState<boolean>(false);
-    const { enqueueSnackbar } = useSnackbar();
+  const [talentos, setTalentos] = useState<EmployeeType[]>([]);
+  const [totalElementos, setTotalElementos] = useState(0);
+  const [totalPaginas, setTotalPaginas] = useState(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [emptyList, setEmptyList] = useState<boolean>(false);
+  const { enqueueSnackbar } = useSnackbar();
 
-    const fetchTalentos = useCallback(async (page: number, search: string) => {
-        setLoading(true);
-        try {
-            const endpoint = search
-                ? `/fmi/talent/list?busqueda=${encodeURIComponent(search)}`
-                : `/fmi/talent/list?nPag=${page}`;
+  const fetchTalentos = useCallback(
+    async (page: number, search: string) => {
+      setLoading(true);
+      try {
+        const endpoint = search
+          ? `/fmi/employee/list?busqueda=${encodeURIComponent(
+              search
+            )}`
+          : `/fmi/employee/list?nPag=${page}`;
 
-            const response = await apiClientWithToken.get<TalentosResponse>(endpoint);
+        const response =
+          await apiClientWithToken.get<EmployeesResponse>(endpoint);
 
-            if (response.status === 200 && response.data.idTipoMensaje === 2) {
-                setTalentos(response.data.talentos);
-                setTotalElementos(response.data.totalElementos || 0);
-                setTotalPaginas(response.data.totalPaginas || 0);
-                setEmptyList(response.data.talentos.length === 0);
-                return;
-            }
-            enqueueSnackbar(response.data.mensaje, { variant: 'error' });
-        } catch (error) {
-            setTalentos([]);
-        } finally {
-            setLoading(false);
+        if (
+          response.status === 200 &&
+          response.data.idTipoMensaje === 2
+        ) {
+          setTalentos(response.data.talentos);
+          setTotalElementos(response.data.totalElementos || 0);
+          setTotalPaginas(response.data.totalPaginas || 0);
+          setEmptyList(response.data.talentos.length === 0);
+          return;
         }
-    }, [enqueueSnackbar]);
+        enqueueSnackbar(response.data.mensaje, { variant: "error" });
+      } catch (error) {
+        setTalentos([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [enqueueSnackbar]
+  );
 
-    useEffect(() => {
-        fetchTalentos(currentPage, searchTerm);
-    }, [currentPage, enqueueSnackbar, fetchTalentos, searchTerm]);
+  useEffect(() => {
+    fetchTalentos(currentPage, searchTerm);
+  }, [currentPage, enqueueSnackbar, fetchTalentos, searchTerm]);
 
-    return { talentos, loading, currentPage, setCurrentPage, emptyList, setSearchTerm, totalElementos, totalPaginas };
+  return {
+    talentos,
+    loading,
+    currentPage,
+    setCurrentPage,
+    emptyList,
+    setSearchTerm,
+    totalElementos,
+    totalPaginas,
+  };
 };
 
 export default useTalentos;

@@ -1,7 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { TalentoType } from "../models/type/TalentoType";
 import { usePostHook } from "../hooks/usePostHook";
-import { MODALIDAD_LOC_SERVICIOS, UNIDAD } from "../utils/config";
+import {
+  MODALIDAD_LOC_SERVICIOS,
+  TIPO_MONEDA,
+  UNIDAD,
+} from "../utils/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import {
@@ -24,16 +28,20 @@ import { format } from "date-fns";
 const PantallaMovimiento = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento } = (location.state as { talento: TalentoType }) || {};
+  const { talento } =
+    (location.state as { talento: TalentoType }) || {};
 
   const { postData, postloading } = usePostHook();
   const { employee, loading: employeeLoading } = useFetchEmpleado(
-    talento.idTalento,
+    talento.idTalento
   );
   const { clientes, loading: clientsLoading } = useFetchClients();
-  const { paramsByMaestro, loading: paramLoading } = useParams(`${UNIDAD}`);
+  const { paramsByMaestro, loading: paramLoading } = useParams(
+    `${UNIDAD}, ${TIPO_MONEDA}`
+  );
 
   const unitValues = paramsByMaestro[UNIDAD] || [];
+  const currencyTypes = paramsByMaestro[TIPO_MONEDA] || [];
 
   const goBack = () => navigate(-1);
 
@@ -48,6 +56,7 @@ const PantallaMovimiento = () => {
     mode: "onChange",
     defaultValues: {
       nombres: "",
+      idMoneda: 0,
       apellidoPaterno: "",
       apellidoMaterno: "",
       idArea: 0,
@@ -84,18 +93,21 @@ const PantallaMovimiento = () => {
 
     if (data?.idCliente && data.idCliente !== 0) {
       cliente =
-        clientes.find((cliente) => cliente.idCliente === data?.idCliente)
-          ?.razonSocial || "";
+        clientes.find(
+          (cliente) => cliente.idCliente === data?.idCliente
+        )?.razonSocial || "";
     }
 
     if (data.idArea !== 0) {
       area =
-        unitValues?.find((area) => area.num1 === data.idArea)?.string1 || "";
+        unitValues?.find((area) => area.num1 === data.idArea)
+          ?.string1 || "";
     }
 
     const response = await postData("/fmi/employee/movement", {
+      ...data,
       idTalento: talento.idTalento,
-      idMoneda: null,
+      idMoneda: data.idMoneda,
       idModalidad: null,
       fchInicioContrato: null,
       fchTerminoContrato: null,
@@ -103,7 +115,6 @@ const PantallaMovimiento = () => {
       objetoContrato: null,
       area: area,
       cliente: cliente,
-      ...data,
     });
 
     if (response.idTipoMensaje === 2) {
@@ -113,11 +124,15 @@ const PantallaMovimiento = () => {
 
   return (
     <>
-      {(paramLoading || postloading || employeeLoading || clientsLoading) && (
-        <Loading overlayMode={true} />
-      )}
+      {(paramLoading ||
+        postloading ||
+        employeeLoading ||
+        clientsLoading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-8"
+        >
           {/* Talent Data */}
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />
@@ -176,6 +191,19 @@ const PantallaMovimiento = () => {
           )}
 
           {/* Movement */}
+          <DropdownForm
+            name="idMoneda"
+            control={control}
+            label="Tipo de moneda"
+            error={errors.idMoneda}
+            options={
+              currencyTypes.map((currency) => ({
+                value: currency.num1,
+                label: currency.string1,
+              })) || []
+            }
+            required={true}
+          />
           <SalaryStructureForm
             control={control}
             mainLabel="Estructura Salarial"
@@ -269,7 +297,9 @@ const PantallaMovimiento = () => {
             </button>
             <button
               type="submit"
-              className={`btn ${isDirty ? "btn-primary" : "btn-disabled"}`}
+              className={`btn ${
+                isDirty ? "btn-primary" : "btn-disabled"
+              }`}
               disabled={!isDirty}
             >
               Guardar

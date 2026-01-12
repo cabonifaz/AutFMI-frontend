@@ -2,16 +2,10 @@ import { useEffect } from "react";
 import { useFetchEmployeeDetails } from "../../../../hooks/useFetchFullHistory";
 import { CloseModalButton } from "../../CloseModalButton";
 import { Tabs } from "../../Tabs";
-import { useNavigate } from "react-router-dom";
 import { TalentoType } from "../../../../models/type/TalentoType";
-import { Utils } from "../../../../utils/formatters";
-
-import { Table, Th, Td, SectionCard } from "../../TableComponents";
-import ButtonIcon from "../../ButtonIcon";
 import { PersonalDetailsTab } from "./tabs/PersonalDetails";
 import { ContractsTabs } from "./tabs/ContractsTab";
 import { MovemetsTab } from "./tabs/MovementsTab";
-import { Loading } from "../../Loading";
 import { EquipmentRequestTab } from "./tabs/EquipmentsRequestTab";
 import { ContractsFinishedTab } from "./tabs/ContractsFinishedTab";
 

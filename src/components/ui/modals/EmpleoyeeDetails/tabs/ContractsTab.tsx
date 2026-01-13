@@ -9,6 +9,8 @@ import { SectionCard, Table, Th, Td } from "../../../TableComponents";
 
 interface MDProps {
   details?: EmployeeResponseDetail;
+  talentId?: number;
+
 }
 
 export const ContractsTabs = ({ details }: MDProps) => {
@@ -21,6 +23,16 @@ export const ContractsTabs = ({ details }: MDProps) => {
         contract: contract,
       },
     });
+    details;
+  };
+
+  const handleMovement = (contract: Contract) => {
+  navigate("/formMovimiento", {
+    state: {
+      employeeDetails: details, 
+      contract: contract,       
+    },
+  });
     details;
   };
 
@@ -84,7 +96,7 @@ export const ContractsTabs = ({ details }: MDProps) => {
                           title="Finalizar Contrato"
                         />
                         <ButtonIcon
-                          onClick={() => handleTerminate(c)}
+                          onClick={() => handleMovement(c)}
                           iconSrc="/assets/ic_movement.png"
                           alt="Crear Movimiento"
                           title="Crear Movimiento"

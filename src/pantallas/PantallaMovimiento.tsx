@@ -19,22 +19,24 @@ import {
   SalaryStructureForm,
 } from "../components/forms";
 import BackButton from "../components/ui/BackButton";
-import useFetchEmpleado from "../hooks/useFetchEmpleado";
 import { Loading } from "../components/ui/Loading";
 import { useFetchClients } from "../hooks/useFetchClients";
 import { useParams } from "../context/ParamsContext";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
+import { EmployeeResponseDetail } from "../models/response/EmployeeDetailResponse";
+import { Contract } from "../models/response/EmployeeDetailResponse";
 
 const PantallaMovimiento = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento } =
-    (location.state as { talento: TalentoType }) || {};
+  const { employeeDetails, contract } =
+  (location.state as {
+    employeeDetails: EmployeeResponseDetail;
+    contract: Contract;
+  }) || {};
 
   const { postData, postloading } = usePostHook();
-  const { employee, loading: employeeLoading } = useFetchEmpleado(
-    talento.idTalento
-  );
+  
   const { clientes, loading: clientsLoading } = useFetchClients();
   const { paramsByMaestro, loading: paramLoading } = useParams(
     `${UNIDAD}, ${TIPO_MONEDA}`
@@ -63,7 +65,6 @@ const PantallaMovimiento = () => {
       idCliente: 0,
       montoBase: 0,
       montoMovilidad: 0,
-      montoMensual: 0,
       montoTrimestral: 0,
       montoSemestral: 0,
       puesto: "",
@@ -74,59 +75,81 @@ const PantallaMovimiento = () => {
   });
 
   useEffect(() => {
-    if (employee && !employeeLoading) {
-      reset({
-        nombres: employee.nombres || "",
-        apellidoPaterno: employee.apellidoPaterno || "",
-        apellidoMaterno: employee.apellidoMaterno || "",
-        idArea: employee.idArea || 0,
-        idCliente: employee.idCliente || 0,
-        montoBase: employee.remuneracion || 0,
-        puesto: employee.cargo || "",
-      });
-    }
-  }, [employee, employeeLoading, reset]);
+  if (employeeDetails) {
+    reset({
+      nombres: employeeDetails.names || "",
+      apellidoPaterno: employeeDetails.lastname || "",
+      apellidoMaterno: employeeDetails.surname || "",
+      idArea: Number((contract as any).idArea || (contract as any).areaId) || 0,
+      idCliente: Number((contract as any).idCliente || (contract as any).clientId) || 0,
+      montoBase: Number(contract.baseAmount) || 0, 
+      puesto: contract.rqTitle || "", 
+      idMoneda: 0,
+      idMovArea: 0,
+      horario: "",
+    });
+  }
+  }, [employeeDetails, contract, reset]);
 
   const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
-    let cliente = "";
-    let area = "";
+  const nombreCliente = data?.idCliente 
+    ? clientes.find((c) => c.idCliente === data.idCliente)?.razonSocial || "" 
+    : "";
+  const nombreAreaActual = unitValues?.find((a) => a.num1 === data.idArea)?.string1 || "";
+  const nombreNuevaArea = unitValues?.find((a) => a.num1 === data.idMovArea)?.string1 || "";
 
-    if (data?.idCliente && data.idCliente !== 0) {
-      cliente =
-        clientes.find(
-          (cliente) => cliente.idCliente === data?.idCliente
-        )?.razonSocial || "";
-    }
+  const formatToISO = (dateStr: string | null | undefined) => {
+      if (!dateStr) return null;
+      if (dateStr.includes("-")) return dateStr;
+      try {
+          const parsedDate = parse(dateStr, "dd/MM/yyyy", new Date());
+          return format(parsedDate, "yyyy-MM-dd");
+      } catch (e) {
+          return null;
+      }
+  };
 
-    if (data.idArea !== 0) {
-      area =
-        unitValues?.find((area) => area.num1 === data.idArea)
-          ?.string1 || "";
-    }
+  const payload = {
+    idTalento: employeeDetails?.talentId, 
+    nombres: data.nombres,
+    apellidoPaterno: data.apellidoPaterno,
+    apellidoMaterno: data.apellidoMaterno,
+    puesto: data.puesto,
+    horario: data.horario,
+    fchMovimiento: data.fchMovimiento,
 
-    const response = await postData("/fmi/employee/movement", {
-      ...data,
-      idTalento: talento.idTalento,
-      idMoneda: data.idMoneda,
-      idModalidad: null,
-      fchInicioContrato: null,
-      fchTerminoContrato: null,
-      proyectoServicio: null,
-      objetoContrato: null,
-      area: area,
-      cliente: cliente,
-    });
+    idMoneda: Number(data.idMoneda) || 0,
+    idArea: Number(data.idArea) || 0,
+    idCliente: data.idCliente ? Number(data.idCliente) : 0,
+    idMovArea: Number(data.idMovArea) || 0,
+    idModalidad: Number((contract as any)?.idModalidad) || 0,
 
-    if (response.idTipoMensaje === 2) {
-      goBack();
-    }
+    montoBase: Number(data.montoBase) || 0,
+    montoMovilidad: Number(data.montoMovilidad) || 0,
+    montoTrimestral: Number(data.montoTrimestral) || 0,
+    montoSemestral: Number(data.montoSemestral) || 0,
+    
+    area: nombreAreaActual,
+    cliente: nombreCliente,
+    movArea: nombreNuevaArea, 
+    proyectoServicio: (contract as any)?.proyecto || "",
+    objetoContrato: (contract as any)?.objeto || "",
+
+    fchInicioContrato: formatToISO(contract?.startDate), 
+    fchTerminoContrato: formatToISO(contract?.endDate),
+  };
+
+  const response = await postData("/fmi/employee/movement", payload);
+
+  if (response?.idTipoMensaje === 2) {
+    goBack();
+  }
   };
 
   return (
     <>
       {(paramLoading ||
         postloading ||
-        employeeLoading ||
         clientsLoading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         <form
@@ -174,7 +197,7 @@ const PantallaMovimiento = () => {
             }
           />
 
-          {talento.modalidad === MODALIDAD_LOC_SERVICIOS && (
+          {contract?.contractType === MODALIDAD_LOC_SERVICIOS && (
             <DropdownForm
               name="idCliente"
               control={control}
@@ -211,7 +234,6 @@ const PantallaMovimiento = () => {
             enabledFields={[
               "montoBase",
               "montoMovilidad",
-              "montoMensual",
               "montoTrimestral",
               "montoSemestral",
             ]}
@@ -226,12 +248,6 @@ const PantallaMovimiento = () => {
               {
                 label: "Monto Movilidad",
                 name: "montoMovilidad",
-                type: "number",
-                regex: /^\d*(\.\d{0,2})?$/,
-              },
-              {
-                label: "Monto Mensual",
-                name: "montoMensual",
                 type: "number",
                 regex: /^\d*(\.\d{0,2})?$/,
               },

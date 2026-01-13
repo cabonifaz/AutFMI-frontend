@@ -41,7 +41,12 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
             },
             {
               label: "Movimientos",
-              children: <MovemetsTab details={details} />,
+              children: (
+                <MovemetsTab
+                  details={details}
+                  talentId={details?.talentId || 0}
+                />
+              ),
             },
             {
               label: "Solicitudes de Equipo",

@@ -54,7 +54,12 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
             },
             {
               label: "Ceses",
-              children: <ContractsFinishedTab details={details} />,
+              children: (
+                <ContractsFinishedTab
+                  details={details}
+                  talentId={details?.talentId || 0}
+                />
+              ),
             },
           ]}
         />

@@ -6,14 +6,15 @@ import {
 import { Utils } from "../../../../../utils/formatters";
 import ButtonIcon from "../../../ButtonIcon";
 import { SectionCard, Table, Th, Td } from "../../../TableComponents";
+import { useHistory } from "../../../../../hooks/useHistory";
+import { Loading } from "../../../Loading";
 
 interface MDProps {
   details?: EmployeeResponseDetail;
-  talentId?: number;
-
 }
 
 export const ContractsTabs = ({ details }: MDProps) => {
+  const {isLoading, fetchHistoryFile} = useHistory();
   const navigate = useNavigate();
 
   const handleTerminate = (contract: Contract) => {
@@ -27,6 +28,7 @@ export const ContractsTabs = ({ details }: MDProps) => {
   };
 
   const handleMovement = (contract: Contract) => {
+  console.log("Navegando con contrato:", contract);
   navigate("/formMovimiento", {
     state: {
       employeeDetails: details, 
@@ -36,7 +38,20 @@ export const ContractsTabs = ({ details }: MDProps) => {
     details;
   };
 
+  const handleRequestEquipment = (contract: Contract) => {
+  navigate("/formSolicitarEquipo", {
+    state: {
+      employeeDetails: details, 
+      contract: contract,       
+    },
+  });
+  details;
+};
+
+
   return (
+    <>
+     {isLoading && <Loading overlayMode />}
     <SectionCard>
       <div className="max-h-[380px] overflow-x-auto overflow-y-auto border rounded-md w-full">
         <div className="min-w-[1200px]">
@@ -102,7 +117,7 @@ export const ContractsTabs = ({ details }: MDProps) => {
                           title="Crear Movimiento"
                         />
                         <ButtonIcon
-                          onClick={() => {}}
+                          onClick={() => handleRequestEquipment(c)}
                           iconSrc="/assets/ic_computer.png"
                           alt="PDF"
                           title="Solicitar Equipo"
@@ -117,5 +132,6 @@ export const ContractsTabs = ({ details }: MDProps) => {
         </div>
       </div>
     </SectionCard>
+    </>
   );
 };

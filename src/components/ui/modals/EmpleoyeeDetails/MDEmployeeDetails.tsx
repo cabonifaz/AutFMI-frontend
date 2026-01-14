@@ -52,7 +52,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
             },
             {
               label: "Solicitudes de Equipo",
-              children: <EquipmentRequestTab details={details} />,
+              children: <EquipmentRequestTab details={details} idTalent={details?.talentId || 0} />,
             },
             {
               label: "Ceses",

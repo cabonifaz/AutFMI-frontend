@@ -1,13 +1,25 @@
 import { EmployeeResponseDetail } from "../../../../../models/response/EmployeeDetailResponse";
 import ButtonIcon from "../../../ButtonIcon";
+import { Loading } from "../../../Loading";
 import { SectionCard, Table, Th, Td } from "../../../TableComponents";
+import { useEquipmentRequest } from "../../../../../hooks/useEquipmentRequest";
 
 interface MDProps {
   details?: EmployeeResponseDetail;
+  idTalent: number;
 }
 
-export const EquipmentRequestTab = ({ details }: MDProps) => {
+export const EquipmentRequestTab = ({ details, idTalent }: MDProps) => {
+  const { isLoading, fetchEquipmentRequestFile } = useEquipmentRequest();
+
+  const handleGetEquipmentRequestFile = (requestId: number) => {
+    fetchEquipmentRequestFile(requestId, idTalent);
+  };
+  
   return (
+    <>
+    { isLoading && <Loading overlayMode />}
+
     <SectionCard>
       <div className="max-h-[380px] overflow-auto border rounded-md">
         <Table>
@@ -32,7 +44,7 @@ export const EquipmentRequestTab = ({ details }: MDProps) => {
                 <Td center>
                   <div className="flex items-center justify-center gap-2">
                     <ButtonIcon
-                      onClick={() => {}}
+                      onClick={() => handleGetEquipmentRequestFile(e.requestId)}
                       iconSrc="/assets/see_pass.svg"
                       alt="Detalles"
                       title="Ver Detalles"
@@ -45,5 +57,6 @@ export const EquipmentRequestTab = ({ details }: MDProps) => {
         </Table>
       </div>
     </SectionCard>
+    </>
   );
 };

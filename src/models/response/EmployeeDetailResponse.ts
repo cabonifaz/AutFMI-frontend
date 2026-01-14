@@ -32,11 +32,13 @@ export interface Contract {
 }
 
 export interface Movement {
+  movementId: number;
   movementDate: string; // dd/MM/yyyy
   reason: string;
   previousArea: string;
   position: string;
   movementType: string;
+  movementTypeId: number;
 }
 export interface EquipmentRequest {
   requestId: number;

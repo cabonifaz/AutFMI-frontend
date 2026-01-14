@@ -22,16 +22,22 @@ import { Loading } from "../components/ui/Loading";
 import { useFetchClients } from "../hooks/useFetchClients";
 import { useParams } from "../context/ParamsContext";
 import { format } from "date-fns";
+import { EmployeeResponseDetail } from "../models/response/EmployeeDetailResponse";
 
 const PantallaSolicitarEquipo = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento } = (location.state as { talento: TalentoType }) || {};
+  
+  const { employeeDetails, contract } = (location.state as { 
+  employeeDetails: EmployeeResponseDetail; 
+  contract: any; 
+}) || {};
+
   const [defaultSoftwareIds, setDefaultSoftwareIds] = useState<string[]>([]);
 
   const { postData, postloading } = usePostHook();
   const { employee, loading: employeeLoading } = useFetchEmpleado(
-    talento?.idTalento,
+  employeeDetails?.talentId 
   );
   const { clientes, loading: clientsLoading } = useFetchClients();
   const { paramsByMaestro, loading: paramLoading } = useParams(
@@ -187,8 +193,8 @@ const PantallaSolicitarEquipo = () => {
         nombres: employee.nombres || "",
         apellidoPaterno: employee.apellidoPaterno || "",
         apellidoMaterno: employee.apellidoMaterno || "",
-        idCliente: employee.idCliente || 0,
-        idArea: employee.idArea || 0,
+        idCliente: contract?.clientId || employee.idCliente || 0,
+        idArea: contract?.areaId || employee.idArea || 0,
         cargo: employee.cargo || "",
         fechaSolicitud: format(new Date(), "yyyy-MM-dd"),
         fechaEntrega: format(new Date(), "yyyy-MM-dd"),
@@ -210,13 +216,7 @@ const PantallaSolicitarEquipo = () => {
         software: [],
       });
     }
-  }, [
-    employee,
-    employeeLoading,
-    reset,
-    tipoHardwareParams,
-    anexoHardwareParams,
-  ]);
+  }, [employee, employeeLoading, reset, tipoHardwareParams, anexoHardwareParams, contract]);
 
   const onSubmit: SubmitHandler<EquipoFormType> = async (data) => {
     let cliente = "";
@@ -235,7 +235,7 @@ const PantallaSolicitarEquipo = () => {
 
     try {
       const formattedData = {
-        idTalento: talento?.idTalento,
+        idTalento: employeeDetails?.talentId,
         nombreEmpleado: data.nombres,
         apellidoPaternoEmpleado: data.apellidoPaterno,
         apellidoMaternoEmpleado: data.apellidoMaterno,

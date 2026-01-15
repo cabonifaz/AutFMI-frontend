@@ -21,9 +21,10 @@ import {
 const PantallaCese = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { employeeDetails, contract } =
+  const { employeeDetails, talentId, contract } =
     (location.state as {
       employeeDetails: EmployeeResponseDetail;
+      talentId: number;
       contract: Contract;
     }) || {};
 
@@ -36,7 +37,14 @@ const PantallaCese = () => {
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_CESE];
 
-  const goBack = () => navigate(-1);
+  const goBack = () => {
+  navigate("/pantalla-lista-talentos", {
+    state: {
+      reopenEmployeeModal: true,
+      talentId,
+    },
+  });
+  };
 
   const {
     control,

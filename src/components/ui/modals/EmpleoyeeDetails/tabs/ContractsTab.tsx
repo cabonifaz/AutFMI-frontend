@@ -21,6 +21,7 @@ export const ContractsTabs = ({ details }: MDProps) => {
     navigate("/formCese", {
       state: {
         employeeDetails: details,
+        talentId: details?.talentId,
         contract: contract,
       },
     });

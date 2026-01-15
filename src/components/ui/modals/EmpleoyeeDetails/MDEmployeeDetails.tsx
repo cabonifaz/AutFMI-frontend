@@ -26,7 +26,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
       <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] min-h-[570px] max-h-[570px] overflow-hidden relative">
         <header className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-bold">
-            Detalles Empleado - {details?.names || "-"}
+            Detalles Talento - {details?.names || "-"}
           </h2>
           <CloseModalButton onClick={onClose} />
         </header>

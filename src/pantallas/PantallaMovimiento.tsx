@@ -45,7 +45,15 @@ const PantallaMovimiento = () => {
   const unitValues = paramsByMaestro[UNIDAD] || [];
   const currencyTypes = paramsByMaestro[TIPO_MONEDA] || [];
 
-  const goBack = () => navigate(-1);
+  const goBack = () => {
+  navigate("/pantalla-lista-talentos", {
+    state: {
+      reopenEmployeeModal: true,
+      talentId: employeeDetails?.talentId,
+    },
+  });
+  };
+
 
   const {
     control,

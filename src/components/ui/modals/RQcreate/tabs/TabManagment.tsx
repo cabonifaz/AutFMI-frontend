@@ -14,12 +14,14 @@ interface TabProps {
   rqDuration: ParamType[];
   rqModes: ParamType[];
   factModes: ParamType[];
+  currencyOptions: ParamType[];
 }
 
 export const TabManagement = ({
   rqDuration,
   rqModes,
   factModes,
+  currencyOptions,
 }: TabProps) => {
   const {
     register,
@@ -76,7 +78,7 @@ export const TabManagement = ({
   ) => ({
     idModalidad,
     idGrupoModalidad: isPlanilla ? 2 : 1,
-    currencyType: CurrencyType.UNDEFINED,
+    currencyType: 0,
     minBaseAmount: 0,
     maxBaseAmount: 0,
     minTravelAllowance: 0,
@@ -269,6 +271,7 @@ export const TabManagement = ({
                 index={index}
                 modalidadId={field.idModalidad}
                 title={findLabelForMode(field.idModalidad)}
+                currencyOptions={currencyOptions}
               />
             ))}
           </div>

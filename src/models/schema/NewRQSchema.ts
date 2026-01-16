@@ -106,7 +106,7 @@ const rqFacturacionSchema = z.object({
   currencyType: z.coerce
     .number()
     .min(0, "Se necesita selecionar una moneda")
-    .default(CurrencyType.UNDEFINED),
+    .default(0),
 });
 
 export const newRQSchema = z

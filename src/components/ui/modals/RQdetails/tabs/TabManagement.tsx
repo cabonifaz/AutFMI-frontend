@@ -18,6 +18,7 @@ interface TabProps {
   rqMode: ParamType[];
   isEditing: boolean;
   handleToggleEdit: () => void;
+  currencyOptions: ParamType[];
 }
 
 export const TabManagment = ({
@@ -26,6 +27,7 @@ export const TabManagment = ({
   rqMode,
   isEditing,
   handleToggleEdit,
+  currencyOptions,
 }: TabProps) => {
   const {
     formState: { errors },
@@ -330,6 +332,7 @@ export const TabManagment = ({
               modalidadId={field.idModalidad}
               title={findLabelForMode(field.idModalidad)}
               isEditable={isEditing}
+              currencyOptions={currencyOptions}
             />
           ))}
         </div>

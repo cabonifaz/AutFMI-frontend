@@ -31,8 +31,8 @@ import {
   GRADO_ESTUDIO,
   TIPO_ARCHIVOS_RQ,
   TIPO_ARCHIVO,
+  TIPO_MONEDA,
 } from "../../../../utils";
-import { data } from "react-router-dom";
 
 interface ModalProps {
   rqId: number;
@@ -54,7 +54,7 @@ export const ModalRQDetails = ({
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`
   );
 
   // @marker base state
@@ -68,6 +68,7 @@ export const ModalRQDetails = ({
   const paymentModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const rqMode = paramsByMaestro[MODALIDAD_RQ] || [];
   const extensionTypes = paramsByMaestro[TIPO_ARCHIVO] || [];
+  const currencyOptions = paramsByMaestro[TIPO_MONEDA] || [];
 
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -186,13 +187,22 @@ export const ModalRQDetails = ({
         req.lstRqFacturacion?.map((f) => ({
           idModalidad: f.idModalidad ?? 0,
           idGrupoModalidad: f.idGrupoModalidad ?? 0,
-          declaraSunat: Boolean(f.declaraSunat),
-          sedeSunat: f.sedeSunat ?? "sede-principal",
-          montoBase: Number(f.montoBase ?? 0),
-          montoMovilidad: Number(f.montoMovilidad ?? 0),
-          montoMensual: Number(f.montoMensual ?? 0),
-          montoTrimestral: Number(f.montoTrimestral ?? 0),
-          montoSemestral: Number(f.montoSemestral ?? 0),
+
+          minBaseAmount: f.minBaseAmount,
+          maxBaseAmount: f.maxBaseAmount,
+
+          minTravelAllowance: f.minTravelAllowance,
+          maxTravelAllowance: f.maxTravelAllowance,
+
+          minMonthlyAmount: f.minMonthlyAmount,
+          maxMonthlyAmount: f.minMonthlyAmount,
+
+          minQuarterlyAmount: f.minQuarterlyAmount,
+          maxQuarterlyAmount: f.maxQuarterlyAmount,
+
+          minSemiAnnualAmount: f.minSemiAnnualAmount,
+          maxSemiAnnualAmount: f.maxSemiAnnualAmount,
+
           idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
         })) ?? [];
 
@@ -305,13 +315,22 @@ export const ModalRQDetails = ({
         req.lstRqFacturacion?.map((f) => ({
           idModalidad: f.idModalidad ?? 0,
           idGrupoModalidad: f.idGrupoModalidad ?? 0,
-          declaraSunat: Boolean(f.declaraSunat),
-          sedeSunat: f.sedeSunat ?? "sede-principal",
-          montoBase: Number(f.montoBase ?? 0),
-          montoMovilidad: Number(f.montoMovilidad ?? 0),
-          montoMensual: Number(f.montoMensual ?? 0),
-          montoTrimestral: Number(f.montoTrimestral ?? 0),
-          montoSemestral: Number(f.montoSemestral ?? 0),
+
+          minBaseAmount: f.minBaseAmount,
+          maxBaseAmount: f.maxBaseAmount,
+
+          minTravelAllowance: f.minTravelAllowance,
+          maxTravelAllowance: f.maxTravelAllowance,
+
+          minMonthlyAmount: f.minMonthlyAmount,
+          maxMonthlyAmount: f.minMonthlyAmount,
+
+          minQuarterlyAmount: f.minQuarterlyAmount,
+          maxQuarterlyAmount: f.maxQuarterlyAmount,
+
+          minSemiAnnualAmount: f.minSemiAnnualAmount,
+          maxSemiAnnualAmount: f.maxSemiAnnualAmount,
+
           idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
         })) ?? [];
 
@@ -509,6 +528,7 @@ export const ModalRQDetails = ({
                         rqDurationOptions={rqDurationOptions}
                         paymentModes={paymentModes}
                         rqMode={rqMode}
+                        currencyOptions={currencyOptions}
                       />
                     ),
                   },

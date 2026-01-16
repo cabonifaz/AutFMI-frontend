@@ -8,6 +8,7 @@ import { DropdownForm } from "../../../../forms";
 import { ParamType } from "../../../../../models/type/ParamType";
 import { NumberInputV2 } from "../../../../forms/NumberInputV2";
 import { BillingTable } from "../../../BillingTable";
+import { CurrencyType } from "../../../../../utils";
 
 interface TabProps {
   rqDuration: ParamType[];
@@ -43,8 +44,7 @@ export const TabManagement = ({
   });
 
   const handleChangeContractMode = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    label: string
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = parseInt(e.target.value, 10);
     const checked = e.target.checked;
@@ -64,21 +64,30 @@ export const TabManagement = ({
        * Se puede verificar en la Tabla Parametros con idMaestro = 3
        */
       const declaraSunat = declareSunatIds.includes(value);
-      append({
-        idModalidad: value,
-        idGrupoModalidad: declaraSunat ? 2 : 1,
-        declaraSunat: declaraSunat,
-        sedeSunat: declaraSunat ? "sede-principal" : "",
-        montoBase: 0,
-        montoMovilidad: 0,
-        montoMensual: 0,
-        montoTrimestral: 0,
-        montoSemestral: 0,
-      });
+      append(createDefaultBillingItem(value, declaraSunat));
     } else if (!checked && existsIndex !== -1) {
       remove(existsIndex);
     }
   };
+
+  const createDefaultBillingItem = (
+    idModalidad: number,
+    isPlanilla: boolean
+  ) => ({
+    idModalidad,
+    idGrupoModalidad: isPlanilla ? 2 : 1,
+    currencyType: CurrencyType.UNDEFINED,
+    minBaseAmount: 0,
+    maxBaseAmount: 0,
+    minTravelAllowance: 0,
+    maxTravelAllowance: 0,
+    minMonthlyAmount: 0,
+    maxMonthlyAmount: 0,
+    minQuarterlyAmount: 0,
+    maxQuarterlyAmount: 0,
+    minSemiAnnualAmount: 0,
+    maxSemiAnnualAmount: 0,
+  });
 
   const findLabelForMode = (idModalidad: number) => {
     const mode = factModes.find((mod) => mod.num1 === idModalidad);
@@ -239,9 +248,7 @@ export const TabManagement = ({
                     value={mod.num1}
                     {...register("idModalidadFact")}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
-                    onChange={(e) =>
-                      handleChangeContractMode(e, mod.string1)
-                    }
+                    onChange={(e) => handleChangeContractMode(e)}
                   />
                   <span>{mod.string1}</span>
                 </label>

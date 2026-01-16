@@ -1,7 +1,6 @@
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../models/schema/NewRQSchema";
-import { RQFacturacionDeclaraSunat } from "../../models/type/RQFacturacion";
 
 interface BillingTableProps {
   index: number;
@@ -23,16 +22,23 @@ export const BillingTable: React.FC<BillingTableProps> = ({
 
   // Configuración de campos de montos
   const montoFields = [
-    { name: "montoBase", label: "Monto Base" },
-    { name: "montoMovilidad", label: "Monto Movilidad" },
-    { name: "montoMensual", label: "Monto Mensual" },
-    { name: "montoTrimestral", label: "Monto Trimestral" },
-    { name: "montoSemestral", label: "Monto Semestral" },
+    { name: "minBaseAmount", label: "M. Básico Min" },
+    { name: "maxBaseAmount", label: "M. Básico Max" },
+
+    { name: "minTravelAllowance", label: "M. Movilidad Min" },
+    { name: "maxTravelAllowance", label: "M. Movilidad Max" },
+
+    { name: "minMonthlyAmount", label: "M. Mensual Min" },
+    { name: "maxMonthlyAmount", label: "M. Mensual Max" },
+
+    { name: "minQuarterlyAmount", label: "M. Trimestral Min" },
+    { name: "minQuarterlyAmount", label: "M. Trimestral Max" },
+
+    { name: "minSemiAnnualAmount", label: "M. Semestral Min" },
+    { name: "maxSemiAnnualAmount", label: "M. Semestral Max" },
   ] as const;
 
-  // Determinar el grupo de modalidad y configuración por defecto
-  const planillaIds = [2, 3];
-  const isPlanilla = planillaIds.includes(modalidadId);
+  const universalFields = ["minBaseAmount", "maxBaseAmount"];
 
   return (
     <div className={"border border-gray-300 rounded-lg p-4"}>
@@ -43,113 +49,62 @@ export const BillingTable: React.FC<BillingTableProps> = ({
         </h3>
       </div>
 
-      {/* Campos superiores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 hidden">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ¿Declarado en SUNAT?
-          </label>
-          <Controller
-            name={`lstFacturacion.${index}.declaraSunat`}
-            control={control}
-            defaultValue={isPlanilla}
-            render={({ field }) => (
-              <select
-                {...field}
-                disabled={!isEditable}
-                value={
-                  isPlanilla
-                    ? RQFacturacionDeclaraSunat.SI
-                    : RQFacturacionDeclaraSunat.NO
-                }
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={RQFacturacionDeclaraSunat.SI}>
-                  Sí
-                </option>
-                <option value={RQFacturacionDeclaraSunat.NO}>
-                  No
-                </option>
-              </select>
-            )}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Sede a declarar
-          </label>
-          <Controller
-            name={`lstFacturacion.${index}.sedeSunat`}
-            control={control}
-            render={({ field }) => (
-              <select
-                {...field}
-                value={field.value || ""}
-                disabled={!isEditable}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Selecione una opción</option>
-                <option value="sede-principal">Sede Principal</option>
-                <option value="oficina-cliente">
-                  Oficina del Cliente
-                </option>
-              </select>
-            )}
-          />
-        </div>
-      </div>
-
       {/* Tabla de montos */}
       <div className="space-y-4">
         {montoFields.map((montoField) => {
-          // Para modalidad 1 (Locación de servicios), solo mostrar montoBase
-          const isVisible =
-            modalidadId !== 1 || montoField.name === "montoBase";
+          const isUniversalField = universalFields.includes(
+            montoField.name
+          );
+
+          // 2. Un campo es visible si
+          const isVisible = isUniversalField || modalidadId !== 1;
 
           return (
-            <div
-              key={montoField.name}
-              className={`flex items-center space-x-4 ${
-                !isVisible ? "hidden" : ""
-              }`}
-            >
-              {/* Label del concepto */}
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700">
-                  {montoField.label}
-                </label>
-              </div>
+            <div key={montoField.name}>
+              <div
+                className={`flex items-center space-x-4 ${
+                  !isVisible ? "hidden" : ""
+                }`}
+              >
+                {/* Label del concepto */}
+                <div className="flex">
+                  <label className="text-sm font-medium text-gray-700">
+                    {montoField.label}
+                  </label>
+                </div>
 
-              {/* Input del valor */}
-              <div className="w-32">
-                <Controller
-                  name={
-                    `lstFacturacion.${index}.${montoField.name}` as any
-                  }
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="number"
-                      disabled={!isEditable}
-                      min="0"
-                      step="0.01"
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0.00"
-                    />
-                  )}
-                />
-                {errors.lstFacturacion?.[index]?.[
-                  montoField.name
-                ] && (
-                  <span className="text-red-500 text-xs mt-1 block">
-                    {
-                      errors.lstFacturacion?.[index]?.[
-                        montoField.name
-                      ]?.message
+                {/* Input del valor */}
+                <div className="w-32">
+                  <Controller
+                    name={
+                      `lstFacturacion.${index}.${montoField.name}` as any
                     }
-                  </span>
-                )}
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="number"
+                        disabled={!isEditable}
+                        min="0"
+                        step="0.01"
+                        className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="0.00"
+                        value={field.value}
+                      />
+                    )}
+                  />
+                  {errors.lstFacturacion?.[index]?.[
+                    montoField.name
+                  ] && (
+                    <span className="text-red-500 text-xs mt-1 block">
+                      {
+                        errors.lstFacturacion?.[index]?.[
+                          montoField.name
+                        ]?.message
+                      }
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );

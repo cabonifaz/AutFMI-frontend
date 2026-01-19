@@ -37,7 +37,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
     { name: "maxMonthlyAmount", label: "M. Mensual Max" },
 
     { name: "minQuarterlyAmount", label: "M. Trimestral Min" },
-    { name: "minQuarterlyAmount", label: "M. Trimestral Max" },
+    { name: "maxQuarterlyAmount", label: "M. Trimestral Max" },
 
     { name: "minSemiAnnualAmount", label: "M. Semestral Min" },
     { name: "maxSemiAnnualAmount", label: "M. Semestral Max" },
@@ -76,7 +76,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {montoFields.map((montoField) => {
           const isUniversalField = universalFields.includes(
-            montoField.name
+            montoField.name,
           );
           const isVisible = isUniversalField || modalidadId !== 1;
 

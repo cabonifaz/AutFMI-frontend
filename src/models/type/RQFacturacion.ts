@@ -19,6 +19,8 @@ export interface RQFacturacion {
   idModalidad: number;
   idGrupoModalidad: RQFacturacionGrupoModalidad;
 
+  currencyType: number;
+
   minBaseAmount: number;
   maxBaseAmount: number;
 

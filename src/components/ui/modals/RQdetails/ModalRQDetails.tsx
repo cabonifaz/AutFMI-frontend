@@ -54,7 +54,7 @@ export const ModalRQDetails = ({
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
   );
 
   // @marker base state
@@ -133,7 +133,7 @@ export const ModalRQDetails = ({
       // map vacancies
       const mappedVacancies = req.lstRqVacantes.map((v) => {
         const tariffFound = tarifario.find(
-          (item) => item.idPerfil === v.idPerfil
+          (item) => item.idPerfil === v.idPerfil,
         );
 
         const tarifa = tariffFound
@@ -187,6 +187,8 @@ export const ModalRQDetails = ({
         req.lstRqFacturacion?.map((f) => ({
           idModalidad: f.idModalidad ?? 0,
           idGrupoModalidad: f.idGrupoModalidad ?? 0,
+
+          currencyType: f.currencyType,
 
           minBaseAmount: f.minBaseAmount,
           maxBaseAmount: f.maxBaseAmount,
@@ -260,7 +262,7 @@ export const ModalRQDetails = ({
       // map vacancies
       const mappedVacancies = req.lstRqVacantes.map((v) => {
         const tariffFound = tarifario.find(
-          (item) => item.idPerfil === v.idPerfil
+          (item) => item.idPerfil === v.idPerfil,
         );
 
         const tarifa = tariffFound
@@ -316,6 +318,8 @@ export const ModalRQDetails = ({
           idModalidad: f.idModalidad ?? 0,
           idGrupoModalidad: f.idGrupoModalidad ?? 0,
 
+          currencyType: f.currencyType,
+
           minBaseAmount: f.minBaseAmount,
           maxBaseAmount: f.maxBaseAmount,
 
@@ -369,7 +373,7 @@ export const ModalRQDetails = ({
   const totalVacs =
     res?.requerimiento.lstRqVacantes.reduce(
       (sum, vacante) => sum + Number(vacante.cantidad || 0),
-      0
+      0,
     ) ?? 0;
 
   const onSubmit = async (data: UpdateBaseRQSchemaType) => {
@@ -414,7 +418,7 @@ export const ModalRQDetails = ({
 
       const response = await postData(
         "/fmi/requirement/update",
-        payload
+        payload,
       );
 
       if (response.idTipoMensaje === 2) {

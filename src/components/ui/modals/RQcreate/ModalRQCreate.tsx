@@ -26,6 +26,7 @@ import {
   TIPO_ARCHIVO,
   TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
+  TIPO_MONEDA,
 } from "../../../../utils/config";
 import { useParams } from "../../../../context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
@@ -71,7 +72,7 @@ export const ModalRQCreate = ({
     loading: loadingParams,
   } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`
   );
 
   const skillsByParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -81,6 +82,7 @@ export const ModalRQCreate = ({
   const rqModes = paramsByMaestro[MODALIDAD_RQ] || [];
   const factModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const tipoArchivoParams = paramsByMaestro[TIPO_ARCHIVO] || [];
+  const currencyOptions = paramsByMaestro[TIPO_MONEDA] || [];
 
   // @marker base states
   const techSkills = skillsByParams.map((s) => ({
@@ -304,6 +306,7 @@ export const ModalRQCreate = ({
                         rqDuration={rqDuration}
                         rqModes={rqModes}
                         factModes={factModes}
+                        currencyOptions={currencyOptions}
                       />
                     ),
                   },

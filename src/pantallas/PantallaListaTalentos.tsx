@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import useTalentos from "../hooks/useTalentos";
 import { PantallaWrapper } from "./PantallaWrapper";
 import { useMenu } from "../context/MenuContext";
@@ -16,6 +17,8 @@ const PantallaListaTalentos = () => {
   const [showFilesModal, setShowFilesModal] = useState(false);
   const [currentTalent, setCurrentTalent] =
     useState<TalentoType | null>(null);
+
+  const location = useLocation();
   const {
     talentos,
     loading,
@@ -59,12 +62,22 @@ const PantallaListaTalentos = () => {
   };
 
   useEffect(() => {
-    const talentId = searchParams.get("talentId");
-
-    if (talentId && !isModalOpen(MD_EMPLOYEE_DETALS)) {
+    if (location.state?.reopenEmployeeModal && location.state?.talento) {
+      setCurrentTalent(location.state.talento);
       openModal(MD_EMPLOYEE_DETALS);
     }
-  }, [searchParams]);
+  }, [location.state]);
+
+  useEffect(() => {
+  if (location.state?.reopenEmployeeModal && location.state?.talentId) {
+    setCurrentTalent({
+      idTalento: location.state.talentId,
+    } as any);
+
+    openModal(MD_EMPLOYEE_DETALS);
+  }
+  }, [location.state]);
+
 
   const handleKeyPress = (
     event: React.KeyboardEvent<HTMLInputElement>

@@ -81,6 +81,7 @@ export const EntryFormSchema = z
     tieneEquipo: z.boolean({
       required_error: "Debe seleccionar si cuenta con equipo",
     }),
+     tipoMoneda: validDropdown, 
   })
   .refine(
     (data) => {

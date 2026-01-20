@@ -59,3 +59,10 @@ export const MODAL_DETAILS_VAC_SKILLS = "modalDetailsVacSkills";
 export const MODAL_ADD_CAREER = "modalAddCareer";
 export const MODAL_UPDATE_CAREER = "modalUpdateCareer";
 export const MD_EMPLOYEE_DETALS = "MD_EMPLOYEE_DETAILS";
+
+// Currency IDs from PARAMETROS table
+export enum CurrencyType {
+  PEN = 1,
+  USD = 2,
+  UNDEFINED = 3,
+}

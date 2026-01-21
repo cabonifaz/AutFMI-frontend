@@ -13,6 +13,8 @@ export interface EmployeeResponseDetail {
   movements: Movement[];
   equipmentRequests: EquipmentRequest[];
   terminations: Termination[];
+  photoUrl?: string; 
+  photoB64:string
 }
 export interface Contract {
   contractId: number; // ID_CONTRATO

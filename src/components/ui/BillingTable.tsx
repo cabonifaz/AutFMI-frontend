@@ -30,17 +30,17 @@ export const BillingTable: React.FC<BillingTableProps> = ({
     { name: "minBaseAmount", label: "M. Básico Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
     { name: "maxBaseAmount", label: "M. Básico Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
 
-    { name: "minTravelAllowance", label: "M. Movilidad Min", bgColor: "bg-green-100 border-2 border-green-500" },
-    { name: "maxTravelAllowance", label: "M. Movilidad Max", bgColor: "bg-green-100 border-2 border-green-500" },
+    { name: "minTravelAllowance", label: "M. Movilidad Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
+    { name: "maxTravelAllowance", label: "M. Movilidad Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
 
-    { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-purple-100 border-2 border-purple-500" },
-    { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-purple-100 border-2 border-purple-500" },
-    
-    { name: "minQuarterlyAmount", label: "M. Trimestral Min", bgColor: "bg-yellow-100 border-2 border-yellow-500" },
-    { name: "maxQuarterlyAmount", label: "M. Trimestral Max", bgColor: "bg-yellow-100 border-2 border-yellow-500" },
+    { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
+    { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
 
-    { name: "minSemiAnnualAmount", label: "M. Semestral Min", bgColor: "bg-pink-100 border-2 border-pink-500" },
-    { name: "maxSemiAnnualAmount", label: "M. Semestral Max", bgColor: "bg-pink-100 border-2 border-pink-500" },
+    { name: "minQuarterlyAmount", label: "M. Trimestral Min", bgColor: "bg-sky-100 border-2 border-sky-500" },
+    { name: "maxQuarterlyAmount", label: "M. Trimestral Max", bgColor: "bg-sky-100 border-2 border-sky-500" },
+
+    { name: "minSemiAnnualAmount", label: "M. Semestral Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
+    { name: "maxSemiAnnualAmount", label: "M. Semestral Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
   ] as const;
 
   const universalFields = ["minBaseAmount", "maxBaseAmount"];

@@ -20,12 +20,39 @@ export const PersonalDetailsTab = ({ details }: MDProps) => {
     onSuccess: (rs) => setPhotoBase64(rs?.fileBase64),
   });
 
+  const { data: cvNormalData } = useDownloadFileFromBDT({
+    request: { fileUrl: details?.cvNormal },
+    url: "bdt/files/document-by-url",
+  });
+
+  const { data: cvFractalEspData } = useDownloadFileFromBDT({
+    request: { fileUrl: details?.cvEs },
+    url: "bdt/files/document-by-url",
+  });
+
+  const { data: cvFractalEngData } = useDownloadFileFromBDT({
+    request: { fileUrl: details?.cvEn },
+    url: "bdt/files/document-by-url",
+  });
+
   const handleOpenCV = (
     type: "cv" | "cv-fractal-esp" | "cv-fractal-eng",
   ) => {
-    console.log(`Abrir CV tipo: ${type}`);
-  };
+    let cvBase64: string | undefined;
 
+    if (type === "cv") {
+      cvBase64 = cvNormalData?.fileBase64;
+    } else if (type === "cv-fractal-esp") {
+      cvBase64 = cvFractalEspData?.fileBase64;
+    } else if (type === "cv-fractal-eng") {
+      cvBase64 = cvFractalEngData?.fileBase64;
+    }
+
+    if (cvBase64) {
+      const pdfUrl = `data:application/pdf;base64,${cvBase64}`;
+      window.open(pdfUrl, "_blank");
+    }
+  };
   const photoUrl = useMemo(() => {
     if (photoBase64) {
       return Utils.getImageSrc(photoBase64);
@@ -77,24 +104,30 @@ export const PersonalDetailsTab = ({ details }: MDProps) => {
 
           {showCVs && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 z-10 min-w-[150px]">
-              <button
-                onClick={() => handleOpenCV("cv")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                CV
-              </button>
-              <button
-                onClick={() => handleOpenCV("cv-fractal-esp")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                CV Fractal ESP
-              </button>
-              <button
-                onClick={() => handleOpenCV("cv-fractal-eng")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                CV Fractal ENG
-              </button>
+              {details?.cvNormal && (
+                <button
+                  onClick={() => handleOpenCV("cv")}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  CV
+                </button>
+              )}
+              {details?.cvEs && (
+                <button
+                  onClick={() => handleOpenCV("cv-fractal-esp")}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  CV Fractal ESP
+                </button>
+              )}
+              {details?.cvEn && (
+                <button
+                  onClick={() => handleOpenCV("cv-fractal-eng")}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  CV Fractal ENG
+                </button>
+              )}
             </div>
           )}
         </div>

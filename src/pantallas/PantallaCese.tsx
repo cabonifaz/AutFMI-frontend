@@ -61,6 +61,7 @@ const PantallaCese = () => {
       idArea: 0,
       idMotivo: 0,
       fchCese: format(new Date(), "yyyy-MM-dd"),
+      fchDevolucionEquipo: "",
     },
   });
 
@@ -75,6 +76,10 @@ const PantallaCese = () => {
       });
     }
   }, [employeeDetails, reset]);
+
+  const hasActiveEquipment = employeeDetails?.equipmentRequests?.some(
+    (eq) => eq.requestId !== undefined
+  ) || false;
 
   const onSubmit: SubmitHandler<OutFormType> = async (data) => {
     let area = "";
@@ -174,6 +179,17 @@ const PantallaCese = () => {
             type="date"
             required={true}
           />
+
+            {hasActiveEquipment && (
+              <InputForm
+                name="fchDevolucionEquipo"
+                control={control}
+                label="Fecha de devolución de equipo"
+                error={errors.fchDevolucionEquipo}
+                type="date"
+                required={true}
+              />
+            )}
 
           {/* Form options */}
           <div className="flex justify-center gap-4">

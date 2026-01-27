@@ -49,10 +49,10 @@ export const PersonalDetailsTab = ({ details }: MDProps) => {
     }
 
     if (cvBase64) {
-      const pdfUrl = `data:application/pdf;base64,${cvBase64}`;
-      window.open(pdfUrl, "_blank");
+    openBase64File(cvBase64, "application/pdf");
     }
   };
+
   const photoUrl = useMemo(() => {
     if (photoBase64) {
       return Utils.getImageSrc(photoBase64);
@@ -62,9 +62,24 @@ export const PersonalDetailsTab = ({ details }: MDProps) => {
 
   const handleOpenPhoto = () => {
     if (photoBase64) {
-      const photoUrl = Utils.getImageSrc(photoBase64);
-      window.open(photoUrl, "_blank");
+      const mimeType = photoBase64.startsWith("/9j/") ? "image/jpeg" : "image/png";
+      openBase64File(photoBase64, mimeType);
     }
+  };
+
+  const openBase64File = (base64: string, mimeType: string) => {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    const blob = new Blob([bytes], { type: mimeType });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank");
+    
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   };
 
   return (

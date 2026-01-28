@@ -21,6 +21,12 @@ export const OutFormSchema = z.object({
       invalid_type_error: "Campo obligatorio",
     })
     .date("Campo obligatorio"),
+
+  fchDevolucionEquipo: z.string().optional().refine(
+    (val) => !val || new Date(val) >= new Date(),
+    "La fecha debe ser futura"
+  ),
+
 });
 
 export type OutFormType = z.infer<typeof OutFormSchema>;

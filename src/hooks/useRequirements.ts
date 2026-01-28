@@ -19,9 +19,18 @@ export const useRequerimientos = () => {
     const [totalPaginas, setTotalPaginas] = useState(0);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [emptyList, setEmptyList] = useState<boolean>(false);
+    const [filters, setFilters] = useState<Omit<FetchRequerimientosParams, 'nPag'>>({
+        cPag: null,
+        idCliente: null,
+        buscar: null,
+        fechaSolicitud: null,
+        estado: null,
+    });
 
     const fetchRequerimientos = useCallback(async (params: FetchRequerimientosParams) => {
         setLoading(true);
+        const { nPag, ...newFilters } = params;
+        setFilters(newFilters);
         try {
             const queryParams: Record<string, string> = {};
             Object.entries(params).forEach(([key, value]) => {
@@ -51,14 +60,10 @@ export const useRequerimientos = () => {
     useEffect(() => {
         const params: FetchRequerimientosParams = {
             nPag: currentPage,
-            cPag: null,
-            idCliente: null,
-            buscar: null,
-            fechaSolicitud: null,
-            estado: null,
+            ...filters,
         };
         fetchRequerimientos(params);
-    }, [currentPage, fetchRequerimientos]);
+    }, [currentPage]);
 
     return { requerimientos, loading, fetchRequerimientos, setCurrentPage, currentPage, emptyList, totalElementos, totalPaginas };
 };

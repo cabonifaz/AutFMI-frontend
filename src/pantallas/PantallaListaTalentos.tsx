@@ -172,10 +172,9 @@ const PantallaListaTalentos = () => {
                       <th className="table-header-cell">
                         Nombres y Apellidos
                       </th>
-                      <th className="table-header-cell">Opciones</th>
-                      <th className="table-header-cell text-center">
-                        Acciones
-                      </th>
+                     <th className="table-header-cell text-center">
+                      Acciones
+                    </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,25 +198,7 @@ const PantallaListaTalentos = () => {
                             </small>
                           </div>
                         </td>
-                        <td className="table-cell">
-                          <div className="flex gap-2">
-                            {/* FILE BUTTONS */}
-                            <button
-                              className="w-12 rounded-lg hover:bg-slate-200 p-2"
-                              aria-label="Descargar PDF"
-                              onClick={handleFilesButtonClick.bind(
-                                null,
-                                talento
-                              )}
-                            >
-                              <img
-                                src="assets/ic_pdf.svg"
-                                alt="download pdf icon"
-                              />
-                            </button>
-                          </div>
-                        </td>
-                        <td>
+                        <td className="table-cell text-center">
                           <button
                             className="w-12 rounded-lg hover:bg-slate-200 p-2"
                             aria-label="Detalles talento"

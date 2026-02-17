@@ -92,10 +92,7 @@ export const TabData = ({ rqStates }: TabProps) => {
               type="checkbox"
               onChange={(e) => {
                 setAutogenRQ(e.target.checked);
-                setValue(
-                  "codigoRQ",
-                  e.target.checked ? "Autogenerado" : ""
-                );
+                setValue("codigoRQ", e.target.checked ? "Autogenerado" : "");
                 clearErrors("codigoRQ");
               }}
               className="input-checkbox"
@@ -182,13 +179,6 @@ export const TabData = ({ rqStates }: TabProps) => {
             </p>
           )}
         </div>
-      </div>
-
-      {/* Botones de acción */}
-      <div className="flex justify-end space-x-4 mt-6 me-1">
-        <button type="submit" className="btn btn-primary">
-          Agregar RQ
-        </button>
       </div>
     </div>
   );

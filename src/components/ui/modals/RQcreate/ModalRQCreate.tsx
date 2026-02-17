@@ -1,8 +1,4 @@
-import {
-  FormProvider,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import { CloseModalButton } from "../../CloseModalButton";
 import { Tabs } from "../../Tabs";
 import {
@@ -72,7 +68,7 @@ export const ModalRQCreate = ({
     loading: loadingParams,
   } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
   );
 
   const skillsByParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -141,7 +137,7 @@ export const ModalRQCreate = ({
             Utils.getFileNameAndExtension(f.name);
           const idTipoArchivo = Utils.getTipoArchivoId(
             extensionArchivo,
-            tipoArchivoParams
+            tipoArchivoParams,
           );
           return {
             string64: base64,
@@ -150,7 +146,7 @@ export const ModalRQCreate = ({
             idTipoArchivo,
             idTipoArchivoRQ: f.idTipoArchivoRQ,
           };
-        }) || []
+        }) || [],
       );
 
       /** Modalidad fact */
@@ -183,8 +179,7 @@ export const ModalRQCreate = ({
         lstVacantes: lstVacantes,
         lstContactos: contacts,
         lstArchivos,
-        idModalidadFact:
-          modalidadFact === "" ? undefined : modalidadFact,
+        idModalidadFact: modalidadFact === "" ? undefined : modalidadFact,
         lstVacanteSkills,
         lstCarreras: lstCareers,
         idDuracionContrato: idDuracionContrato,
@@ -192,29 +187,73 @@ export const ModalRQCreate = ({
       };
 
       // 4. Enviar los datos al servidor
-      const response = await postData(
-        "/fmi/requirement/save",
-        payload
-      );
+      const response = await postData("/fmi/requirement/save", payload);
 
       if (response.idTipoMensaje === 2) {
         onClose();
         updateRQData();
       }
     } catch (error) {
-      console.error("Error al transformar los datos:", error);
       enqueueSnackbar({
-        message: "Ha ocurrido un error inesperado",
+        message: "No se puedo enviar los datos al servidor",
         variant: "error",
       });
     }
   };
 
-  const hasGestionErrors =
-    methods.formState.errors.duracion?.message !== undefined ||
-    methods.formState.errors.idModalidad?.message !== undefined ||
-    methods.formState.errors.idModalidadFact?.message !== undefined ||
-    methods.formState.errors.idDuracion?.message !== undefined;
+  const managementHasErrors = () => {
+    const { errors } = methods.formState;
+
+    // Validamos errores en campos directos y objetos anidados (contrato)
+    const hasBaseErrors =
+      !!errors.idDuracion ||
+      !!errors.tieneDuracion ||
+      !!errors.duracion ||
+      !!errors.idModalidad ||
+      !!errors.idModalidadFact ||
+      !!errors.contrato?.duracionContrato ||
+      !!errors.contrato?.idDuracionContrato;
+
+    // Validamos errores en el arreglo lstFacturacion
+    const hasFacturacionErrors = !!errors.lstFacturacion;
+
+    return hasBaseErrors || hasFacturacionErrors;
+  };
+
+  const vacantesHasErrors = () => {
+    const errors = methods.formState.errors;
+
+    return (
+      (!!methods.getValues("idCliente") &&
+        methods.getValues("lstVacantes").length === 0) ||
+      !!errors.lstCarreras ||
+      !!errors.lstVacanteSkills ||
+      !!errors.lstVacantes
+    );
+  };
+
+  const rqHasErrors = () => {
+    const { errors } = methods.formState;
+
+    return !!(
+      errors.codigoRQ ||
+      errors.descripcion ||
+      errors.idEstado ||
+      errors.titulo ||
+      errors.fechaSolicitud ||
+      errors.fechaVencimiento
+    );
+  };
+
+  const filesHasErrors = () => {
+    const { errors } = methods.formState;
+    return !!errors.lstArchivos;
+  };
+
+  const clientHasErrors = () => {
+    const { errors } = methods.formState;
+    return !!(errors.idCliente || errors.lstContactos);
+  };
 
   return (
     <>
@@ -224,9 +263,7 @@ export const ModalRQCreate = ({
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <header className="flex items-center justify-between">
-            <h2 className="text-lg font-bold mb-2">
-              Agregar Nuevo RQ
-            </h2>
+            <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
             <CloseModalButton onClick={onClose} />
           </header>
           <FormProvider {...methods}>
@@ -236,13 +273,7 @@ export const ModalRQCreate = ({
                 tabs={[
                   {
                     label: (
-                      <TabLabel
-                        label="Cliente"
-                        hasError={
-                          methods.formState.errors.idCliente
-                            ?.message !== undefined
-                        }
-                      />
+                      <TabLabel label="Cliente" hasError={clientHasErrors()} />
                     ),
                     children: (
                       <TabClients
@@ -253,13 +284,7 @@ export const ModalRQCreate = ({
                   },
                   {
                     label: (
-                      <TabLabel
-                        label="Datos RQ"
-                        hasError={
-                          !!methods.formState.errors.titulo ||
-                          !!methods.formState.errors.descripcion
-                        }
-                      />
+                      <TabLabel label="Datos RQ" hasError={rqHasErrors()} />
                     ),
                     children: <TabData rqStates={rqStates} />,
                   },
@@ -268,12 +293,7 @@ export const ModalRQCreate = ({
                     label: (
                       <TabLabel
                         label="Vacantes"
-                        hasError={
-                          (!!methods.getValues("idCliente") &&
-                            methods.getValues("lstVacantes")
-                              .length === 0) ||
-                          !!methods.formState.errors.lstCarreras
-                        }
+                        hasError={vacantesHasErrors()}
                       />
                     ),
                     children: (
@@ -286,7 +306,9 @@ export const ModalRQCreate = ({
                     ),
                   },
                   {
-                    label: "Archivos",
+                    label: (
+                      <TabLabel label="Archivos" hasError={filesHasErrors()} />
+                    ),
                     children: (
                       <TabFiles
                         fileOptions={fileOptions}
@@ -298,7 +320,7 @@ export const ModalRQCreate = ({
                     label: (
                       <TabLabel
                         label="Gestión"
-                        hasError={hasGestionErrors}
+                        hasError={managementHasErrors()}
                       />
                     ),
                     children: (
@@ -312,6 +334,12 @@ export const ModalRQCreate = ({
                   },
                 ]}
               />
+              {/* Botones de acción */}
+              <div className="flex justify-end space-x-4 mt-6 me-1">
+                <button type="submit" className="btn btn-primary">
+                  Agregar RQ
+                </button>
+              </div>
             </form>
           </FormProvider>
         </div>

@@ -4,9 +4,7 @@ const vacanteSchema = z
   .object({
     idRequerimientoVacante: z.number(),
     idPerfil: z.number(),
-    cantidad: z.coerce
-      .number()
-      .min(1, "La cantidad no puede ser menor a 1"),
+    cantidad: z.coerce.number().min(1, "La cantidad no puede ser menor a 1"),
     idEstado: z.number(),
     tarifa: z.string().optional().nullable(),
     tarifaInicial: z.coerce.string().optional(),
@@ -112,12 +110,8 @@ const rqFacturacionSchema = z
   })
   .superRefine((data, ctx) => {
     // Función auxiliar para validar pares
-    const validateRange = (
-      min: number,
-      max: number,
-      path: string,
-    ) => {
-      if (max > 0 && max < min) {
+    const validateRange = (min: number, max: number, path: string) => {
+      if (max < min) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "El monto máximo no puede ser menor al mínimo",
@@ -126,11 +120,7 @@ const rqFacturacionSchema = z
       }
     };
 
-    validateRange(
-      data.minBaseAmount,
-      data.maxBaseAmount,
-      "maxBaseAmount",
-    );
+    validateRange(data.minBaseAmount, data.maxBaseAmount, "maxBaseAmount");
     validateRange(
       data.minTravelAllowance,
       data.maxTravelAllowance,
@@ -157,9 +147,7 @@ export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
     codigoRQ: z.string().optional(),
-    fechaSolicitud: z
-      .string()
-      .min(1, "La fecha de solicitud es obligatoria"),
+    fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z
       .string()
       .min(1, "La descripción es obligatoria")
@@ -167,10 +155,7 @@ export const UpdateBaseRQSchema = z
     titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
-    duracion: z.coerce
-      .number()
-      .min(1, "La duración no puede ser 0")
-      .optional(),
+    duracion: z.coerce.number().min(1, "La duración no puede ser 0").optional(),
     idDuracion: z
       .number({
         required_error: "Elija una duración",
@@ -261,6 +246,4 @@ export const UpdateBaseRQSchema = z
     }
   });
 
-export type UpdateBaseRQSchemaType = z.infer<
-  typeof UpdateBaseRQSchema
->;
+export type UpdateBaseRQSchemaType = z.infer<typeof UpdateBaseRQSchema>;

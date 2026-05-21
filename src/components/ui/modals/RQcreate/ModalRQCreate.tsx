@@ -30,6 +30,7 @@ import { TabManagement } from "./tabs/TabManagment";
 import { Utils } from "../../../../utils/utils";
 import { usePostHook } from "../../../../hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
 
 interface TabLabelProps {
   label: string;
@@ -154,6 +155,7 @@ export const ModalRQCreate = ({
 
       // Mapea vacantes a formato esperado
       const lstVacantes = data.lstVacantes.map((vacante) => ({
+        tempVacancyId: vacante.tempVacancyId,
         idPerfil: Number(vacante.idPerfil),
         cantidad: Number(vacante.cantidad),
         tarifaFinal: vacante.tarifaFinal,

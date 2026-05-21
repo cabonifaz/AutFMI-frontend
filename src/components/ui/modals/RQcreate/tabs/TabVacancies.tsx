@@ -1,3 +1,4 @@
+
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../../models/schema/NewRQSchema";
 import { Utils } from "../../../../../utils/utils";
@@ -19,7 +20,13 @@ import { NumberInputV2 } from "../../../../forms/NumberInputV2";
 import { AddCareerModal, CareerProps } from "../../../ModalAddCareer";
 import { SearchableSelect } from "../../../SearchableSelect";
 
-type SkillsPayload = BaseSkillProps & { idPerfil: number };
+type SkillsPayload = BaseSkillProps & {
+  tempVacancyId: string;
+};
+
+type VacancyCareerPayload = CareerProps & {
+  tempVacancyId: string;
+};
 
 interface TabProps {
   tarifario: Tarifa[];
@@ -28,35 +35,27 @@ interface TabProps {
   refetchParams: (idMasters: string) => Promise<void>;
 }
 
+const generateTempVacancyId = () => crypto.randomUUID();
+
 export const TabVacancies = ({
   tarifario,
   techSkills,
   availableDegrees,
   refetchParams,
 }: TabProps) => {
-  // @marker base states
-  const [cantidadesVacantes, setCantidadesVacantes] = useState<
-    number[]
-  >([]);
   const { openModal, isModalOpen, closeModal } = useModal();
 
-  /** Select skills for Vacante*/
   const [selectedTechSkills, setSelectedTechSkills] = useState<
-    Record<number, SkillsPayload[]>
+    Record<string, SkillsPayload[]>
   >({});
 
-  /**Select career for Vacante */
   const [selectedCareers, setSelectedCareers] = useState<
-    Record<number, CareerProps[]>
+    Record<string, VacancyCareerPayload[]>
   >({});
 
-  const [careerProfile, setCareerProfile] = useState<number | null>(
-    null
-  );
+  const [currentVacancyId, setCurrentVacancyId] = useState<string | null>(null);
 
-  const [currentProfile, setCurrentProfile] = useState<number | null>(
-    null
-  );
+  const [careerVacancyId, setCareerVacancyId] = useState<string | null>(null);
 
   const {
     register,
@@ -68,48 +67,60 @@ export const TabVacancies = ({
     watch,
   } = useFormContext<newRQSchemaType>();
 
-  // Sincroniza selectedTechSkills con el form context - padre
-  useEffect(() => {
-    const lstVacanteSkills = Object.entries(
-      selectedTechSkills
-    ).flatMap(([idPerfilStr, skills]) => {
-      const idPerfil = Number(idPerfilStr);
-      return skills.map((skill) => ({
-        idPerfil,
-        idSkill: skill.id,
-        anios: skill.years,
-        isOptional: skill.isOptional,
-      }));
-    });
-    setValue("lstVacanteSkills", lstVacanteSkills, {
-      shouldValidate: false,
-    });
-  }, [selectedTechSkills, setValue]);
-
-  // Sincroniza selectedCareers con el form context - padre
-  useEffect(() => {
-    const lstCarreras = Object.entries(selectedCareers).flatMap(
-      ([idPerfilStr, careers]) => {
-        const idPerfil = Number(idPerfilStr);
-        return careers.map((c) => ({
-          idPerfil,
-          carrera: c.label,
-          idGrado: c.degreeId,
-          isOptional: c.isOptional,
-        }));
-      }
-    );
-    setValue("lstCarreras", lstCarreras, {
-      shouldValidate: false,
-    });
-  }, [selectedCareers, setValue]);
-
   const currentVacantes = watch("lstVacantes");
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "lstVacantes",
   });
+
+  useEffect(() => {
+    const lstVacanteSkills = Object.entries(selectedTechSkills).flatMap(
+      ([tempVacancyId, skills]) => {
+        const vacancy = currentVacantes.find(
+          (v) => v.tempVacancyId === tempVacancyId
+        );
+
+        if (!vacancy) return [];
+
+        return skills.map((skill) => ({
+          tempVacancyId,
+          idPerfil: vacancy.idPerfil,
+          idSkill: skill.id,
+          anios: skill.years,
+          isOptional: skill.isOptional,
+        }));
+      }
+    );
+
+    setValue("lstVacanteSkills", lstVacanteSkills, {
+      shouldValidate: false,
+    });
+  }, [selectedTechSkills, currentVacantes, setValue]);
+
+  useEffect(() => {
+    const lstCarreras = Object.entries(selectedCareers).flatMap(
+      ([tempVacancyId, careers]) => {
+        const vacancy = currentVacantes.find(
+          (v) => v.tempVacancyId === tempVacancyId
+        );
+
+        if (!vacancy) return [];
+
+        return careers.map((career) => ({
+          tempVacancyId,
+          idPerfil: vacancy.idPerfil,
+          carrera: career.label,
+          idGrado: career.degreeId,
+          isOptional: career.isOptional,
+        }));
+      }
+    );
+
+    setValue("lstCarreras", lstCarreras, {
+      shouldValidate: false,
+    });
+  }, [selectedCareers, currentVacantes, setValue]);
 
   const handleAddVacante = () => {
     const clientId = getValues("idCliente");
@@ -122,59 +133,51 @@ export const TabVacancies = ({
       return;
     }
 
-    append({ idPerfil: 0, cantidad: 1, tarifaFinal: 0 });
-    setCantidadesVacantes((prev) => [...prev, 1]);
+    append({
+      tempVacancyId: generateTempVacancyId(),
+      idPerfil: 0,
+      cantidad: 1,
+      tarifaFinal: 0,
+    });
+
     clearErrors("lstVacantes");
   };
 
   const handleRemoveVacante = (index: number) => {
-    const idPerfil = getValues(`lstVacantes.${index}.idPerfil`);
+    const tempVacancyId = getValues(
+      `lstVacantes.${index}.tempVacancyId`
+    );
 
     remove(index);
-    setCantidadesVacantes((prev) =>
-      prev.filter((_, i) => i !== index)
-    );
 
-    // Eliminar las habilidades usando el idPerfil
-    if (idPerfil && idPerfil !== 0) {
-      setSelectedTechSkills((prev) => {
-        const newSkills = { ...prev };
-        delete newSkills[idPerfil];
-        return newSkills;
-      });
-      // Remove careers for vacancy
-      setSelectedCareers((prev) => {
-        const newCareers = { ...prev };
-        delete newCareers[idPerfil];
-        return newCareers;
-      });
-    }
+    setSelectedTechSkills((prev) => {
+      const next = { ...prev };
+      delete next[tempVacancyId];
+      return next;
+    });
+
+    setSelectedCareers((prev) => {
+      const next = { ...prev };
+      delete next[tempVacancyId];
+      return next;
+    });
   };
 
-  const getAvailableProfiles = (currentIndex: number) => {
+  const getAvailableProfiles = () => {
     if (getValues("idCliente") === 0) return [];
-
-    const selectedProfiles = currentVacantes
-      .filter((_, index) => index !== currentIndex)
-      .map((v) => v.idPerfil)
-      .filter((id) => id !== 0);
-
-    return tarifario.filter(
-      (perfil) => !selectedProfiles.includes(perfil.idPerfil)
-    );
+    return tarifario;
   };
 
   const handleProfileChange = (index: number, value: string) => {
-    const idPerfilAnterior = getValues(
-      `lstVacantes.${index}.idPerfil`
-    );
     const idPerfil = Number(value);
+
     setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
 
     const tarifa =
       tarifario
         .find((item) => item.idPerfil === idPerfil)
         ?.tarifa.toFixed(2) || "-";
+
     const moneda =
       tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
       "S/.";
@@ -189,33 +192,11 @@ export const TabVacancies = ({
       `lstVacantes.${index}.tarifa`,
       `${moneda} ${Utils.formatCoin(Number(tarifa))}`
     );
+
     clearErrors(`lstVacantes.${index}.idPerfil`);
-
-    // Si cambió el perfil, eliminar las habilidades del perfil anterior
-    if (
-      idPerfilAnterior &&
-      idPerfilAnterior !== 0 &&
-      idPerfilAnterior !== idPerfil
-    ) {
-      setSelectedTechSkills((prev) => {
-        const newSkills = { ...prev };
-        delete newSkills[idPerfilAnterior];
-        return newSkills;
-      });
-    }
   };
 
-  const openModalAddCareer = (careerProfile: number) => {
-    setCareerProfile(careerProfile);
-    if (!careerProfile || careerProfile === 0) {
-      const msg = "Selecciona una vacante para continuar";
-      enqueueSnackbar({ message: msg, variant: "warning" });
-      return;
-    }
-    openModal(MODAL_ADD_CAREER);
-  };
-
-  const handleOpenModal = (profileId: number) => {
+  const handleOpenModal = (tempVacancyId: string, profileId: number) => {
     if (!profileId || profileId === 0) {
       enqueueSnackbar({
         message:
@@ -224,97 +205,119 @@ export const TabVacancies = ({
       });
       return;
     }
-    setCurrentProfile(profileId);
+
+    setCurrentVacancyId(tempVacancyId);
     openModal(MODAL_ADD_TECH_SKILL);
   };
 
-  const getTotalCareersForProfile = (profileId: number): number => {
-    if (!profileId || profileId === 0) return 0;
-    return selectedCareers[profileId]?.length || 0;
+  const openModalAddCareer = (
+    tempVacancyId: string,
+    profileId: number
+  ) => {
+    if (!profileId || profileId === 0) {
+      enqueueSnackbar({
+        message: "Selecciona una vacante para continuar",
+        variant: "warning",
+      });
+      return;
+    }
+
+    setCareerVacancyId(tempVacancyId);
+    openModal(MODAL_ADD_CAREER);
   };
 
-  const getTotalSkillsForProfile = (profileId: number): number => {
-    if (!profileId || profileId === 0) return 0;
-    return selectedTechSkills[profileId]?.length || 0;
-  };
-
-  const handleCloseModalSkills = () => {
-    setCurrentProfile(null);
-    closeModal(MODAL_ADD_TECH_SKILL);
-  };
-
-  /** Handle save tech skills */
   const handleSaveTechSkills = (skills: BaseSkillProps[]) => {
-    if (!currentProfile) return;
-    const vacanteSkills: SkillsPayload[] = skills.map((skill) => ({
-      idPerfil: currentProfile,
+    if (!currentVacancyId) return;
+
+    const vacancySkills: SkillsPayload[] = skills.map((skill) => ({
+      tempVacancyId: currentVacancyId,
       id: skill.id,
       years: skill.years,
-      label: skill?.label || "",
+      label: skill.label,
       isOptional: skill.isOptional,
     }));
+
     setSelectedTechSkills((prev) => ({
       ...prev,
-      [currentProfile]: vacanteSkills,
+      [currentVacancyId]: vacancySkills,
     }));
-  };
-
-  /**Get initial skills */
-  const getInitialSkills = (profileId: number): SkillsPayload[] => {
-    if (!profileId || profileId === 0) return [];
-    const skills = selectedTechSkills[profileId] || [];
-
-    return skills.map((skill) => ({
-      idPerfil: profileId,
-      id: skill.id,
-      years: skill.years,
-      label: skill?.label || "",
-      isOptional: skill.isOptional,
-    }));
-  };
-
-  const closeModalAddCareer = () => {
-    setCareerProfile(null);
-    closeModal(MODAL_ADD_CAREER);
   };
 
   const handleSaveCarrers = (careers: CareerProps[]) => {
-    if (!careerProfile) return;
+    if (!careerVacancyId) return;
+
+    const formattedCareers: VacancyCareerPayload[] = careers.map(
+      (career) => ({
+        ...career,
+        tempVacancyId: careerVacancyId,
+      })
+    );
 
     setSelectedCareers((prev) => ({
       ...prev,
-      [careerProfile]: careers,
+      [careerVacancyId]: formattedCareers,
     }));
-    setCareerProfile(null);
   };
 
-  const getInialCareers = (careerProfile: number): CareerProps[] => {
-    if (!careerProfile || careerProfile === 0) return [];
-
-    return selectedCareers[careerProfile] || [];
+  const getInitialSkills = (tempVacancyId: string) => {
+    return selectedTechSkills[tempVacancyId] || [];
   };
+
+  const getInitialCareers = (tempVacancyId: string) => {
+    return selectedCareers[tempVacancyId] || [];
+  };
+
+  const getTotalSkillsForVacancy = (tempVacancyId: string) => {
+    return selectedTechSkills[tempVacancyId]?.length || 0;
+  };
+
+  const getTotalCareersForVacancy = (tempVacancyId: string) => {
+    return selectedCareers[tempVacancyId]?.length || 0;
+  };
+
+  const closeModalSkills = () => {
+    setCurrentVacancyId(null);
+    closeModal(MODAL_ADD_TECH_SKILL);
+  };
+
+  const closeModalCareers = () => {
+    setCareerVacancyId(null);
+    closeModal(MODAL_ADD_CAREER);
+  };
+
+  const availableProfiles = getAvailableProfiles();
 
   return (
     <>
       {isModalOpen(MODAL_ADD_TECH_SKILL) && (
         <TechSkillsModal
-          onClose={handleCloseModalSkills}
+          onClose={closeModalSkills}
           availableSkills={techSkills}
           onSave={handleSaveTechSkills}
-          initialSkills={getInitialSkills(currentProfile || 0)}
+          initialSkills={
+            currentVacancyId
+              ? getInitialSkills(currentVacancyId)
+              : []
+          }
           refetchAvailableSkills={() =>
             refetchParams(`${HABILIDADES_TECNICAS}`)
           }
         />
       )}
+
       {isModalOpen(MODAL_ADD_CAREER) && (
         <AddCareerModal
           degreeOptions={availableDegrees}
-          initialCareers={getInialCareers(careerProfile || 0)}
+          initialCareers={
+            careerVacancyId
+              ? getInitialCareers(careerVacancyId)
+              : []
+          }
           onSave={handleSaveCarrers}
-          onClose={closeModalAddCareer}
+          onClose={closeModalCareers}
         />
       )}
+
       <div className="flex flex-col h-[calc(570px-120px)]">
         <div className="mb-1 text-end">
           <button
@@ -325,39 +328,31 @@ export const TabVacancies = ({
             Agregar
           </button>
         </div>
+
         <div className="p-1 flex-1 overflow-y-auto">
           <div className="table-container h-full">
             <div className="table-wrapper h-full overflow-y-auto custom-scroll">
               <table className="table">
                 <thead>
                   <tr className="table-header">
-                    <th scope="col" className="table-header-cell">
+                    <th className="table-header-cell">
                       Perfil profesional
                     </th>
-                    <th scope="col" className="table-header-cell">
-                      Cantidad
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Tarifa
-                    </th>
-                    <th scope="col" className="table-header-cell">
+                    <th className="table-header-cell">Cantidad</th>
+                    <th className="table-header-cell">Tarifa</th>
+                    <th className="table-header-cell">
                       Tarifa Final
                     </th>
-                    <th scope="col" className="table-header-cell">
+                    <th className="table-header-cell">
                       Tipo Tarifa
                     </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell text-center"
-                    >
+                    <th className="table-header-cell text-center">
                       Otros
                     </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                    ></th>
+                    <th className="table-header-cell"></th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {fields.length <= 0 ? (
                     <tr>
@@ -367,27 +362,11 @@ export const TabVacancies = ({
                     </tr>
                   ) : (
                     fields.map((field, index) => {
-                      const availableProfiles =
-                        getAvailableProfiles(index);
-                      const currentProfile =
+                      const rowProfileId =
                         currentVacantes[index]?.idPerfil;
-                      const showCurrentProfile =
-                        currentProfile === 0 ||
-                        availableProfiles.some(
-                          (p) => p.idPerfil === currentProfile
-                        ) ||
-                        !tarifario.some(
-                          (p) => p.idPerfil === currentProfile
-                        );
 
-                      const optionsToShow = showCurrentProfile
-                        ? [...availableProfiles]
-                        : [
-                            ...availableProfiles,
-                            ...tarifario.filter(
-                              (p) => p.idPerfil === currentProfile
-                            ),
-                          ];
+                      const tempVacancyId =
+                        currentVacantes[index]?.tempVacancyId;
 
                       const tipoTarifa =
                         tarifario.find(
@@ -405,94 +384,73 @@ export const TabVacancies = ({
                                   value: 0,
                                   label: "Seleccione un perfil",
                                 },
-                                ...optionsToShow.map(
+                                ...availableProfiles.map(
                                   (perfil: Tarifa) => ({
                                     value: perfil.idPerfil,
                                     label: perfil.perfil,
                                   })
                                 ),
                               ]}
-                              value={currentProfile || 0}
+                              value={rowProfileId || 0}
                               onChange={(value) => {
                                 handleProfileChange(
                                   index,
                                   value.toString()
                                 );
-                                setValue(
-                                  `lstVacantes.${index}.idPerfil`,
-                                  Number(value)
-                                );
                               }}
                               placeholder="Seleccione un perfil"
                               disabled={false}
                             />
-                            {errors.lstVacantes?.[index]
-                              ?.idPerfil && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.lstVacantes[index]?.idPerfil
-                                    ?.message
-                                }
-                              </p>
-                            )}
                           </td>
+
                           <td className="table-cell">
-                            <div className="flex">
-                              <div className="flex flex-col gap-1 relative w-32">
-                                <NumberInputV2<newRQSchemaType>
-                                  control={control}
-                                  name={`lstVacantes.${index}.cantidad`}
-                                  error={
-                                    errors.lstVacantes?.[index]
-                                      ?.cantidad?.message
-                                  }
-                                />
-                              </div>
-                            </div>
+                            <NumberInputV2<newRQSchemaType>
+                              control={control}
+                              name={`lstVacantes.${index}.cantidad`}
+                              error={
+                                errors.lstVacantes?.[index]?.cantidad
+                                  ?.message
+                              }
+                            />
                           </td>
+
                           <td className="table-cell">
                             <input
                               {...register(
                                 `lstVacantes.${index}.tarifa`
                               )}
-                              defaultValue={`${Utils.formatCoin(
-                                Number(
-                                  getValues(
-                                    `lstVacantes.${index}.tarifa`
-                                  )
-                                )
-                              )}`}
                               type="text"
-                              id="v-tarifa"
                               className="input-readonly-text w-32"
                               readOnly
                             />
                           </td>
+
                           <td className="table-cell">
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold">
                                 {`${
                                   tarifario.find(
                                     (t) =>
-                                      t.idPerfil === currentProfile
+                                      t.idPerfil === rowProfileId
                                   )?.moneda || "S/."
                                 }`}
                               </span>
-                              <div className="flex flex-col gap-1 relative">
-                                <NumberInputV2<newRQSchemaType>
-                                  control={control}
-                                  name={`lstVacantes.${index}.tarifaFinal`}
-                                  error={
-                                    errors.lstVacantes?.[index]
-                                      ?.tarifaFinal?.message
-                                  }
-                                />
-                              </div>
+
+                              <NumberInputV2<newRQSchemaType>
+                                control={control}
+                                name={`lstVacantes.${index}.tarifaFinal`}
+                                error={
+                                  errors.lstVacantes?.[index]
+                                    ?.tarifaFinal?.message
+                                }
+                              />
                             </div>
                           </td>
+
                           <td className="table-cell">
-                            <p>{tipoTarifa}</p>
+                            {tipoTarifa}
                           </td>
+
                           <td className="table-cell text-center relative group">
                             <div className="flex items-center gap-3 justify-center">
                               <button
@@ -500,7 +458,10 @@ export const TabVacancies = ({
                                 className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                 title="Agregar carreras"
                                 onClick={() =>
-                                  openModalAddCareer(currentProfile)
+                                  openModalAddCareer(
+                                    tempVacancyId,
+                                    rowProfileId
+                                  )
                                 }
                               >
                                 <img
@@ -508,34 +469,40 @@ export const TabVacancies = ({
                                   src="/assets/ic_student.png"
                                   alt="admin-settings-male"
                                 />
-                                {/**@marker skills careers */}
+
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalCareersForProfile(
-                                    currentProfile
+                                  {getTotalCareersForVacancy(
+                                    tempVacancyId
                                   )}
                                 </span>
                               </button>
+
                               <button
                                 type="button"
                                 className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                 title="Agregar habilidades"
-                                onClick={() => {
-                                  handleOpenModal(currentProfile);
-                                }}
+                                onClick={() =>
+                                  handleOpenModal(
+                                    tempVacancyId,
+                                    rowProfileId
+                                  )
+                                }
                               >
                                 <img
                                   src="/assets/ic_skills.png"
                                   alt="icon add"
                                   className="w-6 h-6"
                                 />
+
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalSkillsForProfile(
-                                    currentProfile
+                                  {getTotalSkillsForVacancy(
+                                    tempVacancyId
                                   )}
                                 </span>
                               </button>
                             </div>
                           </td>
+
                           <td className="table-cell">
                             <button
                               type="button"
@@ -565,3 +532,5 @@ export const TabVacancies = ({
     </>
   );
 };
+
+

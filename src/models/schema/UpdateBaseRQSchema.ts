@@ -151,7 +151,7 @@ export const UpdateBaseRQSchema = z
     descripcion: z
       .string()
       .min(1, "La descripción es obligatoria")
-      .max(255, "La descripción no puede exceder los 255 caracteres"),
+      .max(1000, "La descripción no puede exceder los 1000 caracteres"),
     titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),

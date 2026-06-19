@@ -86,6 +86,7 @@ export const PantallaRequerimientos = () => {
     estado,
     fechaSolicitud,
   }: SearchProps) => {
+    setCurrentPage(1);
     fetchRequerimientos({
       nPag: 1,
       idCliente: idCliente,

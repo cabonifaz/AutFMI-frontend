@@ -1,8 +1,6 @@
 import { enqueueSnackbar } from "notistack";
-import { RqFileResponse } from "../models/response/RqFileResponse";
-import { apiClientWithToken } from "../utils/apiClient";
 import { useState } from "react";
-import { downloadAnyFile } from "../utils/util";
+import { generateRqDownloadUrl } from "../services/rqFile.service";
 
 export const useDownloadRqFile = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,33 +9,14 @@ export const useDownloadRqFile = () => {
     try {
       setIsLoading(true);
 
-      const response = await apiClientWithToken.get<RqFileResponse>(
-        `fmi/requirement/file?idArchivo=${rqFile}`
-      );
+      const { data } = await generateRqDownloadUrl({ idArchivo: rqFile });
 
-      if (!response || !response.data) {
-        enqueueSnackbar({ message: "Respuesta inválida", variant: "error" });
-        return;
-      }
-
-      const { file, result, ext } = response.data;
-      if (
-        result?.idTipoMensaje === 2 &&
-        typeof file === "string" &&
-        file.trim() !== ""
-      ) {
-        try {
-          downloadAnyFile(file, ext);
-        } catch (innerErr) {
-          console.error("Error in downloadAnyFile:", innerErr);
-          enqueueSnackbar({
-            message: "No se pudo descargar el archivo",
-            variant: "error",
-          });
-        }
+      if (data.result?.idTipoMensaje === 2 && data.url) {
+        // Descarga directa desde S3 con URL pre-firmada (no pasa por el backend).
+        window.open(data.url, "_blank");
       } else {
         enqueueSnackbar({
-          message: "Archivo no encontrado o inválido",
+          message: "Archivo no disponible",
           variant: "warning",
         });
       }

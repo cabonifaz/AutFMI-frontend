@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import useDownloadPdf from "../../../../../hooks/useDownloadPdf";
 import { ReqTalento } from "../../../../../models/type/ReqTalento";
 import { ESTADO_ATENDIDO } from "../../../../../utils";
 import { Loading } from "../../../Loading";
+import { ModalPostulantFiles } from "../../ModalPostulantFiles";
 
 const notifyWarning = (message: string) =>
   enqueueSnackbar({ message, variant: "warning" });
@@ -23,6 +25,9 @@ export const TabPostulant = ({
   /** Fetch CV for Talent */
   const { fetchAndOpenPdf, loading: downloadPdfLoading } =
     useDownloadPdf();
+
+  // Postulante cuyo modal de archivos está abierto (null = cerrado).
+  const [filesFor, setFilesFor] = useState<ReqTalento | null>(null);
 
   const handleDownloadCV = (talentIndex: number) => {
     // "/bdt/talent/file?fileId=${data}"
@@ -105,12 +110,15 @@ export const TabPostulant = ({
                 <th scope="col" className="table-header-cell">
                   Perfil
                 </th>
+                <th scope="col" className="table-header-cell">
+                  Archivos
+                </th>
               </tr>
             </thead>
             <tbody>
               {talents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="table-empty">
+                  <td colSpan={9} className="table-empty">
                     No hay postulantes disponibles.
                   </td>
                 </tr>
@@ -186,6 +194,20 @@ export const TabPostulant = ({
                       </span>
                     </td>
                     <td className="table-cell">{t.perfil}</td>
+                    <td className="text-center">
+                      <button
+                        type="button"
+                        title="Ver archivos del postulante"
+                        className="p-1 hover:rounded-full hover:bg-gray-100 hover:shadow-lg"
+                        onClick={() => setFilesFor(t)}
+                      >
+                        <img
+                          src="/assets/ic_preview_file.png"
+                          alt="archivos"
+                          className="h-5 w-5"
+                        />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -193,6 +215,14 @@ export const TabPostulant = ({
           </table>
         </div>
       </div>
+
+      {filesFor && (
+        <ModalPostulantFiles
+          rqId={rqId}
+          postulant={filesFor}
+          onClose={() => setFilesFor(null)}
+        />
+      )}
     </>
   );
 };

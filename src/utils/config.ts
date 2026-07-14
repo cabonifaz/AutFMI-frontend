@@ -30,6 +30,23 @@ export const GRADO_ESTUDIO = "38";
 export const TIPO_ARCHIVOS_RQ = "41";
 export const TIPO_ARCHIVO = "17";
 
+// ARCHIVOS DE POSTULANTE (REQUERIMIENTO_TALENTO)
+// Maestro dinámico de tipos de documento del postulante (num1=id, string1=descripción).
+export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
+export const POSTULANT_ALLOWED_EXTENSIONS = [
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "zip",
+];
+export const POSTULANT_MAX_FILE_SIZE_MB = 10;
+
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
 export const ESTADO_DATOS_COMPLETOS = 2;

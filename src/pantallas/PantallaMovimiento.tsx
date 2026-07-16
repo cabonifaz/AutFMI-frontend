@@ -1,11 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { TalentoType } from "../models/type/TalentoType";
 import { usePostHook } from "../hooks/usePostHook";
-import {
-  MODALIDAD_LOC_SERVICIOS,
-  TIPO_MONEDA,
-  UNIDAD,
-} from "../utils/config";
+import useFetchEmpleado from "../hooks/useFetchEmpleado";
+import { TIPO_MONEDA, UNIDAD } from "../utils/config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import {
@@ -38,6 +35,9 @@ const PantallaMovimiento = () => {
   const { postData, postloading } = usePostHook();
   
   const { clientes, loading: clientsLoading } = useFetchClients();
+  // Contract no expone el cliente por id, solo su razon social. El id vive en
+  // el empleado, igual que lo resuelve PantallaSolicitarEquipo.
+  const { employee } = useFetchEmpleado(employeeDetails?.talentId);
   const { paramsByMaestro, loading: paramLoading } = useParams(
     `${UNIDAD}, ${TIPO_MONEDA}`
   );
@@ -88,16 +88,16 @@ const PantallaMovimiento = () => {
       nombres: employeeDetails.names || "",
       apellidoPaterno: employeeDetails.lastname || "",
       apellidoMaterno: employeeDetails.surname || "",
-      idArea: Number((contract as any).idArea || (contract as any).areaId) || 0,
-      idCliente: Number((contract as any).idCliente || (contract as any).clientId) || 0,
-      montoBase: Number(contract.baseAmount) || 0, 
-      puesto: contract.rqTitle || "", 
+      idArea: Number(contract?.areaId) || 0,
+      idCliente: Number(employee?.idCliente) || 0,
+      montoBase: Number(contract.baseAmount) || 0,
+      puesto: contract.rqTitle || "",
       idMoneda: 0,
       idMovArea: 0,
       horario: "",
     });
   }
-  }, [employeeDetails, contract, reset]);
+  }, [employeeDetails, contract, employee, reset]);
 
   const onSubmit: SubmitHandler<MovementFormType> = async (data) => {
   const nombreCliente = data?.idCliente 
@@ -130,7 +130,9 @@ const PantallaMovimiento = () => {
     idArea: Number(data.idArea) || 0,
     idCliente: data.idCliente ? Number(data.idCliente) : 0,
     idMovArea: Number(data.idMovArea) || 0,
-    idModalidad: Number((contract as any)?.idModalidad) || 0,
+    // Contract no tiene idModalidad; el campo real es contractTypeId. Antes
+    // esto viajaba siempre en 0.
+    idModalidad: Number(contract?.contractTypeId) || 0,
 
     montoBase: Number(data.montoBase) || 0,
     montoMovilidad: Number(data.montoMovilidad) || 0,
@@ -138,8 +140,11 @@ const PantallaMovimiento = () => {
     montoSemestral: Number(data.montoSemestral) || 0,
     
     area: nombreAreaActual,
-    cliente: nombreCliente,
-    movArea: nombreNuevaArea, 
+    // Si no se eligió cliente en el combo, se conserva el que ya tenía el
+    // contrato en vez de mandar "": HISTORIAL.CLIENTE es la unica llave con la
+    // que SP_FMI_REPORTE_MOVIMIENTO puede ubicar al gestor que firma el PDF.
+    cliente: nombreCliente || contract?.client || "",
+    movArea: nombreNuevaArea,
     proyectoServicio: (contract as any)?.proyecto || "",
     objetoContrato: (contract as any)?.objeto || "",
 
@@ -205,21 +210,25 @@ const PantallaMovimiento = () => {
             }
           />
 
-          {contract?.contractType === MODALIDAD_LOC_SERVICIOS && (
-            <DropdownForm
-              name="idCliente"
-              control={control}
-              label="Cliente"
-              error={errors.idCliente}
-              options={
-                clientes?.map((client) => ({
-                  value: client.idCliente,
-                  label: client.razonSocial,
-                })) || []
-              }
-              required={true}
-            />
-          )}
+          {/* Siempre visible y obligatorio, igual que en PantallaSolicitarEquipo.
+              Antes se condicionaba a contractType === "RxH", pero contractType es
+              la descripcion de la modalidad ("Locación de servicios", "Planilla -
+              Reg. general", ...) y nunca vale "RxH": el combo no se renderizaba
+              jamas y el movimiento se guardaba sin cliente, dejando al reporte sin
+              gestor que firme. */}
+          <DropdownForm
+            name="idCliente"
+            control={control}
+            label="Cliente"
+            error={errors.idCliente}
+            options={
+              clientes?.map((client) => ({
+                value: client.idCliente,
+                label: client.razonSocial,
+              })) || []
+            }
+            required={true}
+          />
 
           {/* Movement */}
           <DropdownForm

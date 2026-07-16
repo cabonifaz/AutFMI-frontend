@@ -1,5 +1,8 @@
-export const API_BASE_URL = "https://api-autfmi.fractal.com.pe";
-export const BASE_URL_BDT = "https://api-bdt.fractal.com.pe";
+//export const API_BASE_URL = "https://api-autfmi.fractal.com.pe";
+//export const BASE_URL_BDT = "https://api-bdt.fractal.com.pe";
+
+export const API_BASE_URL = "http://localhost:8081";
+export const BASE_URL_BDT = "http://localhost:8080";
 
 export const TOKEN = "jwt_token";
 
@@ -31,7 +34,9 @@ export const TIPO_ARCHIVOS_RQ = "41";
 export const TIPO_ARCHIVO = "17";
 
 // ARCHIVOS DE POSTULANTE (REQUERIMIENTO_TALENTO)
-// Maestro dinámico de tipos de documento del postulante (num1=id, string1=descripción).
+// Maestro dinámico de tipos de documento del postulante, configurado por
+// cliente: num1=id del tipo, num2=idCliente, num3=1 obligatorio / 0 opcional,
+// string1=descripción.
 export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
 export const POSTULANT_ALLOWED_EXTENSIONS = [
   "pdf",

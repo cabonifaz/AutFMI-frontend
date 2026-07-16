@@ -15,6 +15,8 @@ import { format, parseISO } from "date-fns";
 import { ModalIngreso } from "../components/ui/ModalIngreso";
 import { AsignarTalentoType } from "../models/type/TalentoType";
 import { ModalSolicitudEquipo } from "../components/ui/ModalSolicitudEquipo";
+import { BlacklistValidation } from "../models/type/BlacklistValidation";
+import { validateBlacklist } from "../services/blacklist.service";
 
 // Types
 type RequerimientoType = {
@@ -29,6 +31,23 @@ type RequerimientoType = {
   idRequerimiento?: number;
   lstRqTalento?: any[];
   lstRqVacantes?: ReqVacante[];
+};
+
+/**
+ * Agrega el talento, o reemplaza su fila si ya existía. Remover marca la fila
+ * con idEstadoRegistro = 0 en vez de sacarla de la lista, así que volver a
+ * seleccionar al mismo talento debe revivir esa fila y no crear un duplicado
+ * con el mismo idTalento.
+ */
+const upsertTalent = (
+  talents: AsignarTalentoType[],
+  talent: AsignarTalentoType
+): AsignarTalentoType[] => {
+  const index = talents.findIndex((t) => t.idTalento === talent.idTalento);
+  if (index === -1) return [...talents, talent];
+  const next = [...talents];
+  next[index] = talent;
+  return next;
 };
 
 // Componentes
@@ -407,6 +426,72 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
   );
 };
 
+interface BlacklistWarningModalProps {
+  validation: BlacklistValidation | null;
+  talentName: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+/**
+ * Aviso al asignar un talento que está en la lista negra para el cliente del
+ * requerimiento. No bloquea: informa y deja decidir.
+ */
+const BlacklistWarningModal: React.FC<BlacklistWarningModalProps> = ({
+  validation,
+  talentName,
+  onCancel,
+  onConfirm,
+}) => {
+  if (!validation) return null;
+
+  const esGlobal = validation.idCliente === 0;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+      <div className="bg-white rounded-lg w-full max-w-md p-6">
+        <h2 className="text-xl font-semibold mb-4 text-red-700">
+          Talento restringido
+        </h2>
+
+        <div className="rounded-lg border border-red-300 bg-red-50 p-3 mb-4">
+          <p className="text-sm text-red-800">
+            <span className="font-semibold">{talentName}</span> está en la lista
+            negra{" "}
+            {esGlobal ? (
+              "para todos los clientes."
+            ) : (
+              <>
+                para{" "}
+                <span className="font-semibold">{validation.cliente}</span>.
+              </>
+            )}
+          </p>
+          {validation.motivo && (
+            <p className="text-sm text-gray-700 mt-2">
+              <span className="font-medium">Motivo: </span>
+              {validation.motivo}
+            </p>
+          )}
+        </div>
+
+        <p className="mb-6 text-sm text-gray-700">
+          ¿Desea asignarlo a este requerimiento de todas formas?
+        </p>
+
+        <div className="flex justify-end gap-4">
+          <button onClick={onCancel} className="btn btn-outline-gray">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} className="btn btn-red">
+            Asignar igual
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -471,6 +556,13 @@ const TalentTable: React.FC = () => {
   } | null>(null);
   const [currentTalento, setCurrentTalento] =
     useState<AsignarTalentoType | null>(null);
+  // Talento restringido a la espera de que el usuario decida si lo asigna.
+  const [pendingRestricted, setPendingRestricted] = useState<{
+    talent: AsignarTalentoType;
+    perfil: string;
+    idPerfil: number;
+    validation: BlacklistValidation;
+  } | null>(null);
 
   const calculateRemainingVacancies = useCallback(
     (
@@ -617,8 +709,9 @@ const TalentTable: React.FC = () => {
     }
   };
 
-  // Seleccionar talento
-  const handleSelectTalent = async (
+  // Agregar el talento a la tabla y persistir. Separado de handleSelectTalent
+  // para poder llamarlo también tras aceptar el aviso de lista negra.
+  const addTalent = async (
     talent: AsignarTalentoType,
     perfil: string,
     idPerfil: number
@@ -662,20 +755,70 @@ const TalentTable: React.FC = () => {
         formattedTalent = formatTalentFromBasicData(talent);
       }
 
-      setLocalTalents((prev) => [...prev, formattedTalent]);
+      const nextTalents = upsertTalent(localTalents, formattedTalent);
+      setLocalTalents(nextTalents);
       await handleFinalize({
-        talents: [...localTalents, formattedTalent],
+        talents: nextTalents,
         flagCorreo: false,
       });
     } catch (error) {
       console.error("Error fetching talent details:", error);
-      setLocalTalents((prev) => [
-        ...prev,
-        formatTalentFromBasicData(talent),
-      ]);
+      setLocalTalents((prev) =>
+        upsertTalent(prev, formatTalentFromBasicData(talent))
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Seleccionar talento: antes de agregarlo se valida contra la lista negra.
+  // Si está restringido para el cliente del RQ se avisa y se espera decisión;
+  // si la validación falla no se bloquea el trabajo, solo se advierte.
+  const handleSelectTalent = async (
+    talent: AsignarTalentoType,
+    perfil: string,
+    idPerfil: number
+  ) => {
+    try {
+      setIsLoading(true);
+      const { data } = await validateBlacklist({
+        idTalento: talent.idTalento,
+        idRequerimiento,
+      });
+
+      if (data.result?.idMensaje !== 2) {
+        showToast(
+          "No se pudo verificar la lista negra. Continúe con precaución.",
+          "warning"
+        );
+      } else if (data.validacion?.bloqueado) {
+        setPendingRestricted({
+          talent,
+          perfil,
+          idPerfil,
+          validation: data.validacion,
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error validating blacklist:", error);
+      showToast(
+        "No se pudo verificar la lista negra. Continúe con precaución.",
+        "warning"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+
+    await addTalent(talent, perfil, idPerfil);
+  };
+
+  // El usuario decidió asignar al talento restringido de todas formas.
+  const handleConfirmRestricted = async () => {
+    if (!pendingRestricted) return;
+    const { talent, perfil, idPerfil } = pendingRestricted;
+    setPendingRestricted(null);
+    await addTalent(talent, perfil, idPerfil);
   };
 
   // Formatear talento con datos básicos
@@ -744,15 +887,18 @@ const TalentTable: React.FC = () => {
     );
   };
 
-  // Remover talento
-  const handleRemoveTalent = (id: number) => {
-    setLocalTalents((prevTalents) =>
-      prevTalents.map((talent) =>
-        talent.idTalento === id
-          ? { ...talent, idEstadoRegistro: 0 } // marcar eliminado
-          : talent
-      )
+  // Remover talento: marca la fila como eliminada y persiste de inmediato, igual
+  // que seleccionar. Si solo se marcara en memoria, salir sin pulsar "Finalizar"
+  // dejaría al talento asignado en BD. Los ya asignados y confirmados no llegan
+  // aquí: para ellos el botón Remover está deshabilitado (isConfirmedFromAPI).
+  const handleRemoveTalent = async (id: number) => {
+    const nextTalents = localTalents.map((talent) =>
+      talent.idTalento === id
+        ? { ...talent, idEstadoRegistro: 0 } // marcar eliminado
+        : talent
     );
+    setLocalTalents(nextTalents);
+    await handleFinalize({ talents: nextTalents, flagCorreo: false });
   };
 
   // Actualizar talento
@@ -1073,7 +1219,11 @@ const TalentTable: React.FC = () => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           availableTalents={searchResults}
-          selectedTalents={localTalents}
+          // Los removidos siguen en localTalents marcados con idEstadoRegistro
+          // = 0: no cuentan como seleccionados, hay que poder volver a elegirlos.
+          selectedTalents={localTalents.filter(
+            (t) => t.idEstadoRegistro !== 0
+          )}
           onSelectTalent={handleSelectTalent}
           onSearch={handleSearch}
           searchTerm={searchTerm}
@@ -1087,6 +1237,22 @@ const TalentTable: React.FC = () => {
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={() => handleFinalize({ flagCorreo: true })}
           message="¿Está seguro que desea finalizar y guardar los talentos confirmados?"
+        />
+
+        <BlacklistWarningModal
+          validation={pendingRestricted?.validation || null}
+          talentName={
+            pendingRestricted
+              ? `${pendingRestricted.talent.nombres} ${
+                  pendingRestricted.talent.apellidos ||
+                  `${pendingRestricted.talent.apellidoPaterno || ""} ${
+                    pendingRestricted.talent.apellidoMaterno || ""
+                  }`.trim()
+                }`
+              : ""
+          }
+          onCancel={() => setPendingRestricted(null)}
+          onConfirm={handleConfirmRestricted}
         />
 
         {/* Notificaciones */}

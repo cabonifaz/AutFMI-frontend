@@ -1,8 +1,5 @@
-export const API_BASE_URL ="https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-//export const API_BASE_URL = "http://localhost:8081";
-
-export const BASE_URL_BDT ="https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-//export const BASE_URL_BDT = "http://localhost:8080";
+export const API_BASE_URL = "https://api-autfmi.fractal.com.pe";
+export const BASE_URL_BDT = "https://api-bdt.fractal.com.pe";
 
 export const TOKEN = "jwt_token";
 

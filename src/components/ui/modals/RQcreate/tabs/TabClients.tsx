@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../../models/schema/NewRQSchema";
 import { ClientType } from "../../../../../models/type/ClientType";
@@ -234,10 +235,7 @@ export const TabClients = ({ clients, fetchTarifario }: TabProps) => {
                               onClick={() => handleEditContact(c)}
                               className="w-7 h-7"
                             >
-                              <img
-                                src="/assets/ic_edit.svg"
-                                alt="edit icon"
-                              />
+                              <Pencil className="w-7 h-7" />
                             </button>
                           </div>
                         </td>

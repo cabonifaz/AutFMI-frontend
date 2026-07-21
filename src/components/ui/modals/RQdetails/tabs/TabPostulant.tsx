@@ -1,3 +1,4 @@
+import { FolderOpen } from "lucide-react";
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import useDownloadPdf from "../../../../../hooks/useDownloadPdf";
@@ -204,11 +205,7 @@ export const TabPostulant = ({
                         className="p-1 hover:rounded-full hover:bg-gray-100 hover:shadow-lg"
                         onClick={() => setFilesFor(t)}
                       >
-                        <img
-                          src="/assets/ic_preview_file.png"
-                          alt="archivos"
-                          className="h-5 w-5"
-                        />
+                        <FolderOpen className="h-5 w-5" />
                       </button>
                     </td>
                   </tr>

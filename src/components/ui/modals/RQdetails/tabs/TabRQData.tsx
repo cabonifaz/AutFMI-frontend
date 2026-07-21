@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../../models/schema/UpdateBaseRQSchema";
@@ -57,11 +58,7 @@ export const TabRQData = ({
             onClick={handleEdit}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_edit.svg"
-              alt="Editar"
-              className="w-7 h-7"
-            />
+            <Pencil className="w-7 h-7" />
           </button>
         </div>
         {/* Campos del formulario */}

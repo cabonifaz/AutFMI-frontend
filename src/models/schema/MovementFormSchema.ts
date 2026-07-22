@@ -15,7 +15,7 @@ export const MovementFormSchema = z
       .min(1, "Campo obligatorio"),
     apellidoMaterno: z.string().optional().nullable(),
     idArea: validDropdown,
-    idCliente: z.number().optional(),
+    idCliente: validDropdown,
     idMoneda: z.coerce
       .number({
         required_error: "Campo obligatorio",

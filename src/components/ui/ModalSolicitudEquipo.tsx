@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { AsignarTalentoType } from "../../models/type/TalentoType";
 import { DropdownForm, InputForm } from "../forms";
 import { Tabs } from "./Tabs";
@@ -228,11 +229,7 @@ export const ModalSolicitudEquipo = ({
             onClick={handleCancel}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x_fmi.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
         </div>
 

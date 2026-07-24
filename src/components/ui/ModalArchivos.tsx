@@ -1,3 +1,4 @@
+import { X, FileText } from "lucide-react";
 import { useParams } from "../../context/ParamsContext";
 import useDownloadPdf from "../../hooks/useDownloadPdf";
 import { TalentoType } from "../../models/type/TalentoType";
@@ -49,11 +50,7 @@ export const ModalArchivos = ({
           onClick={onClose}
           className="absolute top-4 right-4 focus:outline-none"
         >
-          <img
-            src="/assets/ic_close_x_fmi.svg"
-            alt="icon close"
-            className="w-6 h-6"
-          />
+          <X className="w-6 h-6" />
         </button>
         <Tabs
           isDataLoading={paramLoading || downloadPdfLoading}
@@ -74,11 +71,7 @@ export const ModalArchivos = ({
                       className="p-2 border rounded-lg hover:bg-slate-50 flex items-center justify-between"
                     >
                       {item.string1}
-                      <img
-                        src="/assets/open_pdf.svg"
-                        className="w-8 h-8"
-                        alt="pdf file"
-                      />
+                      <FileText className="w-8 h-8" />
                     </button>
                   ))}
                 </div>
@@ -94,11 +87,7 @@ export const ModalArchivos = ({
                     className="p-2 border rounded-lg hover:bg-slate-50 flex items-center justify-between"
                   >
                     Solicitud de equipo
-                    <img
-                      src="/assets/open_pdf.svg"
-                      className="w-8 h-8"
-                      alt="pdf file"
-                    />
+                    <FileText className="w-8 h-8" />
                   </button>
                 </div>
               ),

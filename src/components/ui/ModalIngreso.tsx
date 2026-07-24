@@ -1,4 +1,5 @@
 import { Controller, useForm, useWatch } from "react-hook-form";
+import { X } from "lucide-react";
 import { DropdownForm, InputForm, SalaryStructureForm } from "../forms";
 import { Tabs } from "./Tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -191,11 +192,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
             onClick={onClose}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x_fmi.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
         </div>
 

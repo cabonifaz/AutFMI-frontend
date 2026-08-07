@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { X, Home, ClipboardList, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
@@ -35,11 +36,7 @@ export const PantallaWrapper = ({ children }: Props) => {
             className="absolute top-4 right-4 lg:hidden z-40 p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label="Cerrar menú"
           >
-            <img
-              src="/assets/ic_close_x_fmi.svg"
-              alt="Cerrar menú"
-              className="w-5 h-5"
-            />
+            <X className="w-5 h-5" />
           </button>
         )}
 
@@ -51,11 +48,7 @@ export const PantallaWrapper = ({ children }: Props) => {
                 onClick={() => navigate("/listaTalentos")}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
               >
-                <img
-                  src="/assets/ic_home_fmi.svg"
-                  alt="Inicio"
-                  className="w-6 h-6"
-                />
+                <Home className="w-6 h-6" />
                 <span className="lg:hidden xl:inline text-sm">Inicio</span>
               </button>
             </li>
@@ -64,11 +57,7 @@ export const PantallaWrapper = ({ children }: Props) => {
                 onClick={() => navigate("/requerimientos")}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
               >
-                <img
-                  src="/assets/ic_requirements_fmi.svg"
-                  alt="Requerimientos"
-                  className="w-6 h-6"
-                />
+                <ClipboardList className="w-6 h-6" />
                 <span className="lg:hidden xl:inline text-sm">
                   Requerimientos
                 </span>
@@ -81,11 +70,7 @@ export const PantallaWrapper = ({ children }: Props) => {
               onClick={logout}
               className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
             >
-              <img
-                src="assets/ic_logout.svg"
-                alt="Cerrar sesión"
-                className="w-5 h-5"
-              />
+              <LogOut className="w-5 h-5" />
               <span className="lg-hidden xl:inline text-sm">Cerrar sesión</span>
             </button>
           </li>

@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { OutsideClickHandler } from "./OutsideClickHandler";
 
 export interface BaseOption {
@@ -117,7 +118,7 @@ export const FilterDropDown = <T extends BaseOption>({
                             }}
                             className="flex items-center"
                         >
-                            <img src="/assets/ic_close_fmi.svg" alt="icon close" className="h-5 w-5" />
+                            <X className="h-5 w-5" />
                         </button>
                     )}
                 </div>
@@ -133,7 +134,7 @@ export const FilterDropDown = <T extends BaseOption>({
                                             {options.find((opt) => opt.value.toString() === value)?.label || value}
                                         </span>
                                         <button type="button" onClick={() => handleRemoveOption(value)}>
-                                            <img src="/assets/ic_close_fmi.svg" alt="icon close" className="h-5 w-5" />
+                                            <X className="h-5 w-5" />
                                         </button>
                                     </li>
                                 ))}

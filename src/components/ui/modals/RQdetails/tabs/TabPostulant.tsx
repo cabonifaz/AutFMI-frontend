@@ -1,4 +1,4 @@
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, FileText } from "lucide-react";
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import useDownloadPdf from "../../../../../hooks/useDownloadPdf";
@@ -163,11 +163,7 @@ export const TabPostulant = ({
                           title="CV propio"
                           onClick={() => handleDownloadCV(index)}
                         >
-                          <img
-                            src="/assets/ic_resume.png"
-                            alt="icon eye"
-                            className="w-5 h-5"
-                          />
+                          <FileText className="w-5 h-5" />
                         </button>
                       </div>
                     </td>

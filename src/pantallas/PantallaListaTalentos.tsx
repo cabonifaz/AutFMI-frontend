@@ -1,3 +1,4 @@
+import { Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
@@ -206,10 +207,7 @@ const PantallaListaTalentos = () => {
                               openEmployeeDetails(talento)
                             }
                           >
-                            <img
-                              src="assets/ic_details.png"
-                              alt="Icono detalles"
-                            />
+                            <Menu className="mx-auto" />
                           </button>
                         </td>
                         {/* {talento.idActivo == 1 ? (

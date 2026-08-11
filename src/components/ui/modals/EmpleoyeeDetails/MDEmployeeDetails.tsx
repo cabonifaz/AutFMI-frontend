@@ -47,12 +47,19 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                 <MovemetsTab
                   details={details}
                   talentId={details?.talentId || 0}
+                  onChanged={() => fetchTalent(talento.idTalento)}
                 />
               ),
             },
             {
               label: "Solicitudes de Equipo",
-              children: <EquipmentRequestTab details={details} idTalent={details?.talentId || 0} />,
+              children: (
+                <EquipmentRequestTab
+                  details={details}
+                  idTalent={details?.talentId || 0}
+                  onChanged={() => fetchTalent(talento.idTalento)}
+                />
+              ),
             },
             {
               label: "Ceses",
@@ -60,6 +67,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                 <ContractsFinishedTab
                   details={details}
                   talentId={details?.talentId || 0}
+                  onChanged={() => fetchTalent(talento.idTalento)}
                 />
               ),
             },

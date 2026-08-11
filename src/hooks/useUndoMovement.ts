@@ -59,5 +59,53 @@ export const useUndoMovement = () => {
     }
   };
 
-  return { isLoading, undoCese, deleteEquipmentRequest };
+  const undoMovimiento = async (
+    idHistorial: number,
+    idTalento: number
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const { data } = await apiClientWithToken.put<BaseMsg>(
+        `/fmi/employee/movimiento/undo?idHistorial=${idHistorial}&idTalento=${idTalento}`
+      );
+      const ok = data.idTipoMensaje === 2;
+      enqueueSnackbar(data.mensaje, { variant: ok ? "success" : "error" });
+      return ok;
+    } catch (error) {
+      console.error("Error al deshacer el movimiento:", error);
+      enqueueSnackbar("Error al deshacer el movimiento", { variant: "error" });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const undoIngreso = async (
+    idHistorial: number,
+    idTalento: number
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const { data } = await apiClientWithToken.put<BaseMsg>(
+        `/fmi/employee/ingreso/undo?idHistorial=${idHistorial}&idTalento=${idTalento}`
+      );
+      const ok = data.idTipoMensaje === 2;
+      enqueueSnackbar(data.mensaje, { variant: ok ? "success" : "error" });
+      return ok;
+    } catch (error) {
+      console.error("Error al deshacer el ingreso:", error);
+      enqueueSnackbar("Error al deshacer el ingreso", { variant: "error" });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    undoCese,
+    deleteEquipmentRequest,
+    undoMovimiento,
+    undoIngreso,
+  };
 };

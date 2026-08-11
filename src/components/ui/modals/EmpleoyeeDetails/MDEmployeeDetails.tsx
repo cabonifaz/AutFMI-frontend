@@ -47,6 +47,7 @@ export const MDEmployeeDetails = ({ onClose, talento }: MDProps) => {
                 <MovemetsTab
                   details={details}
                   talentId={details?.talentId || 0}
+                  onChanged={() => fetchTalent(talento.idTalento)}
                 />
               ),
             },

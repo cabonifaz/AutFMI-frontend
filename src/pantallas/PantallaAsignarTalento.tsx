@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Gauge } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiClientWithToken } from "../utils/apiClient";
 import {
@@ -19,6 +19,9 @@ import { AsignarTalentoType } from "../models/type/TalentoType";
 import { ModalSolicitudEquipo } from "../components/ui/ModalSolicitudEquipo";
 import { BlacklistValidation } from "../models/type/BlacklistValidation";
 import { validateBlacklist } from "../services/blacklist.service";
+import { ModalRiesgoTalento } from "../components/ui/ModalRiesgoTalento";
+import { useFetchTarifario } from "../hooks/useFetchTarifario";
+import type { FilaBanda } from "../utils/riesgoTalento";
 
 // Types
 type RequerimientoType = {
@@ -33,6 +36,9 @@ type RequerimientoType = {
   idRequerimiento?: number;
   lstRqTalento?: any[];
   lstRqVacantes?: ReqVacante[];
+  // La banda salarial del RQ ya viaja en la respuesta (SP_REQUERIMIENTO_SEL
+  // invoca a SP_REQUERIMIENTO_FACTURACION_SEL); solo faltaba declararla.
+  lstRqFacturacion?: FilaBanda[];
 };
 
 /**
@@ -74,6 +80,7 @@ interface TableRowProps {
   talento: AsignarTalentoType;
   onRemove: (id: number) => void;
   onUpdate: (talento: AsignarTalentoType) => void;
+  onRisk: (talento: AsignarTalentoType) => void;
   onConfirmChange: (
     talento: AsignarTalentoType,
     confirm: boolean
@@ -85,6 +92,7 @@ const TableRow: React.FC<TableRowProps> = ({
   talento,
   onRemove,
   onUpdate,
+  onRisk,
   onConfirmChange,
   disabled,
 }) => {
@@ -196,6 +204,14 @@ const TableRow: React.FC<TableRowProps> = ({
           } text-sm`}
         >
           Remover
+        </button>
+        <button
+          onClick={() => onRisk(talento)}
+          className="btn btn-yellow text-sm inline-flex items-center gap-1.5"
+          title="Comparar su pretensión salarial con la tarifa del perfil"
+        >
+          <Gauge className="w-4 h-4" />
+          Calcular Riesgo
         </button>
       </td>
     </tr>
@@ -579,6 +595,13 @@ const TalentTable: React.FC = () => {
     idPerfil: number;
     validation: BlacklistValidation;
   } | null>(null);
+  // Talento cuyo riesgo se está viendo (null = modal cerrado).
+  const [riskTalent, setRiskTalent] = useState<AsignarTalentoType | null>(null);
+  // Tarifario del cliente del RQ. El modal solo busca dentro de esta lista por
+  // idPerfil.
+  const { tarifario, fetchTarifario, loading: loadingTarifario } =
+    useFetchTarifario();
+  const tarifarioPedido = useRef(false);
 
   const calculateRemainingVacancies = useCallback(
     (
@@ -707,6 +730,14 @@ const TalentTable: React.FC = () => {
                 fchInicioContrato: talent?.fchInicioContrato || "",
                 fchTerminoContrato: talent?.fchTerminoContrato || "",
                 montoBase: talent?.montoBase || 0,
+                // Pretensión salarial (modal "Calcular Riesgo").
+                montoInicialPlanilla: talent?.montoInicialPlanilla ?? 0,
+                montoFinalPlanilla: talent?.montoFinalPlanilla ?? 0,
+                montoInicialRxH: talent?.montoInicialRxH ?? 0,
+                montoFinalRxH: talent?.montoFinalRxH ?? 0,
+                idMonedaPlan: talent?.idMonedaPlan ?? 0,
+                idMonedaRxh: talent?.idMonedaRxh ?? 0,
+                idModalidadFacturacion: talent?.idModalidadFacturacion ?? 0,
               })
             );
 
@@ -735,6 +766,24 @@ const TalentTable: React.FC = () => {
   useEffect(() => {
     fetchRequerimiento();
   }, [fetchRequerimiento]);
+
+  /**
+   * El tarifario se pide la PRIMERA vez que alguien abre "Calcular Riesgo", no al
+   * cargar la pantalla: el endpoint exige la funcionalidad 26 (LISTAR_TARIFARIO)
+   * y, pidiéndolo de entrada, los roles que no la tienen recibirían un aviso de
+   * permiso denegado sin haber pedido nada. El ref evita repetir la llamada
+   * cuando el cliente simplemente no tiene tarifas cargadas.
+   */
+  const handleShowRisk = useCallback(
+    (talento: AsignarTalentoType) => {
+      if (requerimiento?.idCliente && !tarifarioPedido.current) {
+        tarifarioPedido.current = true;
+        fetchTarifario(requerimiento.idCliente);
+      }
+      setRiskTalent(talento);
+    },
+    [requerimiento?.idCliente, fetchTarifario]
+  );
 
   // Buscar talentos
   const handleSearch = async (term: string) => {
@@ -814,6 +863,15 @@ const TalentTable: React.FC = () => {
           fchInicioContrato: talent?.fchInicioContrato || "",
           fchTerminoContrato: talent?.fchTerminoContrato || "",
           montoBase: talent?.montoBase || 0,
+          // Pretensión salarial (modal "Calcular Riesgo"). Sale del detalle, no del
+          // talento de la búsqueda: el listado de búsqueda no la trae.
+          montoInicialPlanilla: talentDetails?.montoInicialPlanilla ?? 0,
+          montoFinalPlanilla: talentDetails?.montoFinalPlanilla ?? 0,
+          montoInicialRxH: talentDetails?.montoInicialRxH ?? 0,
+          montoFinalRxH: talentDetails?.montoFinalRxH ?? 0,
+          idMonedaPlan: talentDetails?.idMonedaPlan ?? 0,
+          idMonedaRxh: talentDetails?.idMonedaRxh ?? 0,
+          idModalidadFacturacion: talentDetails?.idModalidadFacturacion ?? 0,
         };
       } else {
         formattedTalent = formatTalentFromBasicData(talent);
@@ -1294,6 +1352,7 @@ const TalentTable: React.FC = () => {
                           talento={talento}
                           onRemove={handleRemoveTalent}
                           onUpdate={handleUpdateTalent}
+                          onRisk={handleShowRisk}
                           onConfirmChange={handleConfirmChange}
                           disabled={buttonsDisabled}
                         />
@@ -1353,6 +1412,14 @@ const TalentTable: React.FC = () => {
           }
           onCancel={() => setPendingRestricted(null)}
           onConfirm={handleConfirmRestricted}
+        />
+
+        <ModalRiesgoTalento
+          talento={riskTalent}
+          tarifa={tarifario.find((t) => t.idPerfil === riskTalent?.idPerfil)}
+          cargandoTarifa={loadingTarifario}
+          banda={requerimiento?.lstRqFacturacion}
+          onClose={() => setRiskTalent(null)}
         />
 
         {/* Notificaciones */}

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
 import { PantallaWrapper } from "./PantallaWrapper";
+import { ModalCalculadoraRiesgo } from "../components/ui/ModalCalculadoraRiesgo";
 import {
   BaseOption,
   FilterDropDown,
@@ -42,6 +43,8 @@ export const PantallaRequerimientos = () => {
     null
   );
   const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
+  // Calculadora de riesgo libre: no depende de ningun RQ de la lista.
+  const [calculadoraAbierta, setCalculadoraAbierta] = useState(false);
   const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] =
     useState(false);
   const [selectedRQ, setSelectedRQ] =
@@ -296,6 +299,14 @@ export const PantallaRequerimientos = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setCalculadoraAbierta(true)}
+                    className="btn btn-yellow"
+                    title="Simular un escenario sin talento ni RQ: se escribe todo a mano"
+                  >
+                    Calculadora
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setIsNuevoRQModalOpen(true)}
                     className="btn btn-blue"
                   >
@@ -492,6 +503,10 @@ export const PantallaRequerimientos = () => {
           handleAsignar={handleAsignarClick}
           updateRQData={updateRQData}
         /> */}
+
+      {calculadoraAbierta && (
+        <ModalCalculadoraRiesgo onClose={() => setCalculadoraAbierta(false)} />
+      )}
 
       {isDetallesRQModalOpen && (
         <ModalRQDetails

@@ -136,9 +136,7 @@ export const ModalRQDetails = ({
           (item) => item.idPerfil === v.idPerfil,
         );
 
-        const tarifa = tariffFound
-          ? tariffFound.tarifa.toFixed(2)
-          : "-";
+        const tarifa = tariffFound?.tarifa?.toFixed(2) ?? "-";
 
         const moneda = tariffFound?.moneda || "S/.";
 
@@ -147,8 +145,14 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
-          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
-          tarifaFinal: v.tarifaFinal || 0,
+          // Sin importe (reclutador) el campo queda vacío en vez de en 0: lo
+          // que se envía al actualizar es este valor y el SP lee el null como
+          // "deja la tarifa que ya estaba".
+          tarifaInicial:
+            v.tarifaInicial != null
+              ? `${Utils.formatCoin(v.tarifaInicial)}`
+              : "-",
+          tarifaFinal: v.tarifaFinal ?? undefined,
           tarifa:
             tarifa === "-"
               ? "S/. -"
@@ -265,9 +269,7 @@ export const ModalRQDetails = ({
           (item) => item.idPerfil === v.idPerfil,
         );
 
-        const tarifa = tariffFound
-          ? tariffFound.tarifa.toFixed(2)
-          : "-";
+        const tarifa = tariffFound?.tarifa?.toFixed(2) ?? "-";
 
         const moneda = tariffFound?.moneda || "S/.";
 
@@ -276,8 +278,14 @@ export const ModalRQDetails = ({
           idPerfil: v.idPerfil,
           cantidad: v.cantidad,
           idEstado: 0,
-          tarifaInicial: `${Utils.formatCoin(v.tarifaInicial || 0)}`,
-          tarifaFinal: v.tarifaFinal || 0,
+          // Sin importe (reclutador) el campo queda vacío en vez de en 0: lo
+          // que se envía al actualizar es este valor y el SP lee el null como
+          // "deja la tarifa que ya estaba".
+          tarifaInicial:
+            v.tarifaInicial != null
+              ? `${Utils.formatCoin(v.tarifaInicial)}`
+              : "-",
+          tarifaFinal: v.tarifaFinal ?? undefined,
           tarifa:
             tarifa === "-"
               ? "S/. -"

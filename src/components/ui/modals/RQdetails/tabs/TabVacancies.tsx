@@ -8,6 +8,7 @@ import { showWarningSnack } from "../ui.helpers";
 
 import { ModalDetailsVacSkills } from "../../../ModalDetailVacSkill";
 import { useModal } from "../../../../../context/ModalContext";
+import { useAuth } from "../../../../../context/AuthContext";
 import { enqueueSnackbar } from "notistack";
 import { NumberInput } from "../../../../forms/NumberInput";
 import { ReqVacante } from "../../../../../models/type/ReqVacante";
@@ -52,6 +53,14 @@ export const TabVacancies = ({
   const [originQuant] = useState<string[]>([]);
   const { closeModal, isModalOpen, openModal } = useModal();
   const [idVac, setIdVac] = useState<number | undefined>();
+  const { getToken } = useAuth();
+
+  // Las tarifas del perfil no se le muestran al reclutador. Se ocultan con
+  // `display` y no desmontando la celda, para que los inputs sigan registrados
+  // en el formulario y la vacante se guarde con su tarifa igual.
+  const tarifaDisplay = Utils.isRecruiter(getToken())
+    ? "none"
+    : "table-cell";
 
   // @marker form handlers
   const {
@@ -79,7 +88,7 @@ export const TabVacancies = ({
           (item) => item.idPerfil === vacante.idPerfil
         );
 
-        if (tarifaData) {
+        if (tarifaData?.tarifa != null) {
           const tarifa = tarifaData.tarifa.toFixed(2);
           const moneda = tarifaData.moneda || "S/.";
           setValue(
@@ -120,15 +129,17 @@ export const TabVacancies = ({
       const tarifa =
         tariff
           .find((item) => item.idPerfil === idPerfil)
-          ?.tarifa.toFixed(2) || "-";
+          ?.tarifa?.toFixed(2) || "-";
 
       const moneda =
         tariff.find((item) => item.idPerfil === idPerfil)?.moneda ||
         "S/.";
 
+      // Sin importe (reclutador) el campo se deja vacío en vez de en 0: el SP
+      // guarda entonces la tarifa del tarifario, no un cero.
       const tarifaFinal =
-        tariff.find((item) => item.idPerfil === idPerfil)?.tarifa ||
-        0;
+        tariff.find((item) => item.idPerfil === idPerfil)?.tarifa ??
+        undefined;
 
       setValue(`lstVacantes.${index}.tarifaFinal`, tarifaFinal);
 
@@ -312,14 +323,30 @@ export const TabVacancies = ({
                     </th>
                     <th className="table-header-cell">Cantidad</th>
 
-                    <th className="table-header-cell">Tarifa Act.</th>
-                    <th className="table-header-cell">
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
+                      Tarifa Act.
+                    </th>
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
                       Tarifa inicial
                     </th>
-                    <th className="table-header-cell">
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
                       Tarifa final
                     </th>
-                    <th className="table-header-cell">Tipo tarifa</th>
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
+                      Tipo tarifa
+                    </th>
 
                     <th className="table-header-cell text-center">
                       Otros
@@ -491,7 +518,10 @@ export const TabVacancies = ({
                             </div>
                           </td>
 
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             <input
                               {...register(
                                 `lstVacantes.${index}.tarifa`
@@ -511,7 +541,10 @@ export const TabVacancies = ({
                               readOnly
                             />
                           </td>
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             <input
                               {...register(
                                 `lstVacantes.${index}.tarifaInicial`
@@ -531,7 +564,10 @@ export const TabVacancies = ({
                               readOnly
                             />
                           </td>
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             <div className=" flex items-center justify-between gap-2">
                               <span>
                                 {`${
@@ -564,7 +600,12 @@ export const TabVacancies = ({
                             </div>
                           </td>
 
-                          <td className="table-cell">{tipoTarifa}</td>
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
+                            {tipoTarifa}
+                          </td>
 
                           <td className="table-cell text-center relative group">
                             <div className="flex items-center gap-3 justify-center">

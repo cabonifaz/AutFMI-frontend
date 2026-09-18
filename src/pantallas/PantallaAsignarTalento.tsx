@@ -39,6 +39,10 @@ type RequerimientoType = {
   // La banda salarial del RQ ya viaja en la respuesta (SP_REQUERIMIENTO_SEL
   // invoca a SP_REQUERIMIENTO_FACTURACION_SEL); solo faltaba declararla.
   lstRqFacturacion?: FilaBanda[];
+  // Duración de contrato pactada en la Gestión del RQ: de ahí salen las fechas
+  // que se proponen al confirmar un talento.
+  duracionContrato?: number;
+  idDuracionContrato?: number;
 };
 
 /**
@@ -1255,6 +1259,8 @@ const TalentTable: React.FC = () => {
           onConfirm={handleOnConfirmModalIngreso}
           currentTalent={currentTalento}
           onClose={handleModalIngresoClose}
+          duracionContrato={requerimiento?.duracionContrato}
+          idDuracionContrato={requerimiento?.idDuracionContrato}
         />
       )}
       {showModalSolicitudEquipo && (

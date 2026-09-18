@@ -17,6 +17,7 @@ import {
   MODAL_ADD_TECH_SKILL,
 } from "../../../../../utils";
 import { useModal } from "../../../../../context/ModalContext";
+import { useAuth } from "../../../../../context/AuthContext";
 import { NumberInputV2 } from "../../../../forms/NumberInputV2";
 import { AddCareerModal, CareerProps } from "../../../ModalAddCareer";
 import { SearchableSelect } from "../../../SearchableSelect";
@@ -45,6 +46,14 @@ export const TabVacancies = ({
   refetchParams,
 }: TabProps) => {
   const { openModal, isModalOpen, closeModal } = useModal();
+  const { getToken } = useAuth();
+
+  // Las tarifas del perfil no se le muestran al reclutador. Se ocultan con
+  // `display` y no desmontando la celda, para que los inputs sigan registrados
+  // en el formulario y la vacante se guarde con su tarifa igual.
+  const tarifaDisplay = Utils.isRecruiter(getToken())
+    ? "none"
+    : "table-cell";
 
   const [selectedTechSkills, setSelectedTechSkills] = useState<
     Record<string, SkillsPayload[]>
@@ -177,15 +186,17 @@ export const TabVacancies = ({
     const tarifa =
       tarifario
         .find((item) => item.idPerfil === idPerfil)
-        ?.tarifa.toFixed(2) || "-";
+        ?.tarifa?.toFixed(2) || "-";
 
     const moneda =
       tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
       "S/.";
 
+    // Sin importe (reclutador) el campo se deja vacío en vez de en 0: el SP de
+    // alta guarda entonces la tarifa del tarifario, no un cero.
     const tarifaFinal =
-      tarifario.find((item) => item.idPerfil === idPerfil)?.tarifa ||
-      0;
+      tarifario.find((item) => item.idPerfil === idPerfil)?.tarifa ??
+      undefined;
 
     setValue(`lstVacantes.${index}.tarifaFinal`, tarifaFinal);
 
@@ -340,11 +351,22 @@ export const TabVacancies = ({
                       Perfil profesional
                     </th>
                     <th className="table-header-cell">Cantidad</th>
-                    <th className="table-header-cell">Tarifa</th>
-                    <th className="table-header-cell">
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
+                      Tarifa
+                    </th>
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
                       Tarifa Final
                     </th>
-                    <th className="table-header-cell">
+                    <th
+                      className="table-header-cell"
+                      style={{ display: tarifaDisplay }}
+                    >
                       Tipo Tarifa
                     </th>
                     <th className="table-header-cell text-center">
@@ -415,7 +437,10 @@ export const TabVacancies = ({
                             />
                           </td>
 
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             <input
                               {...register(
                                 `lstVacantes.${index}.tarifa`
@@ -426,7 +451,10 @@ export const TabVacancies = ({
                             />
                           </td>
 
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold">
                                 {`${
@@ -448,7 +476,10 @@ export const TabVacancies = ({
                             </div>
                           </td>
 
-                          <td className="table-cell">
+                          <td
+                            className="table-cell"
+                            style={{ display: tarifaDisplay }}
+                          >
                             {tipoTarifa}
                           </td>
 

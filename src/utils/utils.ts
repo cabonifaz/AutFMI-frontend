@@ -1,6 +1,7 @@
 import { format, isValid, parse } from "date-fns";
 import { createElement, ReactNode } from "react";
 import { ParamType } from "../models/type/ParamType";
+import { ROL_RECLUTADOR } from "./config";
 
 type fileNameType = string | undefined | null;
 
@@ -74,6 +75,31 @@ export class Utils {
 
   static removeToken = (): void => {
     localStorage.removeItem("token");
+  };
+
+  /**
+   * ¿El usuario es RECLUTADOR? Es el único rol que no ve las tarifas de un
+   * perfil en la sección Perfiles de los modales de RQ (Agregar y Detalle).
+   * Misma regla que en BDT, donde el módulo de Requerimientos también vive.
+   *
+   * Se resuelve por id de rol (`id_roles`) y no por nombre, porque el id no
+   * depende de cómo esté escrito el rol en la base. Sin token se asume
+   * reclutador: ante la duda, la tarifa no se enseña.
+   */
+  static isRecruiter = (token?: string): boolean => {
+    if (!token) return true;
+    const decoded = this.decodeJwt(token);
+
+    const idRoles = decoded?.id_roles;
+    if (Array.isArray(idRoles) && idRoles.length > 0) {
+      return idRoles.some((id: unknown) => Number(id) === ROL_RECLUTADOR);
+    }
+
+    const roles = decoded?.roles;
+    if (!Array.isArray(roles)) return true;
+    return roles.some(
+      (rol: unknown) => String(rol).trim().toUpperCase() === "RECLUTADOR"
+    );
   };
 
   static decodeJwt = (token: string): any => {

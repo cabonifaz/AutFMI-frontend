@@ -3,6 +3,11 @@ export const BASE_URL_BDT = "https://api-bdt.fractal.com.pe";
 
 export const TOKEN = "jwt_token";
 
+// ROLES (maestro 1): 1 Admin · 2 Gestor de servicio · 3 Gestor operativo ·
+// 4 Reclutador · 5 Superadmin. El reclutador es el único al que se le ocultan
+// las tarifas de un perfil en los modales de RQ.
+export const ROL_RECLUTADOR = 4;
+
 // PARAMS
 export const TIPO_TIEMPO = "5";
 export const TIPO_MONEDA = "2";

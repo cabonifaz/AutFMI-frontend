@@ -17,7 +17,9 @@ import {
   GROUP_MODALIDAD_LOC_SERVICIOS,
   GROUP_MODALIDAD_PLANILLA,
   TIPO_MONEDA,
+  DURACION_RQ,
 } from "../../utils/config";
+import { finDeContrato, hoyISO } from "../../utils/duracionContrato";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { sedeSunatList } from "../../models/type/SedeSunatType";
 import { AsignarTalentoType } from "../../models/type/TalentoType";
@@ -29,9 +31,19 @@ interface Props {
   onClose: () => void;
   onConfirm: (talento: AsignarTalentoType) => void;
   currentTalent?: AsignarTalentoType | null;
+  /** Duración de contrato pactada en la Gestión del RQ. */
+  duracionContrato?: number;
+  /** Unidad de esa duración (PARAMETROS, maestro 28). */
+  idDuracionContrato?: number;
 }
 
-export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
+export const ModalIngreso = ({
+  onClose,
+  currentTalent,
+  onConfirm,
+  duracionContrato,
+  idDuracionContrato,
+}: Props) => {
   const { clientes, loading: clientsLoading } = useFetchClients();
   const {
     paramsByMaestro,
@@ -41,7 +53,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
 
   useEffect(() => {
     fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`,
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA},${DURACION_RQ}`,
     );
   }, [fetchParams]);
 
@@ -64,6 +76,17 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
 
   const defaultUnit = getPriorityValueFromParams(unitValues);
   const defaultReason = getPriorityValueFromParams(reasonValues);
+
+  // Fechas de contrato que se proponen al confirmar: empieza hoy y termina
+  // según la duración del RQ. Son sólo el valor inicial de los datepickers;
+  // quien confirma puede cambiarlos.
+  const inicioSugerido = hoyISO();
+  const finSugerido = finDeContrato(
+    inicioSugerido,
+    duracionContrato,
+    idDuracionContrato,
+    paramsByMaestro[DURACION_RQ] || [],
+  );
 
   const {
     control,
@@ -89,8 +112,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       montoMensual: currentTalent?.montoMensual || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
-      fchInicioContrato: currentTalent?.fchInicioContrato || "",
-      fchTerminoContrato: currentTalent?.fchTerminoContrato || "",
+      fchInicioContrato: currentTalent?.fchInicioContrato || inicioSugerido,
+      fchTerminoContrato: currentTalent?.fchTerminoContrato || finSugerido,
       proyectoServicio: proyectoServicio || "",
       objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
@@ -119,6 +142,23 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     proyectoServicio,
     objetoContrato,
   ]);
+
+  // Autocompletar sin pisar nada: si el talento ya traía fechas (porque ya se
+  // confirmó antes) mandan las suyas. Va en un efecto y no sólo en
+  // defaultValues porque el maestro de duraciones se pide al abrir el modal y
+  // llega después.
+  useEffect(() => {
+    if (!getValues("fchInicioContrato")) {
+      setValue("fchInicioContrato", inicioSugerido, {
+        shouldValidate: true,
+      });
+    }
+    if (finSugerido && !getValues("fchTerminoContrato")) {
+      setValue("fchTerminoContrato", finSugerido, {
+        shouldValidate: true,
+      });
+    }
+  }, [inicioSugerido, finSugerido, getValues, setValue]);
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {

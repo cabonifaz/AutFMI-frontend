@@ -3,6 +3,7 @@ import { InfoCard } from "../../../InfoCard";
 import { useMemo, useState } from "react";
 import { Utils } from "../../../../../utils/utils";
 import { useDownloadFileFromBDT } from "../../../../../hooks/useDownloadBdtFiles";
+import { openPdfFilesInNewTab } from "../../../../../utils/file.utils";
 
 interface MDProps {
   details?: EmployeeResponseDetail;
@@ -35,21 +36,40 @@ export const PersonalDetailsTab = ({ details }: MDProps) => {
     url: "bdt/files/document-by-url",
   });
 
+  /** "Alicia Oroya", para que el PDF no se descargue como "CV.pdf" a secas. */
+  const nombreDelTalento = `${details?.names || ""} ${
+    details?.lastname || ""
+  } ${details?.surname || ""}`
+    .replace(/\s+/g, " ")
+    .trim();
+
   const handleOpenCV = (
     type: "cv" | "cv-fractal-esp" | "cv-fractal-eng",
   ) => {
     let cvBase64: string | undefined;
+    let tipoCv = "CV";
 
     if (type === "cv") {
       cvBase64 = cvNormalData?.fileBase64;
     } else if (type === "cv-fractal-esp") {
       cvBase64 = cvFractalEspData?.fileBase64;
+      tipoCv = "CV Fractal ES";
     } else if (type === "cv-fractal-eng") {
       cvBase64 = cvFractalEngData?.fileBase64;
+      tipoCv = "CV Fractal EN";
     }
 
     if (cvBase64) {
-    openBase64File(cvBase64, "application/pdf");
+      // Mismo visor que los formularios: la pestaña lleva el nombre real y el
+      // botón Descargar guarda con él, no con el UUID del blob.
+      openPdfFilesInNewTab([
+        {
+          nombreArchivo: nombreDelTalento
+            ? `${nombreDelTalento} - ${tipoCv}`
+            : tipoCv,
+          archivoB64: cvBase64,
+        },
+      ]);
     }
   };
 

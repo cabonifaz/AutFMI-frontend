@@ -33,12 +33,20 @@ export const TabPostulant = ({
   // Postulante cuyo modal de archivos está abierto (null = cerrado).
   const [filesFor, setFilesFor] = useState<ReqTalento | null>(null);
 
+  /** "Alicia Oroya", para que el PDF no se descargue como "CV.pdf" a secas. */
+  const nombreDelTalento = (talent: ReqTalento): string =>
+    `${talent.nombresTalento || ""} ${talent.apellidosTalento || ""}`
+      .replace(/\s+/g, " ")
+      .trim();
+
   const handleDownloadCV = (talentIndex: number) => {
     // "/bdt/talent/file?fileId=${data}"
-    const idCv = talents[talentIndex].idCvFile;
+    const talent = talents[talentIndex];
+    const idCv = talent.idCvFile;
     const url = `bdt/talent/file?fileId=${idCv}`;
     if (url) {
-      fetchAndOpenPdf(url);
+      const nombre = nombreDelTalento(talent);
+      fetchAndOpenPdf(url, nombre ? `${nombre} - CV` : undefined);
     }
   };
 
@@ -56,7 +64,11 @@ export const TabPostulant = ({
     const fileId = lang === "ES" ? talent.idCVEs : talent.idCVEn;
 
     if (fileId && fileId !== 0) {
-      fetchAndOpenPdf(`bdt/talent/file?fileId=${fileId}`);
+      const nombre = nombreDelTalento(talent);
+      fetchAndOpenPdf(
+        `bdt/talent/file?fileId=${fileId}`,
+        nombre ? `${nombre} - CV Fractal ${lang}` : undefined
+      );
     } else {
       notifyWarning(
         `El talento no tiene CV Fractal en ${

@@ -74,9 +74,16 @@ const paginaVisor = (blobUrl: string, nombre: string): string => {
 export const openPdfFilesInNewTab = (files: PDFDataType[]) => {
   files.forEach((file, index) => {
     setTimeout(() => {
-      const pdfBlob = decodeBase64ToBlob(file.archivoB64);
-      const url = URL.createObjectURL(pdfBlob);
       const nombre = pdfFileName(file.nombreArchivo);
+      // Se envuelve en un File y no en un Blob pelado para que el nombre viaje
+      // con el objeto: es lo que usan los navegadores cuando la descarga no
+      // trae nombre propio. Aun así, la URL sigue siendo `blob:.../<uuid>` y el
+      // visor interno del navegador propone ese uuid; el nombre bueno lo pone
+      // el botón Descargar de la barra.
+      const pdfFile = new File([decodeBase64ToBlob(file.archivoB64)], nombre, {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(pdfFile);
 
       const newTab = window.open("", `_blank_${index}`);
 

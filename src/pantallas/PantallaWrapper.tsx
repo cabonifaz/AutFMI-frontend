@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { X, Home, ClipboardList, LogOut } from "lucide-react";
+import { X, Home, ClipboardList, FileUp, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
@@ -61,6 +61,15 @@ export const PantallaWrapper = ({ children }: Props) => {
                 <span className="lg:hidden xl:inline text-sm">
                   Requerimientos
                 </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => navigate("/cargarFMI")}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
+              >
+                <FileUp className="w-6 h-6" />
+                <span className="lg:hidden xl:inline text-sm">Cargar FMI</span>
               </button>
             </li>
           </div>

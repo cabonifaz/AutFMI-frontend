@@ -15,6 +15,7 @@ import PantallaSolicitarEquipo from "./pantallas/PantallaSolicitarEquipo";
 import { PantallaRequerimientos } from "./pantallas/PantallaRequerimientos";
 import { MenuProvider } from "./context/MenuContext";
 import TalentTable from "./pantallas/PantallaAsignarTalento";
+import PantallaCargarFMI from "./pantallas/PantallaCargarFMI";
 import { ParamsProvider } from "./context/ParamsContext";
 import { ModalProvider } from "./context/ModalContext";
 
@@ -102,6 +103,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <TalentTable />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/cargarFMI"
+                    element={
+                      <ProtectedRoute>
+                        <PantallaCargarFMI />
                       </ProtectedRoute>
                     }
                   />

@@ -17,10 +17,10 @@ import { ModalCrearTalentoFMI } from "../components/ui/modals/ModalCrearTalentoF
 import { useRequerimientos } from "../hooks/useRequirements";
 import { validateBlacklist } from "../services/blacklist.service";
 import {
-  agregarAlRequerimiento,
+  CargaFmiParams,
   analizarFmi,
   buscarCandidatos,
-  obtenerTalentoDeRq,
+  cargarDesdeFmi,
 } from "../services/cargaFmi.service";
 import { FMIExtraction } from "../models/type/FMIExtraction";
 import {
@@ -29,17 +29,46 @@ import {
   nombreDeTalento,
 } from "../models/type/TalentMatch";
 import { RequirementItem } from "../models/type/RequirementItemType";
-import { PerfilType } from "../models/type/PerfilType";
 import {
-  ESTADO_ATENDIDO,
   MOTIVO_INGRESO,
   TIPO_MODALIDAD,
+  TIPO_MONEDA,
+  UNIDAD,
 } from "../utils/config";
 import { useParams } from "../context/ParamsContext";
 import { normalizar } from "../utils/quickCV";
-import { AsignarTalentoType } from "../models/type/TalentoType";
+import { sedeSunatList } from "../models/type/SedeSunatType";
 
 type Paso = 1 | 2 | 3 | 4;
+
+/**
+ * Siempre se registra el contrato. Lo que se elige es si queda referenciado a
+ * un requerimiento (TALENTO_CONTRATO.ID_RQ) o suelto.
+ */
+type Destino = "ambos" | "contrato";
+
+/** Lo que el usuario puede corregir antes de confirmar. */
+type DatosContrato = {
+  idArea: number;
+  cargo: string;
+  idModalidadContrato: number;
+  idMotivo: number;
+  horario: string;
+  proyectoServicio: string;
+  objetoContrato: string;
+  declararSunat: number;
+  sedeDeclarar: string;
+  ubicacion: string;
+  idMoneda: number;
+  montoBase: string;
+  montoMovilidad: string;
+  montoMensual: string;
+  montoTrimestral: string;
+  montoSemestral: string;
+  fchInicioContrato: string;
+  fchTerminoContrato: string;
+  activo: boolean;
+};
 
 /** Talento elegido o recién creado: es lo único que hace falta llevar. */
 type PersonaElegida = {
@@ -97,6 +126,34 @@ const Stepper = ({ actual }: { actual: Paso }) => (
   </ol>
 );
 
+/** Área del maestro 7 que usa el formulario cuando el servicio es outsourcing. */
+const AREA_OUTSOURCING = "Outsourcing";
+
+/** Los cinco importes de la estructura salarial, en el orden del formulario. */
+const MONTOS: [
+  (
+    | "montoBase"
+    | "montoMovilidad"
+    | "montoMensual"
+    | "montoTrimestral"
+    | "montoSemestral"
+  ),
+  string
+][] = [
+  ["montoBase", "Monto base"],
+  ["montoMovilidad", "Movilidad"],
+  ["montoMensual", "Bono mensual"],
+  ["montoTrimestral", "Bono trimestral"],
+  ["montoSemestral", "Bono semestral"],
+];
+
+/** ¿La fecha ya pasó? Sin fecha se asume que el contrato sigue abierto. */
+const esFechaPasada = (fecha?: string | null) => {
+  if (!fecha) return false;
+  const hoy = new Date().toISOString().slice(0, 10);
+  return fecha < hoy;
+};
+
 const Dato = ({ label, valor }: { label: string; valor?: string | null }) => (
   <div className="flex flex-col gap-1">
     <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
@@ -123,7 +180,9 @@ export default function PantallaCargarFMI() {
 
   // Modalidad y motivo llegan del formulario como texto; hay que traducirlos a
   // sus maestros para que el ModalIngreso los reciba ya elegidos.
-  const { paramsByMaestro } = useParams(`${TIPO_MODALIDAD},${MOTIVO_INGRESO}`);
+  const { paramsByMaestro } = useParams(
+    `${TIPO_MODALIDAD},${MOTIVO_INGRESO},${UNIDAD},${TIPO_MONEDA}`
+  );
 
   const [paso, setPaso] = useState<Paso>(1);
   const [cargando, setCargando] = useState(false);
@@ -144,9 +203,25 @@ export default function PantallaCargarFMI() {
   // Paso 3
   const { requerimientos, loading: cargandoRqs, fetchRequerimientos } =
     useRequerimientos();
+  const [destino, setDestino] = useState<Destino>("ambos");
   const [rq, setRq] = useState<RequirementItem | null>(null);
-  const [perfil, setPerfil] = useState<PerfilType | null>(null);
   const [filtroRq, setFiltroRq] = useState("");
+
+  /** Lo que se va a escribir, editable en el paso 4. */
+  const [datos, setDatos] = useState<DatosContrato | null>(null);
+
+  /** "3500.00" -> 3500; vacío o no numérico -> null. */
+  const aNumero = (valor: string) => {
+    const limpio = valor.trim();
+    if (limpio === "") return null;
+    const numero = Number(limpio);
+    return Number.isFinite(numero) ? numero : null;
+  };
+  const [erroresDatos, setErroresDatos] = useState<
+    Partial<Record<keyof DatosContrato, string>>
+  >({});
+
+  const necesitaRq = destino === "ambos";
 
   // Paso 4. El motivo puede venir vacío aunque esté bloqueado, así que el
   // aviso y el motivo se guardan por separado.
@@ -166,57 +241,128 @@ export default function PantallaCargarFMI() {
   };
 
   /**
-   * Lo que el FMI aporta al formulario de ingreso, para que Asignar Talento no
-   * lo pida otra vez. Viaja en el estado de la navegación y no se persiste
-   * aquí: se guarda cuando el usuario confirme y finalice allí, que es el único
-   * momento en que el sistema lo guarda.
+   * Todo lo que el FMI aporta, listo para que el usuario lo revise y corrija.
    *
-   * Quedan fuera a propósito el cargo y las fechas de contrato, aunque el paso 2
-   * los muestre: el cargo sale del perfil de la vacante del RQ y las fechas se
-   * proponen desde la duración de contrato del requerimiento. Traerlos de un
-   * formulario anterior sería arrastrar datos de otro contrato.
+   * El formulario es la fuente, pero nada se escribe sin pasar por pantalla: un
+   * FMI antiguo puede traer un monto o un horario que ya no corresponde.
    */
-  const datosDeIngresoDelFmi = (): Partial<AsignarTalentoType> => {
-    if (!extraccion) return {};
+  const datosDelFmi = (): DatosContrato => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    const declara = normalizar(extraccion?.declaraSunat).startsWith("si");
+
+    // El formulario rotula esa fila como "Cliente" en outsourcing y como
+    // "Equipo" en el resto; solo en el segundo caso es un área del maestro 7.
+    const idArea = extraccion?.esOutsourcing
+      ? idPorNombre(AREA_OUTSOURCING, UNIDAD) ?? 0
+      : idPorNombre(extraccion?.equipoOCliente, UNIDAD) ?? 0;
 
     return {
-      idModalidadContrato: idPorNombre(extraccion.modalidad, TIPO_MODALIDAD),
-      idMotivo: idPorNombre(extraccion.motivoIngreso, MOTIVO_INGRESO),
-      horario: extraccion.horario || undefined,
-      proyectoServicio: extraccion.proyectoServicio || undefined,
-      objetoContrato: extraccion.objetoContrato || undefined,
-      montoBase: extraccion.montoBase ?? undefined,
-      montoMovilidad: extraccion.montoMovilidad ?? undefined,
+      idArea,
+      cargo: extraccion?.cargo || "",
+      idModalidadContrato:
+        idPorNombre(extraccion?.modalidad, TIPO_MODALIDAD) ?? 0,
+      idMotivo: idPorNombre(extraccion?.motivoIngreso, MOTIVO_INGRESO) ?? 0,
+      horario: extraccion?.horario || "",
+      proyectoServicio: extraccion?.proyectoServicio || "",
+      objetoContrato: extraccion?.objetoContrato || "",
+      // El PDF escribe "Sí" o "No"; en el contrato son 1 y 2.
+      declararSunat: declara ? 1 : 2,
+      sedeDeclarar: declara
+        ? sedeSunatList.find(
+            (sede) =>
+              normalizar(sede.nombre) === normalizar(extraccion?.sedeDeclarar)
+          )?.nombre || ""
+        : "",
+      ubicacion: "",
+      // El importe viaja sin símbolo, así que la moneda no se puede deducir del
+      // PDF: queda en la primera del maestro y se corrige si hace falta.
+      idMoneda: (paramsByMaestro[Number(TIPO_MONEDA)] || [])[0]?.num1 ?? 1,
+      montoBase: extraccion?.montoBase != null ? String(extraccion.montoBase) : "",
+      montoMovilidad:
+        extraccion?.montoMovilidad != null
+          ? String(extraccion.montoMovilidad)
+          : "",
+      montoMensual: "",
+      montoTrimestral: "",
+      montoSemestral: "",
+      fchInicioContrato: extraccion?.fechaInicioContrato || hoy,
+      fchTerminoContrato: extraccion?.fechaFinContrato || "",
+      // Un FMI cuyo contrato ya venció entra como terminado, pero es el usuario
+      // quien lo decide.
+      activo: !esFechaPasada(extraccion?.fechaFinContrato),
     };
   };
 
-  /** El cargo del formulario sugiere con qué perfil entra la persona. */
-  const perfilSugerido = useMemo(() => {
-    if (!rq?.lstPerfiles?.length) return null;
-    const cargo = normalizar(extraccion?.cargo);
-    if (!cargo) return null;
+  const setDato = <C extends keyof DatosContrato>(
+    campo: C,
+    valor: DatosContrato[C]
+  ) => {
+    setDatos((prev) => (prev ? { ...prev, [campo]: valor } : prev));
+    setErroresDatos((prev) => ({ ...prev, [campo]: undefined }));
+  };
 
-    return (
-      rq.lstPerfiles.find((item) =>
-        normalizar(item.perfil)
-          .split(/\s+/)
-          .some((palabra) => palabra.length > 3 && cargo.includes(palabra))
-      ) || null
-    );
-  }, [rq, extraccion]);
+  /**
+   * Las mismas reglas que exige el formulario de ingreso de Asignar Talento
+   * (`EntryFormSchema`), porque lo que se escribe acaba en las mismas columnas.
+   *
+   * La única diferencia deliberada: la fecha de término es opcional. Un FMI
+   * puede venir de un contrato sin plazo, y el SP lo registra con
+   * TIENE_DURACION en 0.
+   */
+  const validarDatos = (valores: DatosContrato) => {
+    const fallos: Partial<Record<keyof DatosContrato, string>> = {};
+    const vacio = (texto: string) => texto.trim() === "";
 
-  useEffect(() => {
-    if (rq) setPerfil(perfilSugerido ?? null);
-  }, [rq, perfilSugerido]);
+    if (vacio(valores.cargo)) fallos.cargo = "Campo obligatorio";
+    if (!valores.idArea) fallos.idArea = "Seleccione el equipo o área";
+    if (!valores.idModalidadContrato)
+      fallos.idModalidadContrato = "Seleccione la modalidad";
+    if (!valores.idMotivo) fallos.idMotivo = "Seleccione el motivo de ingreso";
+    if (vacio(valores.horario)) fallos.horario = "Campo obligatorio";
+    if (vacio(valores.proyectoServicio))
+      fallos.proyectoServicio = "Campo obligatorio";
+    if (vacio(valores.objetoContrato))
+      fallos.objetoContrato = "Campo obligatorio";
+    if (vacio(valores.ubicacion)) fallos.ubicacion = "Campo obligatorio";
+    if (!valores.idMoneda) fallos.idMoneda = "Seleccione la moneda";
 
-  // Al llegar al paso 2 se busca sola la primera vez, con el nombre del
-  // formulario: el operador solo reescribe si no sale quien esperaba.
-  useEffect(() => {
-    if (paso === 2 && candidatos === null && busqueda.trim()) {
-      buscarPersona();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paso]);
+    if (!valores.declararSunat)
+      fallos.declararSunat = "Indique si se declara en SUNAT";
+    // Igual que en el formulario de ingreso: la sede sólo se exige cuando sí
+    // se declara.
+    else if (valores.declararSunat !== 2 && vacio(valores.sedeDeclarar))
+      fallos.sedeDeclarar = "Indique la sede a declarar";
+
+    if (!valores.fchInicioContrato)
+      fallos.fchInicioContrato = "Campo obligatorio";
+    else if (
+      valores.fchTerminoContrato &&
+      valores.fchTerminoContrato < valores.fchInicioContrato
+    )
+      fallos.fchTerminoContrato =
+        "La fecha de fin no puede ser menor que la de inicio";
+
+    const base = aNumero(valores.montoBase);
+    if (base === null) fallos.montoBase = "Campo obligatorio";
+    else if (base <= 0) fallos.montoBase = "El monto base debe ser mayor a 0";
+
+    // Los bonos y la movilidad son opcionales, pero si se escriben tienen que
+    // ser un número válido.
+    (
+      [
+        "montoMovilidad",
+        "montoMensual",
+        "montoTrimestral",
+        "montoSemestral",
+      ] as const
+    ).forEach((campo) => {
+      const valor = valores[campo];
+      if (valor.trim() !== "" && aNumero(valor) === null)
+        fallos[campo] = "Monto inválido";
+    });
+
+    return fallos;
+  };
 
   // ─── Paso 1: leer el formulario ────────────────────────────────────────────
 
@@ -300,6 +446,25 @@ export default function PantallaCargarFMI() {
     }
   };
 
+  /**
+   * Abre el alta de un talento nuevo. Deselecciona al candidato que estuviera
+   * marcado: dejar una fila resaltada mientras se crea a otra persona se lee
+   * como que se va a usar esa.
+   */
+  const abrirCrearTalento = () => {
+    setPersona(null);
+    setMostrarCrear(true);
+  };
+
+  // Al llegar al paso 2 se busca sola la primera vez, con el nombre del
+  // formulario: el operador solo reescribe si no sale quien esperaba.
+  useEffect(() => {
+    if (paso === 2 && candidatos === null && busqueda.trim()) {
+      buscarPersona();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paso]);
+
   const elegirCandidato = (candidato: TalentMatch) => {
     setPersona({
       idTalento: candidato.idTalento,
@@ -326,29 +491,37 @@ export default function PantallaCargarFMI() {
 
   const rqsVisibles = useMemo(() => {
     const termino = normalizar(filtroRq);
-    return (requerimientos || [])
-      .filter((item) => item.idEstado !== ESTADO_ATENDIDO)
-      .filter(
-        (item) =>
-          !termino ||
-          normalizar(item.codigoRQ).includes(termino) ||
-          normalizar(item.titulo).includes(termino) ||
-          normalizar(item.cliente).includes(termino)
-      );
+    // Sin filtro por estado: el requerimiento solo se referencia, así que uno
+    // ya atendido o cerrado es un destino válido para un FMI antiguo.
+    return (requerimientos || []).filter(
+      (item) =>
+        !termino ||
+        normalizar(item.codigoRQ).includes(termino) ||
+        normalizar(item.titulo).includes(termino) ||
+        normalizar(item.cliente).includes(termino)
+    );
   }, [requerimientos, filtroRq]);
 
   const irAConfirmar = async () => {
-    if (!persona || !rq || !perfil) return;
+    if (!persona) return;
+    if (necesitaRq && !rq) return;
 
+    // Los datos se siembran al entrar, no antes: así el usuario puede volver al
+    // paso 3, cambiar de destino y seguir viendo lo mismo del formulario.
+    setDatos(datosDelFmi());
+    setErroresDatos({});
     setCargando(true);
     setBloqueoListaNegra(null);
     try {
-      const { data } = await validateBlacklist({
-        idTalento: persona.idTalento,
-        idRequerimiento: rq.idRequerimiento,
-      });
-      if (data.result?.idMensaje === 2 && data.validacion?.bloqueado) {
-        setBloqueoListaNegra({ motivo: data.validacion.motivo });
+      // Sin requerimiento no hay cliente contra el que validar la restricción.
+      if (necesitaRq && rq) {
+        const { data } = await validateBlacklist({
+          idTalento: persona.idTalento,
+          idRequerimiento: rq.idRequerimiento,
+        });
+        if (data.result?.idMensaje === 2 && data.validacion?.bloqueado) {
+          setBloqueoListaNegra({ motivo: data.validacion.motivo });
+        }
       }
     } catch (error) {
       enqueueSnackbar({
@@ -361,89 +534,72 @@ export default function PantallaCargarFMI() {
     }
   };
 
-  // ─── Paso 4: agregar ───────────────────────────────────────────────────────
+  const registrar = async () => {
+    if (!persona || !datos) return;
+    if (necesitaRq && !rq) return;
 
-  const agregar = async () => {
-    if (!persona || !rq || !perfil) return;
+    const fallos = validarDatos(datos);
+    if (Object.keys(fallos).length > 0) {
+      setErroresDatos(fallos);
+      enqueueSnackbar({
+        message: "Revisa los datos del contrato antes de registrarlo",
+        variant: "warning",
+      });
+      return;
+    }
 
     setCargando(true);
     try {
-      // Estado y situación salen del mismo endpoint que usa Asignar Talento,
-      // para que la fila quede igual que si se hubiera agregado desde ahí.
-      let idEstado = 1;
-      let idSituacion = 1;
-      let nombres = persona.nombre;
-      let apellidos = "";
-      let dni = persona.dni || "";
-      let celular = "";
-      let email = persona.email || "";
-
-      try {
-        const { data } = await obtenerTalentoDeRq(
-          persona.idTalento,
-          rq.idRequerimiento
-        );
-        if (data?.idTipoMensaje === 2 && data.talento) {
-          const detalle = data.talento;
-          idEstado = detalle.idEstado || 1;
-          idSituacion = detalle.idSituacion || 1;
-          nombres = detalle.nombres || nombres;
-          apellidos = detalle.apellidos || "";
-          dni = detalle.dni || dni;
-          celular = detalle.celular || "";
-          email = detalle.email || email;
-
-          if (detalle.ingreso) {
-            enqueueSnackbar({
-              message: "Esta persona ya ingresó por este requerimiento.",
-              variant: "warning",
-            });
-            return;
-          }
-        }
-      } catch (error) {
-        // Sin detalle se manda lo que ya se sabe: el SP no lo exige.
-      }
-
-      const { data } = await agregarAlRequerimiento(rq.idRequerimiento, {
+      const params: CargaFmiParams = {
         idTalento: persona.idTalento,
-        nombres,
-        apellidos,
-        dni,
-        celular,
-        email,
-        idSituacion,
-        idEstado,
-        idPerfil: perfil.idPerfil,
-        confirmado: false,
-        ingreso: 0,
-        idEstadoRegistro: 1,
-      });
+        idRequerimiento: necesitaRq ? rq?.idRequerimiento ?? null : null,
+        activo: datos.activo,
 
+        idArea: datos.idArea || null,
+        cargo: datos.cargo.trim() || null,
+        idModalidadContrato: datos.idModalidadContrato || null,
+        idMotivo: datos.idMotivo || null,
+        horario: datos.horario.trim() || null,
+        proyectoServicio: datos.proyectoServicio.trim() || null,
+        objetoContrato: datos.objetoContrato.trim() || null,
+        declararSunat: datos.declararSunat,
+        sedeDeclarar: datos.sedeDeclarar.trim() || null,
+        ubicacion: datos.ubicacion.trim() || null,
+        // El contrato guarda la razón social, y el cliente del RQ manda sobre lo
+        // que diga el formulario.
+        cliente:
+          (necesitaRq ? rq?.cliente : null) ||
+          extraccion?.equipoOCliente ||
+          null,
+
+        idMoneda: datos.idMoneda || null,
+        montoBase: aNumero(datos.montoBase),
+        montoMovilidad: aNumero(datos.montoMovilidad),
+        montoMensual: aNumero(datos.montoMensual),
+        montoTrimestral: aNumero(datos.montoTrimestral),
+        montoSemestral: aNumero(datos.montoSemestral),
+
+        fchInicioContrato: datos.fchInicioContrato,
+        fchTerminoContrato: datos.fchTerminoContrato || null,
+      };
+
+      const { data } = await cargarDesdeFmi(params);
       if (data.idTipoMensaje !== 2) {
         enqueueSnackbar({
-          message: data.mensaje || "No se pudo agregar al requerimiento",
+          message: data.mensaje || "No se pudo registrar al colaborador",
           variant: "error",
         });
         return;
       }
 
-      enqueueSnackbar({
-        message: `${persona.nombre} se agregó al ${rq.codigoRQ}`,
-        variant: "success",
-      });
-      navigate("/tableAsignarTalento", {
-        state: {
-          idRequerimiento: rq.idRequerimiento,
-          cargaFmi: {
-            idTalento: persona.idTalento,
-            datos: datosDeIngresoDelFmi(),
-          },
-        },
-      });
+      enqueueSnackbar({ message: data.mensaje, variant: "success" });
+
+      // Siempre al inicio: la carga no toca el requerimiento, así que abrir
+      // Asignar Talento no mostraría nada nuevo y se leería como un error.
+      navigate("/listaTalentos");
     } catch (error) {
       enqueueSnackbar({
-        message: "No se pudo agregar al requerimiento",
+        message: "No se pudo registrar al colaborador",
         variant: "error",
       });
     } finally {
@@ -813,7 +969,7 @@ export default function PantallaCargarFMI() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setMostrarCrear(true)}
+                    onClick={abrirCrearTalento}
                     className="btn mx-0 h-10 border border-[var(--color-blue)] px-4 text-sm font-semibold text-[var(--color-blue-hover)]"
                   >
                     Crear con CV
@@ -851,6 +1007,62 @@ export default function PantallaCargarFMI() {
           {/* Paso 3 · a qué requerimiento */}
           {paso === 3 && persona && (
             <div className="flex flex-col gap-4">
+              <div className="card flex flex-col gap-3">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-800">
+                    ¿Qué se va a registrar?
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    En los dos casos se registra su contrato y su movimiento de
+                    ingreso. Lo que eliges es si queda anotado de qué
+                    requerimiento salió.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {[
+                    {
+                      id: "ambos" as Destino,
+                      titulo: "Requerimiento y contrato",
+                      detalle:
+                        "El contrato queda referenciado a ese RQ. El requerimiento no cambia: ni su cobertura ni su lista de postulantes.",
+                    },
+                    {
+                      id: "contrato" as Destino,
+                      titulo: "Solo el contrato",
+                      detalle:
+                        "Contrato suelto, para colaboradores cuyo requerimiento ya no existe o que nunca pasaron por uno.",
+                    },
+                  ].map((opcion) => (
+                    <label
+                      key={opcion.id}
+                      className={`flex cursor-pointer gap-3 rounded-lg border p-3.5 ${
+                        destino === opcion.id
+                          ? "border-[var(--color-blue)] bg-sky-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="destino"
+                        checked={destino === opcion.id}
+                        onChange={() => setDestino(opcion.id)}
+                        className="mt-0.5 h-4 w-4 flex-none accent-[var(--color-blue)]"
+                      />
+                      <span className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-800">
+                          {opcion.titulo}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {opcion.detalle}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {necesitaRq && (
               <div className="card flex flex-col gap-4">
                 <div className="flex items-end gap-3">
                   <div className="flex flex-grow flex-col gap-1.5">
@@ -876,7 +1088,7 @@ export default function PantallaCargarFMI() {
                 <div className="flex flex-col gap-2.5">
                   {rqsVisibles.length === 0 ? (
                     <p className="rounded-lg bg-slate-50 px-4 py-6 text-center text-sm text-gray-500">
-                      No hay requerimientos abiertos que coincidan.
+                      Ningún requerimiento coincide con la búsqueda.
                     </p>
                   ) : (
                     rqsVisibles.map((item) => {
@@ -922,114 +1134,14 @@ export default function PantallaCargarFMI() {
                             </span>
                           </label>
 
-                          {/* Las vacantes se abren dentro del RQ elegido: la
-                              pregunta de con qué vacante entra se responde aquí
-                              mismo, no al final del paso. */}
-                          {elegido && (
-                            <div className="flex flex-col gap-3 border-t border-sky-200 px-4 py-4">
-                              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                <span className="text-sm font-semibold text-gray-800">
-                                  ¿Con qué vacante entra?
-                                </span>
-                                {perfilSugerido && (
-                                  <span className="text-xs text-gray-500">
-                                    El cargo del formulario dice «
-                                    {extraccion?.cargo}», por eso viene marcada
-                                    esa.
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                {(item.lstPerfiles || []).map((vacante) => {
-                                  const libres =
-                                    vacante.vacantesTotales -
-                                    vacante.vacantesCubiertas;
-                                  const llena = libres <= 0;
-                                  const marcada =
-                                    perfil?.idPerfil === vacante.idPerfil;
-                                  return (
-                                    <label
-                                      key={vacante.idPerfil}
-                                      className={`flex cursor-pointer flex-col gap-2.5 rounded-lg border bg-white p-3.5 ${
-                                        marcada
-                                          ? "border-[var(--color-blue)] ring-1 ring-[var(--color-blue)]"
-                                          : "border-gray-200"
-                                      }`}
-                                    >
-                                      <span className="flex items-start gap-2.5">
-                                        <input
-                                          type="radio"
-                                          name="perfil"
-                                          checked={marcada}
-                                          onChange={() => setPerfil(vacante)}
-                                          className="mt-0.5 h-4 w-4 flex-none accent-[var(--color-blue)]"
-                                        />
-                                        <span className="flex flex-grow flex-col">
-                                          <span className="text-sm font-semibold text-gray-800">
-                                            {vacante.perfil}
-                                          </span>
-                                          <span
-                                            className={`text-xs ${
-                                              llena
-                                                ? "text-amber-700"
-                                                : "text-gray-500"
-                                            }`}
-                                          >
-                                            {llena
-                                              ? "Vacantes ya cubiertas"
-                                              : `${libres} ${
-                                                  libres === 1
-                                                    ? "vacante libre"
-                                                    : "vacantes libres"
-                                                }`}
-                                          </span>
-                                        </span>
-                                        <span className="text-sm font-semibold text-gray-700">
-                                          {vacante.vacantesCubiertas}/
-                                          {vacante.vacantesTotales}
-                                        </span>
-                                      </span>
-
-                                      {/* Una casilla por vacante: se ve de un
-                                          golpe cuántas quedan. */}
-                                      <span className="flex gap-1">
-                                        {Array.from({
-                                          length: Math.max(
-                                            vacante.vacantesTotales,
-                                            1
-                                          ),
-                                        }).map((_, indice) => (
-                                          <span
-                                            key={indice}
-                                            className={`h-2 flex-grow rounded-sm ${
-                                              indice < vacante.vacantesCubiertas
-                                                ? "bg-emerald-500"
-                                                : "bg-gray-200"
-                                            }`}
-                                          />
-                                        ))}
-                                      </span>
-                                    </label>
-                                  );
-                                })}
-                              </div>
-
-                              {(item.lstPerfiles || []).length === 0 && (
-                                <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                                  Este requerimiento no tiene vacantes por
-                                  perfil, así que no se puede agregar a nadie:
-                                  la fila no aparecería en Asignar Talento.
-                                </p>
-                              )}
-                            </div>
-                          )}
                         </div>
                       );
                     })
                   )}
                 </div>
               </div>
+
+              )}
 
               <div className="flex items-center justify-between gap-3">
                 <button
@@ -1042,22 +1154,22 @@ export default function PantallaCargarFMI() {
                 <button
                   type="button"
                   onClick={irAConfirmar}
-                  disabled={!rq || !perfil || ocupado}
+                  disabled={(necesitaRq && !rq) || ocupado}
                   className={`btn mx-0 flex h-11 items-center gap-2 px-5 text-sm font-semibold ${
-                    !rq || !perfil || ocupado
+                    (necesitaRq && !rq) || ocupado
                       ? "cursor-not-allowed bg-gray-300 text-white"
                       : "btn-blue"
                   }`}
                 >
-                  Revisar y agregar
+                  Revisar lo que se va a registrar
                   <ArrowRight size={18} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Paso 4 · confirmar */}
-          {paso === 4 && persona && rq && perfil && (
+          {/* Paso 4 · revisar y registrar */}
+          {paso === 4 && persona && datos && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-4 md:flex-row">
                 <div className="card flex flex-col gap-3">
@@ -1074,25 +1186,392 @@ export default function PantallaCargarFMI() {
                   <span className="badge self-start bg-gray-100 text-gray-700">
                     {persona.esNuevo
                       ? "Talento creado ahora"
-                      : "Talento que ya existía"}
+                      : "Talento existente"}
                   </span>
                 </div>
 
                 <div className="card flex flex-col gap-3">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Requerimiento
+                    Se registrará
                   </span>
-                  <span className="text-base font-semibold text-gray-800">
-                    {rq.codigoRQ}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {rq.titulo} · {rq.cliente}
-                  </span>
-                  <span className="badge self-start bg-sky-100 text-sky-800">
-                    Perfil: {perfil.perfil}
+                  {necesitaRq && rq ? (
+                    <>
+                      <span className="text-base font-semibold text-gray-800">
+                        {rq.codigoRQ}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {rq.titulo} · {rq.cliente}
+                      </span>
+                      <span className="badge self-start bg-sky-100 text-sky-800">
+                        Solo como referencia del contrato
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-500">
+                      Contrato suelto, sin requerimiento asociado.
+                    </span>
+                  )}
+                  <span className="badge self-start bg-emerald-100 text-emerald-800">
+                    Contrato y movimiento de ingreso
                   </span>
                 </div>
               </div>
+
+              <div className="card flex flex-col gap-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800">
+                        Datos del contrato
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        Vienen del FMI. Corrige lo que haga falta: esto es lo que
+                        queda guardado.
+                      </span>
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-gray-200 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={datos.activo}
+                        onChange={(e) => setDato("activo", e.target.checked)}
+                        className="input-checkbox"
+                      />
+                      <span className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-800">
+                          Contrato vigente
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Desmárcalo si el contrato ya terminó
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-cargo" className="dropdown-label">
+                        Cargo
+                      </label>
+                      <input
+                        id="d-cargo"
+                        type="text"
+                        value={datos.cargo}
+                        onChange={(e) => setDato("cargo", e.target.value)}
+                        className="input"
+                      />
+                      {erroresDatos.cargo && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.cargo}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-area" className="dropdown-label">
+                        Equipo / área
+                      </label>
+                      <select
+                        id="d-area"
+                        value={datos.idArea}
+                        onChange={(e) => setDato("idArea", Number(e.target.value))}
+                        className="dropdown"
+                      >
+                        <option value={0}>Sin definir</option>
+                        {(paramsByMaestro[Number(UNIDAD)] || []).map((item) => (
+                          <option key={item.idParametro} value={item.num1}>
+                            {item.string1}
+                          </option>
+                        ))}
+                      </select>
+                      {erroresDatos.idArea && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.idArea}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-modalidad" className="dropdown-label">
+                        Modalidad
+                      </label>
+                      <select
+                        id="d-modalidad"
+                        value={datos.idModalidadContrato}
+                        onChange={(e) =>
+                          setDato("idModalidadContrato", Number(e.target.value))
+                        }
+                        className="dropdown"
+                      >
+                        <option value={0}>Sin definir</option>
+                        {(paramsByMaestro[Number(TIPO_MODALIDAD)] || []).map(
+                          (item) => (
+                            <option key={item.idParametro} value={item.num1}>
+                              {item.string1}
+                            </option>
+                          )
+                        )}
+                      </select>
+                      {erroresDatos.idModalidadContrato && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.idModalidadContrato}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-motivo" className="dropdown-label">
+                        Motivo de ingreso
+                      </label>
+                      <select
+                        id="d-motivo"
+                        value={datos.idMotivo}
+                        onChange={(e) => setDato("idMotivo", Number(e.target.value))}
+                        className="dropdown"
+                      >
+                        <option value={0}>Sin definir</option>
+                        {(paramsByMaestro[Number(MOTIVO_INGRESO)] || []).map(
+                          (item) => (
+                            <option key={item.idParametro} value={item.num1}>
+                              {item.string1}
+                            </option>
+                          )
+                        )}
+                      </select>
+                      {erroresDatos.idMotivo && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.idMotivo}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <label htmlFor="d-horario" className="dropdown-label">
+                        Horario de trabajo
+                      </label>
+                      <input
+                        id="d-horario"
+                        type="text"
+                        value={datos.horario}
+                        onChange={(e) => setDato("horario", e.target.value)}
+                        className="input"
+                      />
+                      {erroresDatos.horario && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.horario}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-inicio" className="dropdown-label">
+                        Inicio de contrato <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="d-inicio"
+                        type="date"
+                        value={datos.fchInicioContrato}
+                        onChange={(e) =>
+                          setDato("fchInicioContrato", e.target.value)
+                        }
+                        className="input"
+                      />
+                      {erroresDatos.fchInicioContrato && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.fchInicioContrato}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-fin" className="dropdown-label">
+                        Término de contrato
+                      </label>
+                      <input
+                        id="d-fin"
+                        type="date"
+                        value={datos.fchTerminoContrato}
+                        onChange={(e) =>
+                          setDato("fchTerminoContrato", e.target.value)
+                        }
+                        className="input"
+                      />
+                      {erroresDatos.fchTerminoContrato && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.fchTerminoContrato}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-ubicacion" className="dropdown-label">
+                        Ubicación
+                      </label>
+                      <input
+                        id="d-ubicacion"
+                        type="text"
+                        value={datos.ubicacion}
+                        onChange={(e) => setDato("ubicacion", e.target.value)}
+                        className="input"
+                      />
+                      {erroresDatos.ubicacion && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.ubicacion}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <label htmlFor="d-proyecto" className="dropdown-label">
+                        Proyecto / servicio
+                      </label>
+                      <input
+                        id="d-proyecto"
+                        type="text"
+                        value={datos.proyectoServicio}
+                        onChange={(e) =>
+                          setDato("proyectoServicio", e.target.value)
+                        }
+                        className="input"
+                      />
+                      {erroresDatos.proyectoServicio && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.proyectoServicio}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 md:col-span-3">
+                      <label htmlFor="d-objeto" className="dropdown-label">
+                        Objeto del contrato
+                      </label>
+                      <input
+                        id="d-objeto"
+                        type="text"
+                        value={datos.objetoContrato}
+                        onChange={(e) => setDato("objetoContrato", e.target.value)}
+                        className="input"
+                      />
+                      {erroresDatos.objetoContrato && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.objetoContrato}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label htmlFor="d-sunat" className="dropdown-label">
+                        Declarado en SUNAT
+                      </label>
+                      <select
+                        id="d-sunat"
+                        value={datos.declararSunat}
+                        onChange={(e) => {
+                          const valor = Number(e.target.value);
+                          setDato("declararSunat", valor);
+                          // Sin declaración no hay sede que elegir.
+                          if (valor === 2) setDato("sedeDeclarar", "");
+                        }}
+                        className="dropdown"
+                      >
+                        <option value={1}>Sí</option>
+                        <option value={2}>No</option>
+                      </select>
+                      {erroresDatos.declararSunat && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.declararSunat}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <label htmlFor="d-sede" className="dropdown-label">
+                        Sede a declarar
+                      </label>
+                      <select
+                        id="d-sede"
+                        value={datos.sedeDeclarar}
+                        disabled={datos.declararSunat === 2}
+                        onChange={(e) => setDato("sedeDeclarar", e.target.value)}
+                        className="dropdown disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        <option value="">
+                          {datos.declararSunat === 2
+                            ? "No aplica"
+                            : "Seleccione la sede"}
+                        </option>
+                        {sedeSunatList.map((sede) => (
+                          <option key={sede.idSede} value={sede.nombre}>
+                            {sede.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      {erroresDatos.sedeDeclarar && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.sedeDeclarar}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800">
+                        Estructura salarial
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        El formulario no imprime la moneda, así que revísala.
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
+                      <div className="flex flex-col gap-1">
+                        <label htmlFor="d-moneda" className="dropdown-label">
+                          Moneda
+                        </label>
+                        <select
+                          id="d-moneda"
+                          value={datos.idMoneda}
+                          onChange={(e) =>
+                            setDato("idMoneda", Number(e.target.value))
+                          }
+                          className="dropdown"
+                        >
+                          {(paramsByMaestro[Number(TIPO_MONEDA)] || []).map(
+                            (item) => (
+                              <option key={item.idParametro} value={item.num1}>
+                                {item.string1}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      {erroresDatos.idMoneda && (
+                        <span className="text-xs text-red-500">
+                          {erroresDatos.idMoneda}
+                        </span>
+                      )}
+                      </div>
+                      {MONTOS.map(([campo, etiqueta]) => (
+                        <div key={campo} className="flex flex-col gap-1">
+                          <label htmlFor={"d-" + campo} className="dropdown-label">
+                            {etiqueta}
+                          </label>
+                          <input
+                            id={"d-" + campo}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={datos[campo]}
+                            onChange={(e) => setDato(campo, e.target.value)}
+                            className="input"
+                          />
+                          {erroresDatos[campo] && (
+                            <span className="text-xs text-red-500">
+                              {erroresDatos[campo]}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
               <div className="card flex flex-col gap-6 md:flex-row">
                 <div className="flex flex-grow flex-col gap-2.5">
@@ -1100,14 +1579,30 @@ export default function PantallaCargarFMI() {
                     Qué va a pasar
                   </span>
                   <ul className="flex list-none flex-col gap-2 p-0 text-sm text-gray-700">
+                    {necesitaRq && rq && (
+                      <li className="flex items-start gap-2">
+                        <Check
+                          size={15}
+                          strokeWidth={3}
+                          className="mt-1 flex-none text-emerald-600"
+                        />
+                        <span>
+                          El contrato queda anotado como procedente del{" "}
+                          {rq.codigoRQ}, y así se ve en su expediente.
+                        </span>
+                      </li>
+                    )}
                     <li className="flex items-start gap-2">
                       <Check
                         size={15}
                         strokeWidth={3}
                         className="mt-1 flex-none text-emerald-600"
                       />
-                      {persona.nombre} entra a la lista de postulantes del{" "}
-                      {rq.codigoRQ}.
+                      <span>
+                        Se crea su contrato{" "}
+                        {datos.activo ? "vigente" : "terminado"} y su movimiento
+                        de ingreso en el expediente.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check
@@ -1115,19 +1610,14 @@ export default function PantallaCargarFMI() {
                         strokeWidth={3}
                         className="mt-1 flex-none text-emerald-600"
                       />
-                      Queda <strong>sin confirmar</strong>, con el perfil{" "}
-                      {perfil.perfil}.
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check
-                        size={15}
-                        strokeWidth={3}
-                        className="mt-1 flex-none text-emerald-600"
-                      />
-                      Los demás postulantes del RQ no se tocan.
+                      <span>
+                        Si no tiene correo corporativo se le genera; si ya tiene,
+                        se conserva.
+                      </span>
                     </li>
                   </ul>
                 </div>
+                <span className="hidden w-px bg-gray-100 md:block" />
                 <div className="flex flex-grow flex-col gap-2.5">
                   <span className="text-sm font-semibold text-amber-700">
                     Qué NO va a pasar
@@ -1135,27 +1625,32 @@ export default function PantallaCargarFMI() {
                   <ul className="flex list-none flex-col gap-2 p-0 text-sm text-gray-700">
                     <li className="flex items-start gap-2">
                       <X size={15} className="mt-1 flex-none text-gray-400" />
-                      No se genera contrato ni formulario de ingreso.
+                      <span>
+                        No se envía ningún correo ni se generan los formularios en
+                        PDF.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <X size={15} className="mt-1 flex-none text-gray-400" />
-                      No se crea solicitud de equipo ni correo corporativo.
+                      <span>
+                        No se toca el requerimiento: no aparece entre sus
+                        postulantes ni cuenta en sus vacantes cubiertas.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <X size={15} className="mt-1 flex-none text-gray-400" />
-                      No se envía ningún correo a nadie.
+                      <span>No se crea solicitud de equipo: el FMI no la trae.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <X size={15} className="mt-1 flex-none text-gray-400" />
+                      <span>
+                        No se avisa del inicio de labores, aunque la fecha sea
+                        futura.
+                      </span>
                     </li>
                   </ul>
                 </div>
               </div>
-
-              <p className="text-sm text-gray-500">
-                Después de agregarlo se abre Asignar Talento. Cuando lo
-                confirmes ahí, el formulario de ingreso llegará con lo que decía
-                su FMI: modalidad, motivo de ingreso, horario, proyecto, objeto
-                del contrato y estructura salarial. El cargo y las fechas de
-                contrato siguen saliendo del requerimiento.
-              </p>
 
               {bloqueoListaNegra && (
                 <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
@@ -1164,7 +1659,9 @@ export default function PantallaCargarFMI() {
                   </span>
                   <p className="text-sm text-amber-800">
                     {bloqueoListaNegra.motivo
-                      ? `El talento se encuentra en la lista negra de este cliente por el motivo: ${bloqueoListaNegra.motivo}.`
+                      ? "El talento se encuentra en la lista negra de este cliente por el motivo: " +
+                        bloqueoListaNegra.motivo +
+                        "."
                       : "El talento se encuentra en la lista negra de este cliente."}
                   </p>
                 </div>
@@ -1180,16 +1677,17 @@ export default function PantallaCargarFMI() {
                 </button>
                 <button
                   type="button"
-                  onClick={agregar}
+                  onClick={registrar}
                   disabled={ocupado}
                   className="btn btn-primary mx-0 flex h-11 items-center gap-2 px-6 text-sm font-semibold"
                 >
                   <Check size={18} />
-                  Agregar al requerimiento
+                  Registrar colaborador
                 </button>
               </div>
             </div>
           )}
+
         </div>
       </PantallaWrapper>
 
@@ -1264,7 +1762,7 @@ export default function PantallaCargarFMI() {
                 type="button"
                 onClick={() => {
                   setDuplicado(null);
-                  setMostrarCrear(true);
+                  abrirCrearTalento();
                 }}
                 className="btn mx-0 h-11 border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700"
               >

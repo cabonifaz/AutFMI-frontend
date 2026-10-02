@@ -95,6 +95,59 @@ export type TalentoDeRqPayload = {
   idEstadoRegistro: number;
 };
 
+/** Lo que se registra del contrato de un colaborador cargado desde su FMI. */
+export type CargaFmiParams = {
+  idTalento: number;
+  /**
+   * De qué requerimiento salió el contrato. Es solo una referencia: se guarda
+   * en TALENTO_CONTRATO.ID_RQ y no cambia nada del RQ. Null = contrato suelto.
+   */
+  idRequerimiento?: number | null;
+  /** Lo decide el usuario: un FMI antiguo entra como contrato terminado. */
+  activo: boolean;
+
+  idArea?: number | null;
+  cargo?: string | null;
+  idModalidadContrato?: number | null;
+  idMotivo?: number | null;
+  horario?: string | null;
+  proyectoServicio?: string | null;
+  objetoContrato?: string | null;
+  declararSunat?: number | null;
+  sedeDeclarar?: string | null;
+  ubicacion?: string | null;
+  cliente?: string | null;
+
+  idMoneda?: number | null;
+  montoBase?: number | null;
+  montoMovilidad?: number | null;
+  montoMensual?: number | null;
+  montoTrimestral?: number | null;
+  montoSemestral?: number | null;
+
+  /** yyyy-MM-dd */
+  fchInicioContrato?: string | null;
+  fchTerminoContrato?: string | null;
+};
+
+export type CargaFmiResponse = BaseResponse & {
+  idContrato?: number | null;
+  idHistorial?: number | null;
+};
+
+/**
+ * Registra el contrato del colaborador con su movimiento de ingreso.
+ *
+ * No manda correos ni genera PDFs, y no toca el requerimiento: solo lo
+ * referencia. Por eso sustituye al camino de `agregarAlRequerimiento` cuando la
+ * carga viene de un FMI.
+ */
+export const cargarDesdeFmi = (
+  params: CargaFmiParams
+): Promise<AxiosResponse<CargaFmiResponse>> => {
+  return apiClientWithToken.post("/fmi/talent/carga-fmi", params);
+};
+
 /**
  * Agrega a la persona al requerimiento, sin confirmar.
  *

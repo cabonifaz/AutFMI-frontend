@@ -73,13 +73,17 @@ const partirCelular = (celular?: string | null) => {
 };
 
 /**
- * Alta de un talento que no está en el banco, a partir de su CV.
+ * Alta de un talento que no está en el banco.
+ *
+ * Basta con los datos básicos: nombres, apellidos, documento, correo, país y
+ * celular. El CV es opcional y actúa como acelerador: si se adjunta, la IA lo
+ * lee y la ficha nace además con ubicación, habilidades, experiencia, educación
+ * e idiomas, y el propio CV queda guardado como archivo.
  *
  * El reparto de fuentes es deliberado: el FMI manda en la identidad —es el
- * documento contractual— y el CV llena todo lo demás (correo, celular,
- * documento, ubicación, habilidades, experiencia, educación, idiomas). Antes de
- * crear se vuelve a buscar por documento y correo, que es lo único
- * determinista: el nombre del CV puede estar escrito de otra forma.
+ * documento contractual— y el CV llena el resto. Antes de crear se vuelve a
+ * buscar por documento y correo, que es lo único determinista: el nombre del CV
+ * puede estar escrito de otra forma.
  */
 export const ModalCrearTalentoFMI = ({
   nombreFmi,
@@ -245,7 +249,7 @@ export const ModalCrearTalentoFMI = ({
   };
 
   const crear = async () => {
-    if (!validar() || !cvFile) return;
+    if (!validar()) return;
 
     setCreando(true);
     try {
@@ -255,7 +259,16 @@ export const ModalCrearTalentoFMI = ({
         return;
       }
 
-      const cvBase64 = await Utils.fileToBase64(cvFile);
+      // El CV es opcional: sin él se crea con lo que hay en pantalla.
+      const cvArchivo = cvFile
+        ? {
+            stringB64: await Utils.fileToBase64(cvFile),
+            nombreArchivo: Utils.getFileNameWithoutExtension(cvFile.name),
+            extensionArchivo: "pdf",
+            idTipoArchivo: ARCHIVO_PDF,
+            idTipoDocumento: DOCUMENTO_CV,
+          }
+        : undefined;
 
       const params: AddTalentParams = {
         ...extra,
@@ -268,13 +281,7 @@ export const ModalCrearTalentoFMI = ({
         idPais: extra.idPais ?? form.idPais,
         idMoneda: null,
         tieneEquipo: false,
-        cvArchivo: {
-          stringB64: cvBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(cvFile.name),
-          extensionArchivo: "pdf",
-          idTipoArchivo: ARCHIVO_PDF,
-          idTipoDocumento: DOCUMENTO_CV,
-        },
+        cvArchivo,
       };
 
       const { data } = await crearTalento(params);
@@ -339,26 +346,29 @@ export const ModalCrearTalentoFMI = ({
           />
 
           {!cvLeido ? (
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => inputArchivoRef.current?.click()}
-                disabled={ocupado}
-                className="flex w-full items-center gap-4 rounded-lg border-2 border-dashed border-gray-300 bg-slate-50 p-6 text-left transition-colors hover:border-[var(--color-blue)] disabled:opacity-60"
-              >
+            <div className="flex flex-col gap-3 rounded-lg border border-dashed border-gray-300 bg-slate-50 p-4">
+              <div className="flex items-center gap-4">
                 <span className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-white text-[var(--color-blue)]">
                   <FileText size={20} />
                 </span>
-                <span className="flex min-w-0 flex-col">
+                <div className="flex min-w-0 flex-grow flex-col">
                   <span className="truncate text-sm font-semibold text-gray-800">
-                    {cvFile ? cvFile.name : "Selecciona el CV en PDF"}
+                    {cvFile ? cvFile.name : "Adjuntar su CV (opcional)"}
                   </span>
                   <span className="text-xs text-gray-500">
-                    Es obligatorio: de ahí salen el correo, el celular y el
-                    documento.
+                    Si lo adjuntas, la ficha nace con habilidades, experiencia,
+                    educación e idiomas. Si no, se crea con lo de abajo.
                   </span>
-                </span>
-              </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => inputArchivoRef.current?.click()}
+                  disabled={ocupado}
+                  className="h-9 flex-none rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {cvFile ? "Cambiar" : "Elegir CV"}
+                </button>
+              </div>
 
               {cvFile && (
                 <button
@@ -372,7 +382,6 @@ export const ModalCrearTalentoFMI = ({
               )}
             </div>
           ) : (
-            <>
               <div className="flex items-center gap-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3">
                 <span className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-white text-[var(--color-blue-hover)]">
                   <FileText size={20} />
@@ -397,8 +406,9 @@ export const ModalCrearTalentoFMI = ({
                   Cambiar CV
                 </button>
               </div>
+          )}
 
-              {discrepanciaDeNombre && (
+          {discrepanciaDeNombre && (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                   El CV dice <strong>«{nombreCv}»</strong> y el formulario{" "}
                   <strong>«{nombreFmi}»</strong>. Se guardará el nombre del
@@ -466,9 +476,7 @@ export const ModalCrearTalentoFMI = ({
                     className="input"
                   />
                   <span className="text-xs text-gray-500">
-                    {extra.dni
-                      ? "Leído del CV"
-                      : "El CV no lo traía; complétalo si lo tienes"}
+                    {extra.dni ? "Leído del CV" : "Opcional, pero ayuda a no duplicarlo"}
                   </span>
                 </div>
                 <div className="col-span-2 flex flex-col gap-1">
@@ -558,8 +566,6 @@ export const ModalCrearTalentoFMI = ({
                   </div>
                 </div>
               )}
-            </>
-          )}
         </div>
 
         <div className="flex items-center justify-between gap-4 border-t border-gray-100 bg-slate-50 px-7 py-4">
@@ -579,7 +585,7 @@ export const ModalCrearTalentoFMI = ({
             <button
               type="button"
               onClick={crear}
-              disabled={!cvLeido || ocupado}
+              disabled={ocupado}
               className="flex h-11 items-center gap-2 rounded-lg bg-[var(--color-blue)] px-5 text-sm font-semibold text-white hover:bg-[var(--color-blue-hover)] disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               <UserPlus size={18} />

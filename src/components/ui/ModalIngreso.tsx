@@ -35,6 +35,14 @@ interface Props {
   duracionContrato?: number;
   /** Unidad de esa duración (PARAMETROS, maestro 28). */
   idDuracionContrato?: number;
+  /**
+   * El talento llegó por la carga de un FMI, así que los campos vienen con lo
+   * que decía ese formulario. Sólo sirve para ofrecer volver a los valores por
+   * defecto.
+   */
+  desdeFmi?: boolean;
+  /** El usuario descartó lo del FMI: la pantalla ya no debe reinyectarlo. */
+  onUsarPorDefecto?: () => void;
 }
 
 export const ModalIngreso = ({
@@ -43,6 +51,8 @@ export const ModalIngreso = ({
   onConfirm,
   duracionContrato,
   idDuracionContrato,
+  desdeFmi = false,
+  onUsarPorDefecto,
 }: Props) => {
   const { clientes, loading: clientsLoading } = useFetchClients();
   const {
@@ -50,6 +60,9 @@ export const ModalIngreso = ({
     loading: paramLoading,
     fetchParams,
   } = useFetchParams();
+
+  /** El aviso de que los campos vienen de un FMI, hasta que se descarten. */
+  const [mostrarAvisoFmi, setMostrarAvisoFmi] = useState(desdeFmi);
 
   useEffect(() => {
     fetchParams(
@@ -102,11 +115,11 @@ export const ModalIngreso = ({
       idModalidadContrato: currentTalent?.idModalidadContrato || 0,
       nombres: currentTalent?.nombres || "",
       apellidos: currentTalent?.apellidos || "",
-      idArea: defaultUnit || 0,
+      idArea: currentTalent?.idArea || defaultUnit || 0,
       idCliente: currentTalent?.idCliente || 0,
-      idMotivo: defaultReason || 0,
+      idMotivo: currentTalent?.idMotivo || defaultReason || 0,
       cargo: currentTalent?.perfil || "",
-      horario: horarioTrabajo || "",
+      horario: currentTalent?.horario || horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
       montoMensual: currentTalent?.montoMensual || 0,
@@ -114,8 +127,8 @@ export const ModalIngreso = ({
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || inicioSugerido,
       fchTerminoContrato: currentTalent?.fchTerminoContrato || finSugerido,
-      proyectoServicio: proyectoServicio || "",
-      objetoContrato: objetoContrato || "",
+      proyectoServicio: currentTalent?.proyectoServicio || proyectoServicio || "",
+      objetoContrato: currentTalent?.objetoContrato || objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
@@ -127,16 +140,22 @@ export const ModalIngreso = ({
     },
   });
 
-  // cargar valores por defecto desde parametros
+  // Cargar valores por defecto desde parámetros. Los maestros llegan después
+  // de abrir el modal, de ahí el efecto; pero sólo rellena lo que está vacío,
+  // para no pisar lo que el talento ya trajera (el FMI, o una confirmación
+  // anterior).
   useEffect(() => {
-    setValue("horario", horarioTrabajo);
-    setValue("idArea", defaultUnit);
-    setValue("idMotivo", defaultReason);
-    setValue("proyectoServicio", proyectoServicio);
-    setValue("objetoContrato", objetoContrato);
+    if (!getValues("horario")) setValue("horario", horarioTrabajo);
+    if (!getValues("idArea")) setValue("idArea", defaultUnit);
+    if (!getValues("idMotivo")) setValue("idMotivo", defaultReason);
+    if (!getValues("proyectoServicio"))
+      setValue("proyectoServicio", proyectoServicio);
+    if (!getValues("objetoContrato"))
+      setValue("objetoContrato", objetoContrato);
   }, [
     horarioTrabajo,
     setValue,
+    getValues,
     defaultReason,
     defaultUnit,
     proyectoServicio,
@@ -229,6 +248,26 @@ export const ModalIngreso = ({
     }
   }, [watchedModalidad, modalityValues, setValue, setEnabledSalaryFields]);
 
+  /**
+   * Devuelve los campos a lo que dicen los maestros, como si el talento se
+   * hubiera confirmado sin FMI. Es la salida para cuando el formulario cargado
+   * trae datos viejos o equivocados.
+   */
+  const usarValoresPorDefecto = () => {
+    // El aviso habla de los datos del FMI, así que al descartarlos deja de
+    // tener sentido: se va con el botón.
+    setMostrarAvisoFmi(false);
+    setValue("idModalidadContrato", 0);
+    setValue("idMotivo", defaultReason || 0);
+    setValue("horario", horarioTrabajo || "");
+    setValue("proyectoServicio", proyectoServicio || "");
+    setValue("objetoContrato", objetoContrato || "");
+    setValue("montoBase", 0);
+    setValue("montoMovilidad", 0);
+    clearErrors();
+    onUsarPorDefecto?.();
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
       <div className="bg-white rounded-lg shadow-lg p-3 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto">
@@ -242,6 +281,22 @@ export const ModalIngreso = ({
             <X className="w-6 h-6" />
           </button>
         </div>
+
+        {mostrarAvisoFmi && (
+          <div className="mx-2 mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5">
+            <span className="flex-grow text-sm text-sky-900">
+              Los campos vienen del FMI que cargaste. Revísalos: lo que guardes
+              es lo que irá al contrato y al formulario de ingreso.
+            </span>
+            <button
+              type="button"
+              onClick={usarValoresPorDefecto}
+              className="btn mx-0 h-9 border border-[var(--color-blue)] px-3 text-xs font-semibold text-[var(--color-blue-hover)]"
+            >
+              Usar los valores por defecto
+            </button>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit(onSubmit)}

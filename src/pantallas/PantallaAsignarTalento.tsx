@@ -558,8 +558,41 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 const TalentTable: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { idRequerimiento } = location.state || {
+  const { idRequerimiento, cargaFmi } = location.state || {
     idRequerimiento: 1,
+  };
+
+  /**
+   * Datos de ingreso que trajo la carga de un FMI, por talento.
+   *
+   * Es opcional y aditivo: si se entra a la pantalla por el camino de siempre
+   * viene vacío y nada cambia. Cuando existe, el ModalIngreso de ese talento se
+   * abre con lo que decía su formulario (cargo, modalidad, motivo, horario,
+   * proyecto, objeto, montos y fechas de contrato) en vez de en blanco.
+   */
+  const datosDelFmi = useRef<Record<number, Partial<AsignarTalentoType>>>(
+    cargaFmi?.idTalento
+      ? { [cargaFmi.idTalento]: cargaFmi.datos || {} }
+      : {}
+  );
+
+  /** Mezcla lo del FMI sin pisar lo que el talento ya tenga. */
+  const conDatosDelFmi = (
+    talento: AsignarTalentoType
+  ): AsignarTalentoType => {
+    const delFmi = datosDelFmi.current[talento.idTalento];
+    if (!delFmi) return talento;
+
+    const mezclado = { ...talento };
+    (Object.keys(delFmi) as (keyof AsignarTalentoType)[]).forEach((campo) => {
+      const actual = mezclado[campo];
+      const propuesto = delFmi[campo];
+      const vacio = actual === undefined || actual === null || actual === "" || actual === 0;
+      if (vacio && propuesto !== undefined && propuesto !== null) {
+        (mezclado as Record<string, unknown>)[campo as string] = propuesto;
+      }
+    });
+    return mezclado;
   };
   const [remainingVacancies, setRemainingVacancies] = useState(0);
 
@@ -1001,7 +1034,7 @@ const TalentTable: React.FC = () => {
         );
         return false;
       }
-      setCurrentTalento(talento);
+      setCurrentTalento(conDatosDelFmi(talento));
       setShowModalIngreso(true);
       return;
     }
@@ -1305,6 +1338,16 @@ const TalentTable: React.FC = () => {
           onClose={handleModalIngresoClose}
           duracionContrato={requerimiento?.duracionContrato}
           idDuracionContrato={requerimiento?.idDuracionContrato}
+          desdeFmi={
+            !!currentTalento &&
+            !!datosDelFmi.current[currentTalento.idTalento]
+          }
+          onUsarPorDefecto={() => {
+            // El usuario descartó lo del FMI: no se reinyecta si vuelve a abrir
+            // el modal.
+            if (currentTalento)
+              delete datosDelFmi.current[currentTalento.idTalento];
+          }}
         />
       )}
       {showModalSolicitudEquipo && (

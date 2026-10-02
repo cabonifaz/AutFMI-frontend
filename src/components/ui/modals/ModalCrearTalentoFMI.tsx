@@ -26,6 +26,9 @@ const MAESTRO_CIUDADES = 13;
 const MAESTRO_HAB_TECNICAS = 19;
 const MAESTRO_HAB_BLANDAS = 20;
 
+/** Perú en el maestro 12: es el país de casi todas las altas. */
+const PAIS_PERU = 1;
+
 /** Tipos de archivo del repositorio de BDT. */
 const ARCHIVO_PDF = 1;
 const DOCUMENTO_CV = 1;
@@ -107,7 +110,7 @@ export const ModalCrearTalentoFMI = ({
     apellidoMaterno: nombresSugeridos.apellidoMaterno,
     dni: "",
     email: "",
-    idPais: 0,
+    idPais: PAIS_PERU,
     celular: "",
   });
   const [errores, setErrores] = useState<Errores>({});

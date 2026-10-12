@@ -42,6 +42,11 @@ type RequerimientoType = {
   // que se proponen al confirmar un talento.
   duracionContrato?: number;
   idDuracionContrato?: number;
+  // Requisitos de ingreso del RQ (0/1). Con asignacionLaptop = 1, todo talento
+  // confirmado pasa por la solicitud de equipo.
+  emo?: number;
+  sctr?: number;
+  asignacionLaptop?: number;
 };
 
 /**
@@ -1285,7 +1290,9 @@ const TalentTable: React.FC = () => {
   ) => {
     // Conservar los datos del formulario de ingreso para reenviarlos en el Finalizar.
     confirmedByTalento.current[talento.idTalento] = talento;
-    if (talento?.tieneEquipo === 0) {
+    // Si el RQ requiere asignación de laptop, siempre se piden las
+    // especificaciones del equipo (como cuando el talento no cuenta con uno).
+    if (talento?.tieneEquipo === 0 || requerimiento?.asignacionLaptop === 1) {
       setCurrentTalento(talento);
       setShowModalSolicitudEquipo(true);
       return;
@@ -1338,6 +1345,7 @@ const TalentTable: React.FC = () => {
           onClose={handleModalIngresoClose}
           duracionContrato={requerimiento?.duracionContrato}
           idDuracionContrato={requerimiento?.idDuracionContrato}
+          requiereLaptop={requerimiento?.asignacionLaptop === 1}
           desdeFmi={
             !!currentTalento &&
             !!datosDelFmi.current[currentTalento.idTalento]
@@ -1356,6 +1364,7 @@ const TalentTable: React.FC = () => {
           onCancel={handleModalSolicitudEquipoCancel}
           currentTalent={currentTalento}
           onClose={handleModalSolicitudEquipoClose}
+          preseleccionarLaptop={requerimiento?.asignacionLaptop === 1}
         />
       )}
       <div className="w-full flex flex-col p-4">

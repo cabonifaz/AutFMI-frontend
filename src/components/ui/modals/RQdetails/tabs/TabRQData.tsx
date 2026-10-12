@@ -51,7 +51,7 @@ export const TabRQData = ({
 
   return (
     <>
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col h-[calc(570px-120px)]">
         <div className="flex justify-end">
           <button
             type="button"
@@ -61,8 +61,9 @@ export const TabRQData = ({
             <Pencil className="w-7 h-7" />
           </button>
         </div>
-        {/* Campos del formulario */}
-        <div className="space-y-4 flex-1">
+        {/* Campos del formulario: con scroll para que se vean los requisitos
+            de ingreso; el botón Actualizar queda fijo abajo. */}
+        <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-2">
           {/* Título RQ */}
           <div className="flex items-center">
             <label className="w-1/3 text-sm font-medium text-gray-700">
@@ -174,6 +175,42 @@ export const TabRQData = ({
               {errors.fechaVencimiento.message}
             </p>
           )}
+
+          {/* Requisitos de ingreso */}
+          <div className="flex items-start">
+            <label className="w-1/3 text-sm font-medium text-gray-700 pt-1">
+              Requisitos de ingreso:
+            </label>
+            <div className="w-2/3 flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("emo")}
+                  type="checkbox"
+                  className="input-checkbox"
+                  disabled={!isEditing}
+                />
+                Requiere EMO
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("sctr")}
+                  type="checkbox"
+                  className="input-checkbox"
+                  disabled={!isEditing}
+                />
+                Requiere SCTR
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("asignacionLaptop")}
+                  type="checkbox"
+                  className="input-checkbox"
+                  disabled={!isEditing}
+                />
+                Requiere asignación de laptop
+              </label>
+            </div>
+          </div>
         </div>
 
         {/* Botones de acción */}

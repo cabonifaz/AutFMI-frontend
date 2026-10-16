@@ -16,6 +16,8 @@ import { PantallaRequerimientos } from "./pantallas/PantallaRequerimientos";
 import { MenuProvider } from "./context/MenuContext";
 import TalentTable from "./pantallas/PantallaAsignarTalento";
 import PantallaCargarFMI from "./pantallas/PantallaCargarFMI";
+import PantallaNoAutorizado from "./pantallas/PantallaNoAutorizado";
+import PantallaAdministracion from "./pantallas/PantallaAdministracion";
 import { ParamsProvider } from "./context/ParamsContext";
 import { ModalProvider } from "./context/ModalContext";
 
@@ -34,6 +36,14 @@ function App() {
               <Router>
                 <Routes>
                   <Route path="/" element={<PantallaLogin />} />
+                  <Route
+                    path="/no-autorizado"
+                    element={
+                      <ProtectedRoute>
+                        <PantallaNoAutorizado />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="/*"
                     element={
@@ -111,6 +121,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <PantallaCargarFMI />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/administracion"
+                    element={
+                      <ProtectedRoute>
+                        <PantallaAdministracion />
                       </ProtectedRoute>
                     }
                   />

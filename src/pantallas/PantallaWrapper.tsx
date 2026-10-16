@@ -1,8 +1,10 @@
 import { ReactNode } from "react";
-import { X, Home, ClipboardList, FileUp, LogOut } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
+import { getAllowedModules } from "../utils/navigation";
+import { Utils } from "../utils/utils";
 
 interface Props {
   children: ReactNode;
@@ -10,8 +12,10 @@ interface Props {
 
 export const PantallaWrapper = ({ children }: Props) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, getToken } = useAuth();
   const { isMenuOpen, toggleMenu } = useMenu();
+  // Solo los módulos cuya ruta está autorizada (claim `routes` del token).
+  const modules = getAllowedModules(Utils.getUserRoutes(getToken()));
 
   return (
     <div className="flex min-h-screen">
@@ -42,36 +46,17 @@ export const PantallaWrapper = ({ children }: Props) => {
 
         <ul className="flex flex-col h-full py-2 px-2 justify-between">
           <div className="pt-12 lg:pt-0">
-            {" "}
-            <li>
-              <button
-                onClick={() => navigate("/listaTalentos")}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
-              >
-                <Home className="w-6 h-6" />
-                <span className="lg:hidden xl:inline text-sm">Inicio</span>
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/requerimientos")}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
-              >
-                <ClipboardList className="w-6 h-6" />
-                <span className="lg:hidden xl:inline text-sm">
-                  Requerimientos
-                </span>
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => navigate("/cargarFMI")}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
-              >
-                <FileUp className="w-6 h-6" />
-                <span className="lg:hidden xl:inline text-sm">Cargar FMI</span>
-              </button>
-            </li>
+            {modules.map(({ key, icon: Icon, label, path }) => (
+              <li key={key}>
+                <button
+                  onClick={() => navigate(path)}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 w-full"
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="lg:hidden xl:inline text-sm">{label}</span>
+                </button>
+              </li>
+            ))}
           </div>
 
           <li>

@@ -119,6 +119,9 @@ export const ModalRQCreate = ({
       idModalidad: 0,
       idModalidadFact: [],
       tieneDuracion: true,
+      emo: false,
+      sctr: false,
+      asignacionLaptop: false,
       contrato: {
         duracionContrato: 1,
         idDuracionContrato: 0,
@@ -186,6 +189,10 @@ export const ModalRQCreate = ({
         lstCarreras: lstCareers,
         idDuracionContrato: idDuracionContrato,
         duracionContrato: duracionContrato,
+        // Requisitos de ingreso: 0 = No requiere, 1 = Requiere
+        emo: data.emo ? 1 : 0,
+        sctr: data.sctr ? 1 : 0,
+        asignacionLaptop: data.asignacionLaptop ? 1 : 0,
       };
 
       // 4. Enviar los datos al servidor. La respuesta trae las URLs PUT

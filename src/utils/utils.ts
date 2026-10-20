@@ -102,6 +102,22 @@ export class Utils {
     );
   };
 
+  /** Rutas del frontend permitidas, del claim `routes` del JWT (vienen de BD). */
+  static getUserRoutes = (token?: string): string[] => {
+    if (!token) return [];
+    const raw = this.decodeJwt(token)?.routes;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((r: unknown): r is string => typeof r === "string");
+  };
+
+  /** Ids de rol del usuario, del claim `id_roles` del JWT. */
+  static getUserRoleIds = (token?: string): number[] => {
+    if (!token) return [];
+    const raw = this.decodeJwt(token)?.id_roles;
+    if (!Array.isArray(raw)) return [];
+    return raw.map(Number).filter((id) => !Number.isNaN(id));
+  };
+
   static decodeJwt = (token: string): any => {
     try {
       const base64Url = token.split(".")[1];

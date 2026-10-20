@@ -7,6 +7,10 @@ export const TOKEN = "jwt_token";
 // 4 Reclutador · 5 Superadmin. El reclutador es el único al que se le ocultan
 // las tarifas de un perfil en los modales de RQ.
 export const ROL_RECLUTADOR = 4;
+// Catálogo de roles = PARAMETROS maestro 1 (num1 = ID_TIPO_ROL, string1 = nombre).
+export const MAESTRO_ROLES = 1;
+// SUPERADMIN: entra directo a Administración y nunca es asignable desde Usuarios.
+export const ROL_SUPERADMIN = 5;
 
 // PARAMS
 export const TIPO_TIEMPO = "5";
@@ -23,6 +27,7 @@ export const ANEXO_HARDWARE = "22";
 export const TIPO_SOFTWARE = "23";
 export const ESTADO_RQ = "24";
 export const PERFIL = "14";
+export const TIPO_TARIFA = "33";
 export const DURACION_RQ = "28";
 export const LIMITE_ALERTA_RQ = "30";
 export const MODALIDAD_RQ = "31";

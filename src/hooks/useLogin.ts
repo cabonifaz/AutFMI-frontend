@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClientWithoutToken } from '../utils/apiClient';
 import { useAuth } from '../context/AuthContext';
 import { LoginResponse } from '../models/response/LoginResponse';
+import { getLandingPath } from '../utils/navigation';
 
 const useLogin = () => {
     const { enqueueSnackbar } = useSnackbar();
@@ -22,7 +23,7 @@ const useLogin = () => {
 
             if (response.data.idTipoMensaje === 2) {
                 login(response.data.token);
-                navigate('/listaTalentos');
+                navigate(getLandingPath(response.data.token));
                 enqueueSnackbar("Bienvenido", { variant: 'info' });
                 return;
             }

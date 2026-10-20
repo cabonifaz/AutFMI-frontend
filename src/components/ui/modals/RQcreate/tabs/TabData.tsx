@@ -46,7 +46,9 @@ export const TabData = ({ rqStates }: TabProps) => {
 
   return (
     <div className="flex flex-col h-[calc(570px-120px)]">
-      <div className="overflow-y-auto pr-2">
+      {/* min-h-0 + flex-1: el contenedor se ajusta a la altura del modal y hace
+          scroll, para que se vean los requisitos de ingreso al final. */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-2">
         <div className="space-y-4 flex-1">
           {/* Título RQ */}
           <div className="flex items-center">
@@ -178,6 +180,39 @@ export const TabData = ({ rqStates }: TabProps) => {
               {errors.fechaVencimiento.message}
             </p>
           )}
+
+          {/* Requisitos de ingreso */}
+          <div className="flex items-start">
+            <label className="w-1/3 text-sm font-medium text-gray-700 pt-1">
+              Requisitos de ingreso:
+            </label>
+            <div className="w-2/3 flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("emo")}
+                  type="checkbox"
+                  className="input-checkbox"
+                />
+                Requiere EMO
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("sctr")}
+                  type="checkbox"
+                  className="input-checkbox"
+                />
+                Requiere SCTR
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  {...register("asignacionLaptop")}
+                  type="checkbox"
+                  className="input-checkbox"
+                />
+                Requiere asignación de laptop
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

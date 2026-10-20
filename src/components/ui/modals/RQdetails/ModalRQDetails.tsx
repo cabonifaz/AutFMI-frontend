@@ -238,6 +238,10 @@ export const ModalRQDetails = ({
           duration: duracionContrato || undefined,
         },
         lstFacturacion: mappedFacturacion,
+        // Requisitos de ingreso (0/1 -> checkbox)
+        emo: req.emo === 1,
+        sctr: req.sctr === 1,
+        asignacionLaptop: req.asignacionLaptop === 1,
       });
     }
   }, [res, reset]);
@@ -372,6 +376,10 @@ export const ModalRQDetails = ({
           duration: duracionContrato,
         },
         lstFacturacion: mappedFacturacion,
+        // Requisitos de ingreso (0/1 -> checkbox)
+        emo: req.emo === 1,
+        sctr: req.sctr === 1,
+        asignacionLaptop: req.asignacionLaptop === 1,
       });
     }
 
@@ -422,6 +430,10 @@ export const ModalRQDetails = ({
         idModalidadFact: data.idModalidadFact?.join(","),
         idDuracionContrato: idDuracionContrato,
         duracionContrato: duracionContrato,
+        // Requisitos de ingreso: 0 = No requiere, 1 = Requiere
+        emo: data.emo ? 1 : 0,
+        sctr: data.sctr ? 1 : 0,
+        asignacionLaptop: data.asignacionLaptop ? 1 : 0,
       };
 
       const response = await postData(

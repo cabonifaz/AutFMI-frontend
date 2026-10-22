@@ -37,6 +37,7 @@ import {
 } from "../utils/config";
 import { useParams } from "../context/ParamsContext";
 import { normalizar } from "../utils/quickCV";
+import { Pagination } from "../components/ui/Pagination";
 import { sedeSunatList } from "../models/type/SedeSunatType";
 
 type Paso = 1 | 2 | 3 | 4;
@@ -78,6 +79,11 @@ type PersonaElegida = {
   dni?: string | null;
   email?: string | null;
 };
+
+/** Tamaño de página para traer todos los RQ de una vez (paso 3). */
+const TODOS_LOS_RQ = "1000";
+/** RQ por página en la lista del paso 3. */
+const RQS_POR_PAGINA = 6;
 
 const PASOS: { numero: Paso; titulo: string }[] = [
   { numero: 1, titulo: "Formulario" },
@@ -206,6 +212,7 @@ export default function PantallaCargarFMI() {
   const [destino, setDestino] = useState<Destino>("ambos");
   const [rq, setRq] = useState<RequirementItem | null>(null);
   const [filtroRq, setFiltroRq] = useState("");
+  const [paginaRq, setPaginaRq] = useState(1);
 
   /** Lo que se va a escribir, editable en el paso 4. */
   const [datos, setDatos] = useState<DatosContrato | null>(null);
@@ -483,24 +490,40 @@ export default function PantallaCargarFMI() {
     if (!elegida) return;
     // El cliente del formulario acota la lista de RQ; el filtro es editable.
     setFiltroRq(extraccion?.equipoOCliente || "");
-    fetchRequerimientos({ nPag: 1, buscar: null, estado: null });
+    // Todos los RQ en una sola página: el filtro es local y, con la página por
+    // defecto del SP, los RQ de las páginas siguientes nunca aparecían.
+    fetchRequerimientos({ nPag: 1, cPag: TODOS_LOS_RQ, buscar: null, estado: null });
     setPaso(3);
   };
 
   // ─── Paso 3: a qué requerimiento ───────────────────────────────────────────
 
   const rqsVisibles = useMemo(() => {
-    const termino = normalizar(filtroRq);
+    // Búsqueda por palabras: el RQ coincide si contiene TODAS las palabras del
+    // filtro (en cualquier orden) en su código, título o cliente. Se ignoran
+    // signos y palabras de 1-2 letras ("S.A.", "de"), así el cliente leído del
+    // FMI ("BANBIF S.A.") encuentra los RQ de "Banbif".
+    const palabras = normalizar(filtroRq)
+      .split(/[^a-z0-9]+/)
+      .filter((p) => p.length > 2 || /^\d+$/.test(p));
     // Sin filtro por estado: el requerimiento solo se referencia, así que uno
     // ya atendido o cerrado es un destino válido para un FMI antiguo.
-    return (requerimientos || []).filter(
-      (item) =>
-        !termino ||
-        normalizar(item.codigoRQ).includes(termino) ||
-        normalizar(item.titulo).includes(termino) ||
-        normalizar(item.cliente).includes(termino)
-    );
+    return (requerimientos || []).filter((item) => {
+      if (palabras.length === 0) return true;
+      const texto = normalizar(`${item.codigoRQ} ${item.titulo} ${item.cliente}`);
+      return palabras.every((p) => texto.includes(p));
+    });
   }, [requerimientos, filtroRq]);
+
+  // Al cambiar la búsqueda o la lista se vuelve a la primera página.
+  useEffect(() => {
+    setPaginaRq(1);
+  }, [filtroRq, requerimientos]);
+
+  const rqsPagina = useMemo(
+    () => rqsVisibles.slice((paginaRq - 1) * RQS_POR_PAGINA, paginaRq * RQS_POR_PAGINA),
+    [rqsVisibles, paginaRq]
+  );
 
   const irAConfirmar = async () => {
     if (!persona) return;
@@ -1091,7 +1114,7 @@ export default function PantallaCargarFMI() {
                       Ningún requerimiento coincide con la búsqueda.
                     </p>
                   ) : (
-                    rqsVisibles.map((item) => {
+                    rqsPagina.map((item) => {
                       const elegido = rq?.idRequerimiento === item.idRequerimiento;
                       return (
                         <div
@@ -1139,6 +1162,20 @@ export default function PantallaCargarFMI() {
                     })
                   )}
                 </div>
+
+                {rqsVisibles.length > RQS_POR_PAGINA && (
+                  <div className="flex flex-col items-center gap-1">
+                    <Pagination
+                      totalItems={rqsVisibles.length}
+                      itemsPerPage={RQS_POR_PAGINA}
+                      currentPage={paginaRq}
+                      onPaginate={setPaginaRq}
+                    />
+                    <span className="text-xs text-gray-500">
+                      {rqsVisibles.length} requerimientos
+                    </span>
+                  </div>
+                )}
               </div>
 
               )}

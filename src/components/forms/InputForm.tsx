@@ -55,10 +55,9 @@ const InputForm = ({
             return;
         }
 
-        // Más de un punto solo es inválido en números (1.5.2); en texto se permite
-        // (usuarios como franco.martinez.admin, correos como a.b@empresa.com.pe).
+        // Verificar si el valor tiene más de un punto
         const dotCount = (value.match(/\./g) || []).length;
-        const hasMultipleDots = type === 'number' && dotCount > 1;
+        const hasMultipleDots = dotCount > 1;
 
         // Si pasa el regex y no tiene múltiples puntos
         if ((!regex || regex.test(value)) && !hasMultipleDots) {

@@ -176,6 +176,7 @@ export const ClientsManager = () => {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 sticky top-0">
             <tr className="text-left">
+              <th className="px-4 py-2.5 font-medium">ID</th>
               <th className="px-4 py-2.5 font-medium">RUC</th>
               <th className="px-4 py-2.5 font-medium">Razón social</th>
               <th className="px-4 py-2.5 font-medium">Dirección</th>
@@ -192,6 +193,7 @@ export const ClientsManager = () => {
                   c.idEstadoRegistro !== 1 ? "text-gray-400" : "text-gray-600"
                 }`}
               >
+                <td className="px-4 py-2.5 tabular-nums">{cell(c.idCliente)}</td>
                 <td className="px-4 py-2.5 font-medium">{cell(c.ruc)}</td>
                 <td className="px-4 py-2.5">{cell(c.razonSocial)}</td>
                 <td className="px-4 py-2.5 max-w-xs truncate" title={c.direccion ?? ""}>
@@ -257,7 +259,7 @@ export const ClientsManager = () => {
             ))}
             {!loadingList && clients.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
+                <td colSpan={7}className="px-4 py-10 text-center text-gray-400">
                   No se encontraron clientes.
                 </td>
               </tr>

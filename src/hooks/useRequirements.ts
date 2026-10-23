@@ -10,6 +10,9 @@ type FetchRequerimientosParams = {
     buscar?: string | null;
     fechaSolicitud?: string | null;
     estado?: number | null;
+    idContactos?: number[];
+    idPerfiles?: number[];
+    idTalentos?: number[];
 };
 
 export const useRequerimientos = () => {
@@ -25,6 +28,9 @@ export const useRequerimientos = () => {
         buscar: null,
         fechaSolicitud: null,
         estado: null,
+        idContactos: [],
+        idPerfiles: [],
+        idTalentos: [],
     });
 
     const fetchRequerimientos = useCallback(async (params: FetchRequerimientosParams) => {
@@ -34,7 +40,8 @@ export const useRequerimientos = () => {
         try {
             const queryParams: Record<string, string> = {};
             Object.entries(params).forEach(([key, value]) => {
-                if (value !== null && value !== undefined) {
+                // Las listas viajan como "1,2"; una lista vacía no se envía.
+                if (value !== null && value !== undefined && value.toString() !== '') {
                     queryParams[key] = value.toString();
                 }
             });

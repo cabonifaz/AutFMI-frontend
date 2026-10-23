@@ -2,29 +2,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { DataFormSchema, DataFormType } from "../models/schema/DataFormSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DropdownForm, FormRow, InputForm } from "../components/forms";
+import { InputForm } from "../components/forms";
 import { TalentoType } from "../models/type/TalentoType";
 import useFetchTalento from "../hooks/useFetchTalento";
 import { useEffect } from "react";
 import { usePostHook } from "../hooks/usePostHook";
-import { TIPO_MODALIDAD, TIPO_MONEDA, TIPO_TIEMPO } from "../utils/config";
 import BackButton from "../components/ui/BackButton";
 import { Loading } from "../components/ui/Loading";
-import { useParams } from "../context/ParamsContext";
-import { format } from "date-fns";
 
+/**
+ * Datos personales del talento observado en AsignarTalento. Los datos de
+ * colaborador (contrato, remuneración, modalidad, ubicación) no se piden aquí:
+ * se completan en el modal de confirmación.
+ */
 const PantallaDatos = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const { postData, postloading } = usePostHook();
-  const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${TIPO_TIEMPO},${TIPO_MONEDA},${TIPO_MODALIDAD}`,
-  );
-
-  const timeValues = paramsByMaestro[TIPO_TIEMPO];
-  const currencyValues = paramsByMaestro[TIPO_MONEDA];
-  const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
 
   const { talento } = (location.state as { talento: TalentoType }) || {};
   const { talentoDetails, loading } = useFetchTalento(talento.idTalento);
@@ -34,7 +29,7 @@ const PantallaDatos = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { errors },
     reset,
   } = useForm<DataFormType>({
     resolver: zodResolver(DataFormSchema),
@@ -46,13 +41,6 @@ const PantallaDatos = () => {
       telefono: "",
       dni: "",
       email: "",
-      tiempoContrato: 0,
-      idTiempoContrato: 0,
-      fechaInicioLabores: "",
-      // cargo: "",
-      remuneracion: 0,
-      idMoneda: 0,
-      idModalidad: 0,
       ubicacion: "",
     },
   });
@@ -66,15 +54,6 @@ const PantallaDatos = () => {
         telefono: talentoDetails?.celular || "",
         dni: talentoDetails?.dni || "",
         email: talentoDetails?.email || "",
-        tiempoContrato: talentoDetails?.tiempoContrato || 0,
-        idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
-        fechaInicioLabores: talentoDetails?.fechaInicioLabores
-          ? format(new Date(talentoDetails.fechaInicioLabores), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd"),
-        // cargo: talentoDetails?.cargo || "",
-        remuneracion: talentoDetails?.remuneracion || 0,
-        idMoneda: talentoDetails?.idMoneda || 0,
-        idModalidad: talentoDetails?.idModalidad || 0,
         ubicacion: talentoDetails?.ubicacion || "",
       });
     }
@@ -84,7 +63,6 @@ const PantallaDatos = () => {
     const response = await postData("/fmi/talent/save", {
       idTalento: talento.idTalento,
       APELLIDO_PATERNO: talento.apellidoPaterno,
-      cargo: data?.cargo || "",
       ...data,
     });
     if (response.idTipoMensaje === 2) {
@@ -94,9 +72,7 @@ const PantallaDatos = () => {
 
   return (
     <>
-      {(paramLoading || loading || postloading) && (
-        <Loading overlayMode={true} />
-      )}
+      {(loading || postloading) && <Loading overlayMode={true} />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Data form */}
         <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-8">
@@ -147,80 +123,6 @@ const PantallaDatos = () => {
             error={errors.email}
             required={true}
           />
-
-          <FormRow>
-            <InputForm
-              name="tiempoContrato"
-              control={control}
-              label="Tiempo contrato"
-              type="number"
-              regex={/^\d*$/}
-              error={errors.tiempoContrato}
-              required={true}
-            />
-            <DropdownForm
-              name="idTiempoContrato"
-              control={control}
-              error={errors.idTiempoContrato}
-              options={
-                timeValues?.map((time) => ({
-                  value: time.num1,
-                  label: time.string1,
-                })) || []
-              }
-              flex={true}
-              required={true}
-            />
-          </FormRow>
-
-          <InputForm
-            name="fechaInicioLabores"
-            control={control}
-            label="Inicio de labores"
-            type="date"
-            error={errors.fechaInicioLabores}
-            required={true}
-          />
-          {/*<InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} required={true} />*/}
-
-          <FormRow>
-            <InputForm
-              name="remuneracion"
-              control={control}
-              label="Remuneración"
-              type="number"
-              regex={/^\d*(\.\d{0,2})?$/}
-              error={errors.remuneracion}
-              required={true}
-            />
-            <DropdownForm
-              name="idMoneda"
-              control={control}
-              error={errors.idMoneda}
-              options={
-                currencyValues?.map((currency) => ({
-                  value: currency.num1,
-                  label: currency.string1,
-                })) || []
-              }
-              flex={true}
-              required={true}
-            />
-          </FormRow>
-
-          <DropdownForm
-            name="idModalidad"
-            control={control}
-            label="Modalidad"
-            error={errors.idModalidad}
-            options={
-              modalityValues?.map((modality) => ({
-                value: modality.num1,
-                label: modality.string1,
-              })) || []
-            }
-            required={true}
-          />
           <InputForm
             name="ubicacion"
             control={control}
@@ -238,11 +140,9 @@ const PantallaDatos = () => {
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              className={`btn ${isDirty ? "btn-primary" : "btn-disabled"}`}
-              disabled={!isDirty}
-            >
+            {/* Sin exigir cambios: un talento con datos personales completos que
+                estaba Observado solo por los de colaborador pasa a Datos Completos al guardar */}
+            <button type="submit" className="btn btn-primary">
               Guardar
             </button>
           </div>

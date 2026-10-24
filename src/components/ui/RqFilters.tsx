@@ -99,7 +99,7 @@ const FilterChip = ({
 );
 
 const Panel = ({ children }: { children: ReactNode }) => (
-  <div className="absolute left-0 z-[43] my-3 flex w-80 flex-col gap-1.5 rounded-lg border border-gray-200 bg-white p-2 shadow-lg dark:border-slate-600 dark:bg-slate-800">
+  <div className="absolute left-0 z-[43] my-3 flex w-80 flex-col gap-1.5 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
     {children}
   </div>
 );
@@ -115,15 +115,15 @@ const Elegidos = ({
   onClear: () => void;
 }) =>
   values.length === 0 ? null : (
-    <div className="rounded-md border border-gray-200 p-1.5 dark:border-slate-600">
+    <div className="rounded-md border border-gray-200 p-1.5">
       <div className="mb-1 flex items-center justify-between px-0.5">
-        <span className="text-xs text-gray-500 dark:text-slate-400">
+        <span className="text-xs text-gray-500">
           {values.length} {values.length === 1 ? "elegido" : "elegidos"}
         </span>
         <button
           type="button"
           onClick={onClear}
-          className="rounded px-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="rounded px-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
         >
           Quitar todos
         </button>
@@ -132,14 +132,14 @@ const Elegidos = ({
         {values.map((v) => (
           <li
             key={v.id}
-            className="flex max-w-full items-center gap-1 rounded-md bg-[#EEF2FF] py-0.5 pl-2 pr-1 text-xs text-[#312e81] dark:bg-indigo-500/10 dark:text-indigo-300"
+            className="flex max-w-full items-center gap-1 rounded-md bg-[#EEF2FF] py-0.5 pl-2 pr-1 text-xs text-[#312e81]"
           >
             <span className="truncate">{v.label}</span>
             <button
               type="button"
               onClick={() => onRemove(v.id)}
               aria-label={`Quitar ${v.label}`}
-              className="flex-none rounded hover:bg-indigo-100 dark:hover:bg-indigo-500/20"
+              className="flex-none rounded hover:bg-indigo-100"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -173,7 +173,7 @@ const SearchInput = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500"
     />
   </>
 );
@@ -183,7 +183,7 @@ const Casilla = ({ checked }: { checked: boolean }) => (
     className={`flex h-4 w-4 flex-none items-center justify-center rounded border-2 ${
       checked
         ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-        : "border-gray-400 dark:border-slate-500"
+        : "border-gray-400"
     }`}
   >
     {checked && <Check className="h-3 w-3" strokeWidth={3} />}
@@ -196,16 +196,16 @@ const OPTIONS_LIST = "max-h-60 overflow-y-auto";
 const optionClass = (checked: boolean) =>
   `flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
     checked
-      ? "bg-teal-50 dark:bg-teal-500/10"
-      : "hover:bg-gray-100 dark:hover:bg-slate-700"
+      ? "bg-teal-50"
+      : "hover:bg-gray-100"
   }`;
 
 const Status = ({ children }: { children: ReactNode }) => (
-  <p className="px-2 py-3 text-[13px] text-gray-500 dark:text-slate-400">{children}</p>
+  <p className="px-2 py-3 text-[13px] text-gray-500">{children}</p>
 );
 
 const Cargando = () => (
-  <p className="flex items-center gap-2 px-2 py-3 text-[13px] text-gray-500 dark:text-slate-400">
+  <p className="flex items-center gap-2 px-2 py-3 text-[13px] text-gray-500">
     <LoaderCircle size={14} className="animate-spin" />
     Buscando…
   </p>
@@ -325,7 +325,7 @@ export const LookupFilter = ({
             placeholder={placeholder}
           />
           {faltanLetras ? (
-            <p className="m-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-center text-[13px] text-gray-500 dark:border-slate-600 dark:text-slate-400">
+            <p className="m-1 rounded-md border border-dashed border-gray-300 px-3 py-3 text-center text-[13px] text-gray-500">
               {hint}
             </p>
           ) : cargando && !datos ? (
@@ -335,7 +335,7 @@ export const LookupFilter = ({
           ) : (
             <>
               {minChars === 0 && busqueda.trim() === "" && (
-                <p className="px-1 text-xs text-gray-500 dark:text-slate-400">Más usados</p>
+                <p className="px-1 text-xs text-gray-500">Más usados</p>
               )}
               <div className={`${OPTIONS_LIST} ${cargando ? "opacity-60" : ""}`}>
                 {opciones.map((o) => {
@@ -351,7 +351,7 @@ export const LookupFilter = ({
                     >
                       <Casilla checked={checked} />
                       {persona && (
-                        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-800 dark:bg-teal-500/15 dark:text-teal-300">
+                        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-800">
                           {o.nombre
                             .split(" ")
                             .filter(Boolean)
@@ -362,14 +362,14 @@ export const LookupFilter = ({
                         </span>
                       )}
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-gray-900 dark:text-slate-100">{o.nombre}</span>
+                        <span className="truncate text-gray-900">{o.nombre}</span>
                         {persona && o.detalle && (
-                          <span className="text-xs tabular-nums text-gray-500 dark:text-slate-400">
+                          <span className="text-xs tabular-nums text-gray-500">
                             DNI {o.detalle}
                           </span>
                         )}
                       </span>
-                      <span className="whitespace-nowrap text-xs tabular-nums text-gray-500 dark:text-slate-400">
+                      <span className="whitespace-nowrap text-xs tabular-nums text-gray-500">
                         {cantidadRq(o.cantidad)}
                       </span>
                     </button>
@@ -377,7 +377,7 @@ export const LookupFilter = ({
                 })}
               </div>
               {(datos?.total ?? 0) > opciones.length && (
-                <p className="px-1 pt-1 text-xs text-gray-500 dark:text-slate-400">
+                <p className="px-1 pt-1 text-xs text-gray-500">
                   Mostrando {opciones.length} de {datos?.total}. Sigue escribiendo para afinar.
                 </p>
               )}
@@ -499,7 +499,7 @@ export const ContactFilter = ({
           />
           {clientePanel === null ? (
             <>
-              <p className="px-1 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+              <p className="px-1 pt-0.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 1 · Elige el cliente
               </p>
               <SearchInput
@@ -522,10 +522,10 @@ export const ContactFilter = ({
                       }}
                       className={optionClass(elegidos > 0)}
                     >
-                      <Building2 size={16} className="flex-none text-gray-500 dark:text-slate-400" />
-                      <span className="flex-1 truncate text-gray-900 dark:text-slate-100">{c.label}</span>
+                      <Building2 size={16} className="flex-none text-gray-500" />
+                      <span className="flex-1 truncate text-gray-900">{c.label}</span>
                       {elegidos > 0 && (
-                        <span className="whitespace-nowrap text-xs font-medium text-teal-700 dark:text-teal-300">
+                        <span className="whitespace-nowrap text-xs font-medium text-teal-700">
                           {elegidos} {elegidos === 1 ? "elegido" : "elegidos"}
                         </span>
                       )}
@@ -546,13 +546,13 @@ export const ContactFilter = ({
                     setBusquedaCliente("");
                   }}
                   aria-label="Volver a la lista de clientes"
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100"
                 >
                   <ChevronLeft size={14} />
                   Clientes
                 </button>
                 <span className="text-xs text-gray-400">/</span>
-                <strong className="truncate text-[13px] text-gray-900 dark:text-slate-100">
+                <strong className="truncate text-[13px] text-gray-900">
                   {clienteActual?.label ?? "Cliente"}
                 </strong>
               </div>
@@ -580,14 +580,14 @@ export const ContactFilter = ({
                       >
                         <Casilla checked={checked} />
                         <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate text-gray-900 dark:text-slate-100">{o.nombre}</span>
+                          <span className="truncate text-gray-900">{o.nombre}</span>
                           {o.detalle && (
-                            <span className="truncate text-xs text-gray-500 dark:text-slate-400">
+                            <span className="truncate text-xs text-gray-500">
                               {o.detalle}
                             </span>
                           )}
                         </span>
-                        <span className="whitespace-nowrap text-xs tabular-nums text-gray-500 dark:text-slate-400">
+                        <span className="whitespace-nowrap text-xs tabular-nums text-gray-500">
                           {cantidadRq(o.cantidad)}
                         </span>
                       </button>

@@ -7,6 +7,16 @@ import {
   FilterDropDown,
 } from "../components/ui/FilterDropDown";
 import { DateFilter } from "../components/ui/DateFilter";
+import {
+  ContactFilter,
+  ContactSelection,
+  FilterSelection,
+  LookupFilter,
+} from "../components/ui/RqFilters";
+import {
+  getProfileFilterOptions,
+  getTalentFilterOptions,
+} from "../services/requirementFilters.service";
 import { useMenu } from "../context/MenuContext";
 import { useRequerimientos } from "../hooks/useRequirements";
 import { ESTADO_ATENDIDO, ESTADO_RQ } from "../utils/config";
@@ -24,7 +34,12 @@ interface SearchProps {
   buscar: string | null;
   estado: number | null;
   fechaSolicitud: string | null;
+  idContactos: number[];
+  idPerfiles: number[];
+  idTalentos: number[];
 }
+
+const ids = (values: FilterSelection[]) => values.map((v) => v.id);
 
 export const PantallaRequerimientos = () => {
   const navigate = useNavigate();
@@ -42,6 +57,10 @@ export const PantallaRequerimientos = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(
     null
   );
+  // Filtros buscados en el servidor: guardan id (para el SP) y texto (para el chip).
+  const [selectedContactos, setSelectedContactos] = useState<ContactSelection[]>([]);
+  const [selectedPerfiles, setSelectedPerfiles] = useState<FilterSelection[]>([]);
+  const [selectedTalentos, setSelectedTalentos] = useState<FilterSelection[]>([]);
   const [isNuevoRQModalOpen, setIsNuevoRQModalOpen] = useState(false);
   // Calculadora de riesgo libre: no depende de ningun RQ de la lista.
   const [calculadoraAbierta, setCalculadoraAbierta] = useState(false);
@@ -89,6 +108,9 @@ export const PantallaRequerimientos = () => {
     buscar,
     estado,
     fechaSolicitud,
+    idContactos,
+    idPerfiles,
+    idTalentos,
   }: SearchProps) => {
     setCurrentPage(1);
     fetchRequerimientos({
@@ -97,6 +119,9 @@ export const PantallaRequerimientos = () => {
       buscar: buscar,
       estado: estado,
       fechaSolicitud: fechaSolicitud,
+      idContactos,
+      idPerfiles,
+      idTalentos,
     });
   };
 
@@ -116,11 +141,42 @@ export const PantallaRequerimientos = () => {
       ? Number(selectedValues[0])
       : null;
     setSelectedCliente(newValue);
+    // Cliente y contacto no pueden contradecirse: al elegir un cliente se
+    // sueltan los contactos de otros clientes (quitar el cliente, no).
+    const contactosDelCliente =
+      newValue === null
+        ? selectedContactos
+        : selectedContactos.filter((c) => c.idCliente === newValue);
+    const sueltaContactos = contactosDelCliente.length !== selectedContactos.length;
+    if (sueltaContactos) setSelectedContactos(contactosDelCliente);
     executeSearch({
       estado: selectedEstado,
       fechaSolicitud: selectedDate ? selectedDate : null,
       idCliente: newValue,
+      ...(sueltaContactos ? { idContactos: ids(contactosDelCliente) } : {}),
     });
+  };
+
+  const handleContactosChange = (values: ContactSelection[]) => {
+    setSelectedContactos(values);
+    // Un contacto de otro cliente suelta el filtro Cliente.
+    const sueltaCliente =
+      selectedCliente !== null && values.some((v) => v.idCliente !== selectedCliente);
+    if (sueltaCliente) setSelectedCliente(null);
+    executeSearch({
+      idContactos: ids(values),
+      ...(sueltaCliente ? { idCliente: null } : {}),
+    });
+  };
+
+  const handlePerfilesChange = (values: FilterSelection[]) => {
+    setSelectedPerfiles(values);
+    executeSearch({ idPerfiles: ids(values) });
+  };
+
+  const handleTalentosChange = (values: FilterSelection[]) => {
+    setSelectedTalentos(values);
+    executeSearch({ idTalentos: ids(values) });
   };
 
   const handleDateSelected = (date: Date | null) => {
@@ -142,6 +198,9 @@ export const PantallaRequerimientos = () => {
       estado?: number | null;
       fechaSolicitud?: string | null;
       idCliente?: number | null;
+      idContactos?: number[];
+      idPerfiles?: number[];
+      idTalentos?: number[];
     } = {}
   ) => {
     if (!loading) {
@@ -150,6 +209,9 @@ export const PantallaRequerimientos = () => {
           overrides.idCliente !== undefined
             ? overrides.idCliente
             : selectedCliente,
+        idContactos: overrides.idContactos ?? ids(selectedContactos),
+        idPerfiles: overrides.idPerfiles ?? ids(selectedPerfiles),
+        idTalentos: overrides.idTalentos ?? ids(selectedTalentos),
         buscar: RequerimientoRef.current?.value || null,
         estado:
           overrides.estado !== undefined
@@ -265,6 +327,45 @@ export const PantallaRequerimientos = () => {
                         : []
                     }
                     onChange={handleClienteChangeFilter}
+                  />
+                  <ContactFilter
+                    values={selectedContactos}
+                    onChange={handleContactosChange}
+                    isOpen={openDropdown === 2}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 2 ? null : 2)
+                    }
+                    clients={clientOptions}
+                    selectedClientId={selectedCliente}
+                  />
+                  <LookupFilter
+                    name="perfil"
+                    label="Perfil"
+                    values={selectedPerfiles}
+                    onChange={handlePerfilesChange}
+                    isOpen={openDropdown === 3}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 3 ? null : 3)
+                    }
+                    fetchOptions={getProfileFilterOptions}
+                    minChars={0}
+                    placeholder="Buscar perfil…"
+                    hint=""
+                  />
+                  <LookupFilter
+                    name="postulante"
+                    label="Postulante"
+                    values={selectedTalentos}
+                    onChange={handleTalentosChange}
+                    isOpen={openDropdown === 4}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 4 ? null : 4)
+                    }
+                    fetchOptions={getTalentFilterOptions}
+                    minChars={2}
+                    placeholder="Nombre o Doc. identidad…"
+                    hint="Escribe al menos 2 letras o números del documento."
+                    persona
                   />
                   <FilterDropDown
                     name="estado"

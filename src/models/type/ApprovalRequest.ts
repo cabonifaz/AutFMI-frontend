@@ -1,6 +1,3 @@
-// Bandeja de aprobaciones (FTBO-1118). Los códigos coinciden con las
-// restricciones de dbo.FMI_SOLICITUD_APROBACION y con Constante del backend.
-
 export type TipoSolicitudAprobacion = "INGRESO" | "MOVIMIENTO" | "CESE";
 export type EstadoSolicitudAprobacion = "PENDIENTE" | "APROBADA" | "RECHAZADA" | "ANULADA";
 
@@ -68,4 +65,56 @@ export const MAX_LONGITUD_BUSQUEDA_APROBACIONES = 100;
 export interface ApprovalResult<T> {
   baseResponse: { idTipoMensaje: number; mensaje: string };
   data: T | null;
+}
+
+// ---------------------------------------------------------------- FTBO-1124
+// Flujo de aprobación: permisos, versión, campos editables y línea de tiempo.
+
+export type TipoCampoEditable = "TEXTO" | "NUMERO" | "FECHA" | "SI_NO";
+
+export interface ApprovalEditableField {
+  campo: string;
+  etiqueta: string;
+  tipo: TipoCampoEditable;
+}
+
+export type AccionHistorialAprobacion =
+  | "CREADA"
+  | "FORMULARIO_EDITADO"
+  | "APROBADA"
+  | "EJECUTADA"
+  | "EJECUCION_FALLIDA"
+  | "EJECUCION_INCIERTA"
+  | "CORREO_ENVIADO"
+  | "CORREO_OMITIDO"
+  | "CORREO_FALLIDO";
+
+export interface ApprovalTimelineEntry {
+  idHistorial: number;
+  accion: AccionHistorialAprobacion;
+  estadoAnterior: EstadoSolicitudAprobacion | null;
+  estadoNuevo: EstadoSolicitudAprobacion | null;
+  detalle: string | null;
+  usuario: string;
+  /** yyyy-MM-dd HH:mm:ss */
+  fecha: string;
+}
+
+export interface ApprovalFlow {
+  tipoSolicitud: TipoSolicitudAprobacion;
+  estado: EstadoSolicitudAprobacion;
+  /** Gestor asignado al cliente de la solicitud. */
+  esGestor: boolean;
+  /** Puede editar y aprobar: gestor asignado y solicitud pendiente. */
+  puedeGestionar: boolean;
+  /** Se devuelve al guardar o aprobar: si otro cambió la solicitud, el backend responde 409. */
+  version: number;
+  camposEditables: ApprovalEditableField[];
+  historial: ApprovalTimelineEntry[];
+}
+
+export interface ApprovalDecision {
+  idSolicitud: number;
+  estado: EstadoSolicitudAprobacion;
+  version: number | null;
 }

@@ -1,14 +1,14 @@
 import { AxiosResponse } from "axios";
 import { apiClientWithToken } from "../utils/apiClient";
 import {
+  ApprovalDecision,
   ApprovalDetail,
   ApprovalFilters,
+  ApprovalFlow,
   ApprovalInbox,
   ApprovalResult,
 } from "../models/type/ApprovalRequest";
 
-// Bandeja de aprobaciones (FTBO-1118). Solo se envían filtros: el usuario, la
-// empresa y los roles los toma el backend del token.
 
 export const getApprovalInbox = (
   filters: ApprovalFilters,
@@ -26,3 +26,23 @@ export const getApprovalDetail = (
   idSolicitud: number
 ): Promise<AxiosResponse<ApprovalResult<ApprovalDetail>>> =>
   apiClientWithToken.get(`/fmi/approval/detail/${idSolicitud}`);
+
+
+
+export const getApprovalFlow = (
+  idSolicitud: number
+): Promise<AxiosResponse<ApprovalResult<ApprovalFlow>>> =>
+  apiClientWithToken.get(`/fmi/approval/${idSolicitud}/flow`);
+
+export const updateApprovalForm = (
+  idSolicitud: number,
+  version: number,
+  cambios: Record<string, string | number | null>
+): Promise<AxiosResponse<ApprovalResult<ApprovalDecision>>> =>
+  apiClientWithToken.put(`/fmi/approval/${idSolicitud}/form`, { version, cambios });
+
+export const approveApprovalRequest = (
+  idSolicitud: number,
+  version: number
+): Promise<AxiosResponse<ApprovalResult<ApprovalDecision>>> =>
+  apiClientWithToken.post(`/fmi/approval/${idSolicitud}/approve`, { version });

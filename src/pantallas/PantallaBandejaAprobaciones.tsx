@@ -162,6 +162,8 @@ export const PantallaBandejaAprobaciones = () => {
 
   const openDetail = (id: number) => navigate(`${RUTA_BANDEJA_APROBACIONES}/${id}`);
   const closeDetail = useCallback(() => navigate(RUTA_BANDEJA_APROBACIONES), [navigate]);
+  // Tras guardar o aprobar desde el detalle, la fila refleja el nuevo estado.
+  const refreshInbox = useCallback(() => setReloadKey((k) => k + 1), []);
 
   const renderBody = () => {
     if (loading && items.length === 0) {
@@ -392,6 +394,7 @@ export const PantallaBandejaAprobaciones = () => {
           idSolicitud={Number(idSolicitud)}
           onClose={closeDetail}
           onSessionExpired={handleSessionExpired}
+          onChanged={refreshInbox}
         />
       )}
     </>

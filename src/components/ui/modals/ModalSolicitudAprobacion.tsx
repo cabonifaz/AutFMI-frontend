@@ -64,7 +64,7 @@ const ACCIONES: Record<AccionHistorialAprobacion, { label: string; color: string
   EJECUTADA: { label: "Operación registrada", color: "bg-green-600" },
   EJECUCION_FALLIDA: { label: "Error al registrar la operación", color: "bg-red-600" },
   EJECUCION_INCIERTA: { label: "Registro sin confirmar: verificar", color: "bg-orange-500" },
-  CORREO_ENVIADO: { label: "Correo enviado", color: "bg-slate-500" },
+  CORREO_ENVIADO: { label: "Correo enviado (activado)", color: "bg-slate-500" },
   CORREO_OMITIDO: { label: "Correo no enviado (desactivado)", color: "bg-gray-400" },
   CORREO_FALLIDO: { label: "Correo con error", color: "bg-red-500" },
 };
@@ -427,7 +427,12 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
               {flow && flow.historial.length > 0 && (
                 <ol className="relative ml-2 border-l border-gray-200">
                   {flow.historial.map((h) => {
-                    const accion = ACCIONES[h.accion] ?? { label: h.accion, color: "bg-gray-400" };
+                    const esCorreo = ["CORREO_ENVIADO", "CORREO_OMITIDO", "CORREO_FALLIDO"].includes(h.accion);
+                    // Solo cambia la presentación; se conserva el detalle original de auditoría.
+                    const sinReporte = h.accion === "CORREO_OMITIDO" && /sin reporte/i.test(h.detalle ?? "");
+                    const accion = sinReporte
+                      ? { label: "Correo no enviado (sin reporte)", color: "bg-gray-400" }
+                      : ACCIONES[h.accion] ?? { label: h.accion, color: "bg-gray-400" };
                     return (
                       <li key={h.idHistorial} className="mb-4 ml-5">
                         <span
@@ -445,7 +450,7 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
                         <div className="text-xs text-gray-500">
                           {h.fecha} · {h.usuario}
                         </div>
-                        {h.detalle && <p className="mt-1 break-words text-sm text-gray-700">{h.detalle}</p>}
+                        {!esCorreo && h.detalle && <p className="mt-1 break-words text-sm text-gray-700">{h.detalle}</p>}
                       </li>
                     );
                   })}

@@ -66,6 +66,8 @@ export const ContractsTabs = ({ details }: MDProps) => {
                 <Th>Cliente</Th>
                 <Th>RQ</Th>
                 <Th>Título RQ</Th>
+                <Th center>Solicitud SCTR</Th>
+                <Th center>Solicitud EMO</Th>
                 <Th center>Inicio</Th>
                 <Th center>Fin</Th>
                 <Th center>Monto</Th>
@@ -88,6 +90,8 @@ export const ContractsTabs = ({ details }: MDProps) => {
                   <Td title={c.rqTitle}>
                     {Utils.truncateText(c.rqTitle || "-", 15)}
                   </Td>
+                  <Td center>{c.sctr === 1 ? "Sí" : c.sctr === 0 ? "No" : "Sin información"}</Td>
+                  <Td center>{c.emo === 1 ? "Sí" : c.emo === 0 ? "No" : "Sin información"}</Td>
                   <Td center>{c.startDate}</Td>
                   <Td center>{c.endDate}</Td>
                   <Td center>{c.baseAmount}</Td>

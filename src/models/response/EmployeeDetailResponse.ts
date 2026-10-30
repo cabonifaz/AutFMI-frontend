@@ -31,6 +31,8 @@ export interface Contract {
   client: string; // CLIENTE
   rqCode: string; // CODIGO_RQ
   rqTitle: string; // TITULO_RQ
+  sctr?: number | null;
+  emo?: number | null;
   startDate: string; // dd/MM/yyyy
   endDate: string; // dd/MM/yyyy
   baseAmount: string;

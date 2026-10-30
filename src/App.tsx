@@ -18,6 +18,7 @@ import TalentTable from "./pantallas/PantallaAsignarTalento";
 import PantallaCargarFMI from "./pantallas/PantallaCargarFMI";
 import PantallaNoAutorizado from "./pantallas/PantallaNoAutorizado";
 import PantallaAdministracion from "./pantallas/PantallaAdministracion";
+import PantallaBandejaAprobaciones from "./pantallas/PantallaBandejaAprobaciones";
 import { ParamsProvider } from "./context/ParamsContext";
 import { ModalProvider } from "./context/ModalContext";
 
@@ -121,6 +122,22 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <PantallaCargarFMI />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/bandejaAprobaciones"
+                    element={
+                      <ProtectedRoute>
+                        <PantallaBandejaAprobaciones />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/bandejaAprobaciones/:idSolicitud"
+                    element={
+                      <ProtectedRoute>
+                        <PantallaBandejaAprobaciones />
                       </ProtectedRoute>
                     }
                   />

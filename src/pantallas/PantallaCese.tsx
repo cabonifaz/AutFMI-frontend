@@ -96,6 +96,8 @@ const PantallaCese = () => {
         idTalento: employeeDetails.talentId,
         area: area,
         contractId: contract.contractId,
+        idCliente: contract.clientId ?? null,
+        cliente: contract.client,
         ...data,
       }
     );

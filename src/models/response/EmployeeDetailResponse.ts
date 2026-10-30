@@ -27,6 +27,7 @@ export interface Contract {
   contractTypeId: number;
   contractType: string;
   area: string; // AREA
+  clientId?: number | null; // Cliente del contrato (RQ propio o historial).
   client: string; // CLIENTE
   rqCode: string; // CODIGO_RQ
   rqTitle: string; // TITULO_RQ

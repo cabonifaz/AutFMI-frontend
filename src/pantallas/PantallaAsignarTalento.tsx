@@ -1108,18 +1108,18 @@ const TalentTable: React.FC = () => {
 
     const quienes =
       total === 1
-        ? `Se registrará el ingreso de ${nombreDeTalento(talentosAIngresar[0])}`
-        : `Se registrará el ingreso de ${total} talentos`;
+        ? `Se solicitará la aprobación del ingreso de ${nombreDeTalento(talentosAIngresar[0])}`
+        : `Se solicitará la aprobación del ingreso de ${total} talentos`;
 
     const pendiente = isFullyCovered
-      ? " Con esto se cubren todas las vacantes y el requerimiento pasará a Atendido."
+      ? " Los ingresos y la cobertura se registrarán cuando el gestor apruebe."
       : perfilesFaltantes.length > 0
         ? ` Quedan vacantes por cubrir (${perfilesFaltantes.join(
             ", "
           )}): el requerimiento seguirá abierto para completarlas después.`
         : " El requerimiento seguirá abierto.";
 
-    return `${quienes}, con sus formularios y correos.${pendiente} ¿Desea continuar?`;
+    return `${quienes}.${pendiente} ¿Desea continuar?`;
   }, [talentosAIngresar, isFullyCovered, perfilesFaltantes]);
 
   /**
@@ -1272,7 +1272,7 @@ const TalentTable: React.FC = () => {
 
       if (response.data.idTipoMensaje === 2) {
         setIsConfirmModalOpen(false);
-        showToast("Operación completada con éxito", "success");
+        showToast(response.data.mensaje || "Operación completada con éxito", "success");
         fetchRequerimiento();
       } else {
         showToast(response.data.mensaje, "error");

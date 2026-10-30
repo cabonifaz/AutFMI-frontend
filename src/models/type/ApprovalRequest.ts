@@ -109,6 +109,8 @@ export interface ApprovalFlow {
   puedeGestionar: boolean;
   /** Se devuelve al guardar o aprobar: si otro cambió la solicitud, el backend responde 409. */
   version: number;
+  prontoInicioDisponible?: boolean;
+  notificarProntoInicio?: number;
   camposEditables: ApprovalEditableField[];
   historial: ApprovalTimelineEntry[];
 }

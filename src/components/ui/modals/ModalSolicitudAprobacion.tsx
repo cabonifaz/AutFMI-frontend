@@ -213,7 +213,8 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
     [editable]
   );
 
-  const original = (campo: string) => asText(form?.[campo]);
+  const original = (campo: string) => asText(campo === "notificarProntoInicio"
+    ? form?.[campo] ?? flow?.notificarProntoInicio ?? 0 : form?.[campo]);
   const valueOf = (campo: string) => (campo in draft ? draft[campo] : original(campo));
   const changed = editable.filter((f) => f.campo in draft && draft[f.campo] !== original(f.campo));
   const hasChanges = changed.length > 0;
@@ -280,7 +281,7 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
     }
   };
 
-  const formKeys = form ? Object.keys(form) : [];
+  const formKeys = form ? Object.keys(form).filter((key) => key !== "notificarProntoInicio" && key !== "seleccion") : [];
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -361,6 +362,25 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
                 <pre className="overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs">{detail.datosFormulario}</pre>
               )}
             </section>
+
+            {detail.tipoSolicitud === "INGRESO" && (
+              <div className="rounded-lg bg-slate-50 p-3 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={flow?.prontoInicioDisponible === true && valueOf("notificarProntoInicio") === "1"}
+                    disabled={busy || !flow?.puedeGestionar || !flow?.prontoInicioDisponible}
+                    onChange={(event) => setDraft((d) => ({ ...d, notificarProntoInicio: event.target.checked ? "1" : "0" }))}
+                  />
+                  Enviar aviso de pronto inicio
+                </label>
+                <p className="mt-1 text-xs text-gray-500">
+                  {flow?.prontoInicioDisponible
+                    ? "Desmarca y guarda los cambios antes de aprobar para omitir los avisos de este ingreso."
+                    : "No disponible: requiere un único contrato activo de Outsourcing con avisos pendientes. Los contratos históricos o ya notificados conservan su estado."}
+                </p>
+              </div>
+            )}
 
             {actionError && (
               <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">

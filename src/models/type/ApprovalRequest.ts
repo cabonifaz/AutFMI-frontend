@@ -1,10 +1,12 @@
-export type TipoSolicitudAprobacion = "INGRESO" | "MOVIMIENTO" | "CESE";
+export type TipoSolicitudAprobacion = "INGRESO" | "MOVIMIENTO" | "CESE" | "ASIGNACION_EQUIPO" | "CREDENCIALES";
 export type EstadoSolicitudAprobacion = "PENDIENTE" | "APROBADA" | "RECHAZADA" | "ANULADA";
 
 export const TIPOS_SOLICITUD_APROBACION: { value: TipoSolicitudAprobacion; label: string }[] = [
   { value: "INGRESO", label: "Ingreso" },
   { value: "MOVIMIENTO", label: "Movimiento" },
   { value: "CESE", label: "Cese" },
+  { value: "ASIGNACION_EQUIPO", label: "Asignación de equipo" },
+  { value: "CREDENCIALES", label: "Creación / cambio de credenciales" },
 ];
 
 export const ESTADOS_SOLICITUD_APROBACION: { value: EstadoSolicitudAprobacion; label: string }[] = [
@@ -26,6 +28,7 @@ export interface ApprovalItem {
   usuarioSolicitante: string | null;
   /** yyyy-MM-dd HH:mm */
   fechaSolicitud: string;
+  fechaResolucion?: string | null;
 }
 
 export interface ApprovalDetail extends ApprovalItem {
@@ -79,6 +82,9 @@ export interface ApprovalEditableField {
 }
 
 export type AccionHistorialAprobacion =
+  | "AREA_APROBADA"
+  | "AREA_RECHAZADA"
+  | "RESUELTA"
   | "CREADA"
   | "FORMULARIO_EDITADO"
   | "APROBADA"
@@ -119,4 +125,20 @@ export interface ApprovalDecision {
   idSolicitud: number;
   estado: EstadoSolicitudAprobacion;
   version: number | null;
+}
+
+export type ApprovalAreaName = "FMI" | "EQUIPO" | "CREDENCIALES";
+export interface ApprovalArea {
+  area: ApprovalAreaName;
+  estado: "PENDIENTE" | "APROBADA" | "RECHAZADA" | "NO_APLICA";
+  fechaResolucion: string | null;
+  usuario: string | null;
+  datos: Record<string, unknown>;
+  camposEditables: ApprovalEditableField[];
+}
+export interface ApprovalAreas {
+  version: number;
+  puedeGestionar: boolean;
+  areas: ApprovalArea[];
+  revisadas: ApprovalAreaName[];
 }

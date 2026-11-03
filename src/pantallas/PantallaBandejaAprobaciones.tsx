@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useNavigate, useParams } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, Clock3 } from "lucide-react";
 import { PantallaWrapper } from "./PantallaWrapper";
 import { BaseOption, FilterDropDown } from "../components/ui/FilterDropDown";
 import { Pagination } from "../components/ui/Pagination";
@@ -22,6 +22,10 @@ import {
   TIPOS_SOLICITUD_APROBACION,
   TipoSolicitudAprobacion,
 } from "../models/type/ApprovalRequest";
+
+import { approvalDays, formatApprovalDate, formatApprovalDays } from "../utils/approvalTime";
+
+import { ApprovalExpandableText } from "../components/ui/ApprovalExpandableText";
 
 const SIN_FILTROS: ApprovalFilters = { idCliente: null, tipoSolicitud: null, estado: null, busqueda: null };
 const SIN_DESPLEGABLES: Partial<ApprovalFilters> = { idCliente: null, tipoSolicitud: null, estado: null };
@@ -85,7 +89,7 @@ export const PantallaBandejaAprobaciones = () => {
     setLoading(true);
     setError(null);
 
-    getApprovalInbox(filters, page)
+    getApprovalInbox({ ...filters, estado: filters.busqueda ? filters.estado : "PENDIENTE" }, page)
       .then((response) => {
         if (requestId !== lastRequest.current) return;
         setLoading(false);
@@ -146,7 +150,7 @@ export const PantallaBandejaAprobaciones = () => {
 
   const clearSearch = () => {
     setTextoBusqueda("");
-    if (filters.busqueda !== null) updateFilters({ busqueda: null });
+    if (filters.busqueda !== null) updateFilters({ busqueda: null, estado: null });
   };
 
   const toggleDropdown = (index: number) =>
@@ -169,7 +173,7 @@ export const PantallaBandejaAprobaciones = () => {
     if (loading && items.length === 0) {
       return (
         <tr>
-          <td colSpan={9} className="table-empty" role="status">
+          <td colSpan={8} className="table-empty" role="status">
             Cargando solicitudes…
           </td>
         </tr>
@@ -178,7 +182,7 @@ export const PantallaBandejaAprobaciones = () => {
     if (error) {
       return (
         <tr>
-          <td colSpan={9} className="table-empty">
+          <td colSpan={8} className="table-empty">
             <div role="alert" className="flex flex-col items-center gap-3">
               <span className="text-red-600">{error.message}</span>
               {error.canRetry && (
@@ -198,7 +202,7 @@ export const PantallaBandejaAprobaciones = () => {
     if (items.length === 0) {
       return (
         <tr>
-          <td colSpan={9} className="table-empty">
+          <td colSpan={8} className="table-empty">
             {filters.busqueda !== null ? (
               <div className="flex flex-col items-center gap-3">
                 <span>
@@ -224,7 +228,7 @@ export const PantallaBandejaAprobaciones = () => {
                 </button>
               </div>
             ) : (
-              "No hay solicitudes de aprobación para tus clientes."
+              "No tienes solicitudes pendientes."
             )}
           </td>
         </tr>
@@ -234,19 +238,18 @@ export const PantallaBandejaAprobaciones = () => {
       <tr key={item.idSolicitud} className="table-row">
         <td className="table-cell">{item.idSolicitud}</td>
         <td className="table-cell">{labelOf(tipoOptions, item.tipoSolicitud)}</td>
-        <td className="table-cell">{item.cliente}</td>
-        <td className="table-cell">{item.nombreTalento || "-"}</td>
+        <td className="table-cell"><div className="font-medium text-slate-800">{item.nombreTalento || "-"}</div>
+          {filters.busqueda && <span className={ESTADO_BADGE[item.estado] ?? "badge"}>{labelOf(estadoOptions, item.estado)}</span>}</td>
         <td className="table-cell">
-          {item.resumen
-            ? item.resumen.length > 60
-              ? `${item.resumen.slice(0, 60)}...`
-              : item.resumen
-            : "-"}
+          <ApprovalExpandableText key={`summary-${item.idSolicitud}`} label="resumen" value={item.resumen || "-"} preview={item.resumen && item.resumen.length > 55 ? `${item.resumen.slice(0, 55)}…` : item.resumen || "-"} />
         </td>
         <td className="table-cell">{item.usuarioSolicitante || "-"}</td>
-        <td className="table-cell text-nowrap">{item.fechaSolicitud}</td>
-        <td className="table-cell">
-          <span className={ESTADO_BADGE[item.estado] ?? "badge"}>{labelOf(estadoOptions, item.estado)}</span>
+        <td className="table-cell"><ApprovalExpandableText key={`date-${item.idSolicitud}`} label="fecha" value={formatApprovalDate(item.fechaSolicitud)} preview={formatApprovalDate(item.fechaSolicitud).split(" ")[0]} /></td>
+        <td className="table-cell text-nowrap">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
+            <Clock3 size={13} aria-hidden="true" />
+            {formatApprovalDays(approvalDays(item.fechaSolicitud, item.fechaResolucion, item.estado === "PENDIENTE"))}
+          </span>
         </td>
         <td className="table-cell">
           <button
@@ -278,7 +281,10 @@ export const PantallaBandejaAprobaciones = () => {
               </div>
               Bandeja de aprobaciones
             </h2>
-            <div className="card mb-6">
+            <p className="mb-5 text-sm text-slate-500">
+              {filters.busqueda ? "Resultados de búsqueda · incluye el histórico" : "Todas las solicitudes pendientes. Busca para consultar el histórico."}
+            </p>
+            <div className="card mb-5 !rounded-2xl border border-slate-200 !shadow-sm">
               <div className="flex gap-4 justify-evenly sm:justify-start flex-wrap items-center">
                 <div className="relative w-full sm:w-80">
                   <Search
@@ -339,7 +345,7 @@ export const PantallaBandejaAprobaciones = () => {
                     updateFilters({ tipoSolicitud: (values[0] as TipoSolicitudAprobacion) || null })
                   }
                 />
-                <FilterDropDown
+                {filters.busqueda && <FilterDropDown
                   name="estado"
                   label="Estado"
                   options={estadoOptions}
@@ -352,7 +358,7 @@ export const PantallaBandejaAprobaciones = () => {
                   onChange={(values) =>
                     updateFilters({ estado: (values[0] as EstadoSolicitudAprobacion) || null })
                   }
-                />
+                />}
               </div>
             </div>
           </div>
@@ -363,12 +369,11 @@ export const PantallaBandejaAprobaciones = () => {
                 <tr className="table-header">
                   <th className="table-header-cell text-nowrap">N°</th>
                   <th className="table-header-cell text-nowrap">Tipo</th>
-                  <th className="table-header-cell text-nowrap">Cliente</th>
                   <th className="table-header-cell text-nowrap">Talento</th>
                   <th className="table-header-cell text-nowrap">Resumen</th>
                   <th className="table-header-cell text-nowrap">Solicitado por</th>
                   <th className="table-header-cell text-nowrap">Fecha</th>
-                  <th className="table-header-cell text-nowrap">Estado</th>
+                  <th className="table-header-cell text-nowrap">Tiempo</th>
                   <th className="table-header-cell text-nowrap">Acciones</th>
                 </tr>
               </thead>

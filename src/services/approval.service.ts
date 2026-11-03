@@ -46,3 +46,8 @@ export const approveApprovalRequest = (
   version: number
 ): Promise<AxiosResponse<ApprovalResult<ApprovalDecision>>> =>
   apiClientWithToken.post(`/fmi/approval/${idSolicitud}/approve`, { version });
+
+export const getApprovalAreas = (id: number) => apiClientWithToken.get<ApprovalResult<import("../models/type/ApprovalRequest").ApprovalAreas>>(`/fmi/approval/${id}/areas`);
+export const reviewApprovalArea = (id: number, area: string, version: number) => apiClientWithToken.post(`/fmi/approval/${id}/areas/${area}/review`, { version });
+export const updateApprovalArea = (id: number, area: string, version: number, cambios: Record<string, string | number | null>) => apiClientWithToken.put<ApprovalResult<ApprovalDecision>>(`/fmi/approval/${id}/areas/${area}/form`, { version, cambios });
+export const decideApprovalAreas = (id: number, version: number, areas: string[], accion: "APROBAR" | "RECHAZAR", motivo = "", confirmarTodo = false) => apiClientWithToken.post<ApprovalResult<ApprovalDecision>>(`/fmi/approval/${id}/areas/decision`, { version, areas, accion, motivo, confirmarTodo });

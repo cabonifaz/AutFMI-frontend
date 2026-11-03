@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import { PantallaBandejaAprobaciones } from "./PantallaBandejaAprobaciones";
 import { getApprovalInbox } from "../services/approval.service";
 jest.mock("axios", () => ({ isAxiosError: () => false }));
@@ -24,6 +24,28 @@ jest.mock("../services/approval.service", () => ({
   getApprovalInbox: jest.fn(),
 }));
 const get = getApprovalInbox as jest.Mock;
+test("espera dos segundos desde la última tecla y consulta una sola vez", async () => {
+  jest.useFakeTimers();
+  try {
+    render(<PantallaBandejaAprobaciones />);
+    await act(async () => {});
+    expect(get).toHaveBeenCalledTimes(1);
+    const input = screen.getByRole("searchbox");
+    fireEvent.change(input, { target: { value: "hola" } });
+    act(() => { jest.advanceTimersByTime(1500); });
+    expect(get).toHaveBeenCalledTimes(1);
+    fireEvent.change(input, { target: { value: "hola mundo" } });
+    act(() => { jest.advanceTimersByTime(1999); });
+    expect(get).toHaveBeenCalledTimes(1);
+    await act(async () => { jest.advanceTimersByTime(1); });
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(get).toHaveBeenLastCalledWith(
+      expect.objectContaining({ busqueda: "hola mundo" }), 1,
+    );
+  } finally {
+    jest.useRealTimers();
+  }
+});
 beforeEach(() => {
   jest.clearAllMocks();
   get.mockResolvedValue({

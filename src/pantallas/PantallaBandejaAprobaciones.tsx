@@ -31,7 +31,7 @@ const SIN_FILTROS: ApprovalFilters = { idCliente: null, tipoSolicitud: null, est
 const SIN_DESPLEGABLES: Partial<ApprovalFilters> = { idCliente: null, tipoSolicitud: null, estado: null };
 
 // Espera tras la última tecla antes de consultar: evita una petición por tecla.
-export const ESPERA_BUSQUEDA_MS = 350;
+export const ESPERA_BUSQUEDA_MS = 2000;
 const PLACEHOLDER_BUSQUEDA = "Buscar por número, talento o resumen";
 
 const tipoOptions: BaseOption[] = TIPOS_SOLICITUD_APROBACION;

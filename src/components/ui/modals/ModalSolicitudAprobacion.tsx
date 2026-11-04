@@ -1,34 +1,86 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
-import { CloseModalButton } from "../CloseModalButton";
 import {
-  approveApprovalRequest,
+  Check,
+  CheckCheck,
+  FileText,
+  Laptop,
+  KeyRound,
+  X,
+  Clock3,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import {
   getApprovalDetail,
   getApprovalFlow,
-  updateApprovalForm,
+  getApprovalAreas,
+  reviewApprovalArea,
+  updateApprovalArea,
+  decideApprovalAreas,
 } from "../../../services/approval.service";
 import {
-  AccionHistorialAprobacion,
   ApprovalDetail,
-  ApprovalEditableField,
   ApprovalFlow,
-  ESTADOS_SOLICITUD_APROBACION,
+  ApprovalAreas,
+  ApprovalAreaName,
+  ApprovalEditableField,
   TIPOS_SOLICITUD_APROBACION,
 } from "../../../models/type/ApprovalRequest";
+import { ApprovalExpandableText } from "../ApprovalExpandableText";
+import { formatApprovalDate } from "../../../utils/approvalTime";
 
 interface Props {
   idSolicitud: number;
   onClose: () => void;
   onSessionExpired: () => void;
-  /** Se llama tras guardar o aprobar, para refrescar la bandeja. */
   onChanged?: () => void;
 }
-
-const labelOf = (options: { value: string; label: string }[], value: string) =>
-  options.find((o) => o.value === value)?.label ?? value;
-
-// Mismas etiquetas que ApprovalFormPolicy del backend.
+const TABS = [
+  {
+    area: "FMI" as const,
+    label: "FMI",
+    icon: FileText,
+    description: "Datos del ingreso, movimiento o cese.",
+  },
+  {
+    area: "EQUIPO" as const,
+    label: "Equipo",
+    icon: Laptop,
+    description: "Asignación o devolución del equipo.",
+  },
+  {
+    area: "CREDENCIALES" as const,
+    label: "Credenciales",
+    icon: KeyRound,
+    description: "Creación, cambio o baja de accesos.",
+  },
+];
+const text = (value: unknown) =>
+  value === null || value === undefined
+    ? ""
+    : typeof value === "boolean"
+      ? value
+        ? "Sí"
+        : "No"
+      : typeof value === "object"
+        ? ""
+        : String(value);
+const statusLabels: Record<string, string> = {
+  PENDIENTE: "Pendiente",
+  APROBADA: "Aprobada",
+  RECHAZADA: "Desaprobada",
+  NO_APLICA: "No aplica",
+  ANULADA: "Anulada",
+};
+const statusStyles: Record<string, string> = {
+  PENDIENTE: "bg-amber-50 text-amber-700",
+  APROBADA: "bg-emerald-50 text-emerald-700",
+  RECHAZADA: "bg-red-50 text-red-700",
+  NO_APLICA: "bg-slate-100 text-slate-500",
+  ANULADA: "bg-slate-100 text-slate-500",
+};
 const ETIQUETAS_CAMPO: Record<string, string> = {
   nombres: "Nombres",
   apellidoPaterno: "Apellido paterno",
@@ -57,463 +109,789 @@ const ETIQUETAS_CAMPO: Record<string, string> = {
   sedeDeclarar: "Sede a declarar",
 };
 
-const ACCIONES: Record<AccionHistorialAprobacion, { label: string; color: string }> = {
-  CREADA: { label: "Solicitud registrada", color: "bg-blue-500" },
-  FORMULARIO_EDITADO: { label: "Formulario editado", color: "bg-yellow-500" },
-  APROBADA: { label: "Flujo aprobado", color: "bg-green-600" },
-  EJECUTADA: { label: "Operación registrada", color: "bg-green-600" },
-  EJECUCION_FALLIDA: { label: "Error al registrar la operación", color: "bg-red-600" },
-  EJECUCION_INCIERTA: { label: "Registro sin confirmar: verificar", color: "bg-orange-500" },
-  CORREO_ENVIADO: { label: "Correo enviado (activado)", color: "bg-slate-500" },
-  CORREO_OMITIDO: { label: "Correo no enviado (desactivado)", color: "bg-gray-400" },
-  CORREO_FALLIDO: { label: "Correo con error", color: "bg-red-500" },
+const LABELS: Record<string, string> = {
+  ...ETIQUETAS_CAMPO,
+  fechaEntrega: "Fecha de entrega",
+  procesador: "Procesador",
+  ram: "Memoria RAM",
+  hd: "Disco",
+  marca: "Marca",
+  accesorios: "Accesorios",
+  tipoEquipo: "Tipo de equipo",
+  usuario: "Usuario / correo",
+  detalle: "Detalle",
+  fecha: "Fecha requerida",
+  accion: "Acción",
+  software: "Software solicitado",
+  anexo: "Anexo",
+  celular: "Celular",
+  internetMovil: "Internet móvil",
+  bitCelular: "Celular",
+  bitInternetMovil: "Internet móvil",
+  notificarProntoInicio: "Enviar aviso de pronto inicio",
 };
 
-type FormValues = Record<string, unknown>;
-
-/** Objeto del JSON del formulario; null si no es un objeto legible. */
-const parseForm = (json: string): FormValues | null => {
-  try {
-    const parsed = JSON.parse(json);
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-    return parsed as FormValues;
-  } catch {
-    return null;
-  }
+type Confirm = {
+  areas: ApprovalAreaName[];
+  action: "APROBAR" | "RECHAZAR";
+  all: boolean;
 };
-
-const asText = (value: unknown) =>
-  value === null || value === undefined
-    ? ""
-    : typeof value === "object"
-    ? JSON.stringify(value)
-    : String(value);
-
-const display = (campo: string, value: unknown) => {
-  if (campo === "tieneEquipo") return value === 1 ? "Sí" : value === 0 ? "No" : asText(value);
-  return asText(value);
-};
-
-/** Valor del borrador en el tipo que espera el backend. */
-const toPayload = (field: ApprovalEditableField, value: string): string | number | null => {
-  if (field.tipo === "NUMERO" || field.tipo === "SI_NO") return value.trim() === "" ? null : Number(value);
-  return value.trim() === "" && field.tipo === "FECHA" ? null : value;
-};
-
-const errorInfo = (err: unknown) => ({
-  status: isAxiosError(err) ? err.response?.status : undefined,
-  mensaje: isAxiosError(err)
-    ? (err.response?.data as { baseResponse?: { mensaje?: string } } | undefined)?.baseResponse?.mensaje
-    : undefined,
-});
-
-export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpired, onChanged }: Props) => {
+export const ModalSolicitudAprobacion = ({
+  idSolicitud,
+  onClose,
+  onSessionExpired,
+  onChanged,
+}: Props) => {
   const [detail, setDetail] = useState<ApprovalDetail | null>(null);
   const [flow, setFlow] = useState<ApprovalFlow | null>(null);
-  const [flowError, setFlowError] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
+  const [areas, setAreas] = useState<ApprovalAreas | null>(null);
+  const [active, setActive] = useState<ApprovalAreaName>("FMI");
+  const [selected, setSelected] = useState<ApprovalAreaName[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
-  const [approving, setApproving] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [reason, setReason] = useState("");
+  const [reload, setReload] = useState(0);
+  const actionLock = useRef(false);
+  const requestIdRef = useRef(idSolicitud);
+  requestIdRef.current = idSolicitud;
+  const dialog = useRef<HTMLDivElement>(null);
+  const sessionRef = useRef(onSessionExpired);
+  sessionRef.current = onSessionExpired;
+  const changedRef = useRef(onChanged);
+  changedRef.current = onChanged;
 
-  const onSessionExpiredRef = useRef(onSessionExpired);
-  onSessionExpiredRef.current = onSessionExpired;
-  const onChangedRef = useRef(onChanged);
-  onChangedRef.current = onChanged;
-
-  useEffect(() => {
-    let vigente = true;
-    setError(null);
-
-    if (!Number.isInteger(idSolicitud) || idSolicitud < 1) {
-      setDetail(null);
-      setLoading(false);
-      setError("La solicitud indicada no es válida.");
+  const fail = useCallback((e: unknown, fallback: string) => {
+    if (isAxiosError(e) && e.response?.status === 401) {
+      sessionRef.current();
       return;
     }
-
+    const message = isAxiosError(e)
+      ? e.response?.data?.baseResponse?.mensaje
+      : undefined;
+    setError(message || fallback);
+    if (isAxiosError(e) && e.response?.status === 409) {
+      setSelected([]);
+      setReload((v) => v + 1);
+      changedRef.current?.();
+    }
+  }, []);
+  useEffect(() => {
+    setActive("FMI");
+    setSelected([]);
+    setDraft({});
+    setConfirm(null);
+    setReason("");
+    setDetail(null);
+    setAreas(null);
+    setFlow(null);
+  }, [idSolicitud]);
+  useEffect(() => {
+    let current = true;
     setLoading(true);
-    // El flujo es complementario: si falla, el detalle se muestra igual.
-    const flowRequest = getApprovalFlow(idSolicitud).then(
-      (response) => ({ response, failed: false as const }),
-      (err) => ({ err, failed: true as const })
-    );
-
-    Promise.all([getApprovalDetail(idSolicitud), flowRequest])
-      .then(([response, flowResult]) => {
-        if (!vigente) return;
-        setLoading(false);
-        if (response.data.baseResponse?.idTipoMensaje === 2 && response.data.data) {
-          setDetail(response.data.data);
-          setDraft({});
-        } else {
+    setError(null);
+    if (!Number.isInteger(idSolicitud) || idSolicitud < 1) {
+      setError("La solicitud no es válida.");
+      setLoading(false);
+      return;
+    }
+    Promise.all([
+      getApprovalDetail(idSolicitud),
+      getApprovalFlow(idSolicitud),
+      getApprovalAreas(idSolicitud),
+    ])
+      .then(([d, f, a]) => {
+        if (!current) return;
+        for (const response of [d, f, a])
+          if (
+            response.data.baseResponse?.idTipoMensaje !== 2 ||
+            !response.data.data
+          )
+            throw new Error(
+              response.data.baseResponse?.mensaje ||
+                "No se pudo cargar la solicitud.",
+            );
+        setDetail(d.data.data);
+        setFlow(f.data.data);
+        setAreas(a.data.data);
+        const applicable =
+          a.data.data?.areas.filter((area) => area.estado !== "NO_APLICA") ||
+          [];
+        setActive((previous) =>
+          applicable.some((area) => area.area === previous)
+            ? previous
+            : applicable[0]?.area || "FMI",
+        );
+        setDraft({});
+        setSelected([]);
+      })
+      .catch((e) => {
+        if (current) {
           setDetail(null);
-          setError(response.data.baseResponse?.mensaje || "No se pudo cargar la solicitud.");
-          return;
-        }
-        if (!flowResult.failed && flowResult.response.data.baseResponse?.idTipoMensaje === 2) {
-          setFlow(flowResult.response.data.data);
-          setFlowError(false);
-        } else {
-          if (flowResult.failed && errorInfo(flowResult.err).status === 401) {
-            onSessionExpiredRef.current();
-            return;
-          }
-          setFlow(null);
-          setFlowError(true);
+          setAreas(null);
+          fail(
+            e,
+            e instanceof Error ? e.message : "No se pudo cargar la solicitud.",
+          );
         }
       })
-      .catch((err) => {
-        if (!vigente) return;
-        setLoading(false);
-        setDetail(null);
-        const { status } = errorInfo(err);
-        if (status === 401) {
-          onSessionExpiredRef.current();
-          return;
-        }
-        setError(
-          status === 404
-            ? "La solicitud no existe o no está asignada a tus clientes."
-            : status === 403
-            ? "No tienes permiso para ver la bandeja de aprobaciones."
-            : "No se pudo cargar la solicitud."
-        );
+      .finally(() => {
+        if (current) setLoading(false);
       });
-
     return () => {
-      vigente = false;
+      current = false;
     };
-  }, [idSolicitud, reloadKey]);
-
-  const busy = saving || approving;
-
+  }, [idSolicitud, reload, fail]);
+  const version = areas?.version;
+  const canManage = areas?.puedeGestionar === true;
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || busy) return;
-      if (confirmOpen) setConfirmOpen(false);
-      else onClose();
+    if (!canManage || version === undefined || loading) return;
+    let current = true;
+    setReviewing(true);
+    reviewApprovalArea(idSolicitud, active, version)
+      .then((response) => {
+        if (response.data.baseResponse?.idTipoMensaje !== 2)
+          throw new Error(
+            response.data.baseResponse?.mensaje ||
+              "No se pudo registrar la revisión.",
+          );
+        if (requestIdRef.current === idSolicitud)
+          setAreas((a) =>
+            a && a.version === version
+              ? {
+                  ...a,
+                  revisadas: Array.from(new Set([...a.revisadas, active])),
+                }
+              : a,
+          );
+      })
+      .catch((e) => {
+        if (current)
+          fail(
+            e,
+            "No se pudo registrar la revisión. Reabre la pestaña antes de confirmar.",
+          );
+      })
+      .finally(() => {
+        if (current) setReviewing(false);
+      });
+    return () => {
+      current = false;
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose, confirmOpen, busy]);
-
-  const form = detail ? parseForm(detail.datosFormulario) : null;
-  const editable = useMemo(
-    () => (flow?.puedeGestionar ? flow.camposEditables : []),
-    [flow]
+  }, [idSolicitud, active, version, canManage, loading, fail]);
+  const busy = loading || working;
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    dialog.current?.focus();
+    return () => previous?.focus();
+  }, []);
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) {
+        if (confirm) setConfirm(null);
+        else onClose();
+      }
+      if (event.key === "Tab" && dialog.current && !confirm) {
+        const nodes = Array.from(
+          dialog.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]',
+          ),
+        );
+        const first = nodes[0],
+          last = nodes[nodes.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", listener);
+    return () => document.removeEventListener("keydown", listener);
+  }, [busy, confirm, onClose]);
+  const current = areas?.areas.find((a) => a.area === active);
+  const pending =
+    areas?.areas.filter((a) => a.estado === "PENDIENTE").map((a) => a.area) ||
+    [];
+  const visibleTabs = TABS.filter((tab) =>
+    areas?.areas.some(
+      (area) => area.area === tab.area && area.estado !== "NO_APLICA",
+    ),
   );
-  const editableByCampo = useMemo(
-    () => Object.fromEntries(editable.map((f) => [f.campo, f])),
-    [editable]
+  const reviewedCount = visibleTabs.filter((tab) =>
+    areas?.revisadas.includes(tab.area),
+  ).length;
+  const allReviewed =
+    visibleTabs.length > 0 && reviewedCount === visibleTabs.length;
+  const fields = current?.camposEditables || [];
+  const fieldMap = Object.fromEntries(
+    fields.map((field) => [field.campo, field]),
   );
-
-  const original = (campo: string) => asText(campo === "notificarProntoInicio"
-    ? form?.[campo] ?? flow?.notificarProntoInicio ?? 0 : form?.[campo]);
-  const valueOf = (campo: string) => (campo in draft ? draft[campo] : original(campo));
-  const changed = editable.filter((f) => f.campo in draft && draft[f.campo] !== original(f.campo));
-  const hasChanges = changed.length > 0;
-
-  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
-
-  const handleActionError = (err: unknown, fallback: string) => {
-    const { status, mensaje } = errorInfo(err);
-    if (status === 401) {
-      onSessionExpiredRef.current();
-      return;
-    }
-    setActionError(mensaje || fallback);
-    // 409/422: la solicitud cambió (otro gestor aprobó o editó) o volvió a pendiente.
-    if (status === 409 || status === 422) {
-      reload();
-      onChangedRef.current?.();
-    }
+  const keys = Array.from(
+    new Set([
+      ...Object.keys(current?.datos || {}),
+      ...fields.map((field) => field.campo),
+    ]),
+  );
+  const original = (key: string) =>
+    text(
+      current?.datos[key] ??
+        (key === "notificarProntoInicio"
+          ? flow?.notificarProntoInicio
+          : undefined),
+    );
+  const changes = fields.filter(
+    (field) =>
+      field.campo in draft && draft[field.campo] !== original(field.campo),
+  );
+  const dirty = changes.length > 0;
+  const switchTab = (area: ApprovalAreaName) => {
+    if (busy || dirty) return;
+    setActive(area);
+    setDraft({});
+    setError(null);
   };
-
+  const choose = (area: ApprovalAreaName) =>
+    setSelected((items) =>
+      items.includes(area) ? items.filter((a) => a !== area) : [...items, area],
+    );
+  const openConfirm = (
+    selection: ApprovalAreaName[],
+    action: "APROBAR" | "RECHAZAR",
+    all = false,
+  ) => {
+    setError(null);
+    setReason("");
+    setConfirm({ areas: selection, action, all });
+  };
   const save = async () => {
-    if (!flow || !hasChanges) return;
-    setSaving(true);
-    setActionError(null);
-    const cambios = Object.fromEntries(changed.map((f) => [f.campo, toPayload(f, draft[f.campo])]));
+    if (!areas || !dirty || actionLock.current) return;
+    actionLock.current = true;
+    setWorking(true);
+    setError(null);
+    const payload = Object.fromEntries(
+      changes.map((field) => [
+        field.campo,
+        field.tipo === "NUMERO" || field.tipo === "SI_NO"
+          ? draft[field.campo].trim() === ""
+            ? null
+            : Number(draft[field.campo])
+          : draft[field.campo],
+      ]),
+    );
     try {
-      const response = await updateApprovalForm(idSolicitud, flow.version, cambios);
-      if (response.data.baseResponse?.idTipoMensaje === 2) {
-        enqueueSnackbar("Cambios guardados.", { variant: "success" });
-        reload();
-        onChangedRef.current?.();
-      } else {
-        setActionError(response.data.baseResponse?.mensaje || "No se pudieron guardar los cambios.");
-      }
-    } catch (err) {
-      handleActionError(err, "No se pudieron guardar los cambios.");
+      const response = await updateApprovalArea(
+        idSolicitud,
+        active,
+        areas.version,
+        payload,
+      );
+      if (response.data.baseResponse?.idTipoMensaje !== 2)
+        throw new Error(
+          response.data.baseResponse?.mensaje ||
+            "No se pudieron guardar los cambios.",
+        );
+      enqueueSnackbar(
+        "Corrección guardada. Revisa los datos antes de aprobar.",
+        { variant: "success" },
+      );
+      setReload((v) => v + 1);
+      changedRef.current?.();
+    } catch (e) {
+      fail(
+        e,
+        e instanceof Error ? e.message : "No se pudieron guardar los cambios.",
+      );
     } finally {
-      setSaving(false);
+      actionLock.current = false;
+      setWorking(false);
     }
   };
-
-  const approve = async () => {
-    if (!flow) return;
-    setApproving(true);
-    setActionError(null);
+  const decide = async () => {
+    if (!areas || !confirm || actionLock.current) return;
+    actionLock.current = true;
+    setWorking(true);
+    setError(null);
     try {
-      const response = await approveApprovalRequest(idSolicitud, flow.version);
-      setConfirmOpen(false);
-      if (response.data.baseResponse?.idTipoMensaje === 2) {
-        enqueueSnackbar(response.data.baseResponse.mensaje || "Solicitud aprobada.", { variant: "success" });
-        reload();
-        onChangedRef.current?.();
-      } else {
-        // 202: aprobada con resultado incierto. Cambió el estado: se recarga.
-        setActionError(response.data.baseResponse?.mensaje || "No se pudo aprobar la solicitud.");
-        reload();
-        onChangedRef.current?.();
-      }
-    } catch (err) {
-      setConfirmOpen(false);
-      handleActionError(err, "No se pudo aprobar la solicitud.");
+      const response = await decideApprovalAreas(
+        idSolicitud,
+        areas.version,
+        confirm.areas,
+        confirm.action,
+        reason,
+        confirm.all,
+      );
+      if (response.data.baseResponse?.idTipoMensaje !== 2)
+        throw new Error(
+          response.data.baseResponse?.mensaje ||
+            "No se pudo confirmar la decisión.",
+        );
+      enqueueSnackbar(
+        confirm.action === "APROBAR"
+          ? "Áreas aprobadas correctamente."
+          : "Área desaprobada. Se notificará solo al solicitante.",
+        { variant: "success" },
+      );
+      setConfirm(null);
+      setReload((v) => v + 1);
+      changedRef.current?.();
+    } catch (e) {
+      setConfirm(null);
+      fail(
+        e,
+        e instanceof Error ? e.message : "No se pudo confirmar la decisión.",
+      );
     } finally {
-      setApproving(false);
+      actionLock.current = false;
+      setWorking(false);
     }
   };
-
-  const formKeys = form ? Object.keys(form).filter((key) => key !== "notificarProntoInicio" && key !== "seleccion") : [];
-
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-sm sm:p-6">
       <div
+        ref={dialog}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="titulo-solicitud-aprobacion"
-        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        aria-labelledby="approval-title"
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 id="titulo-solicitud-aprobacion" className="text-lg font-semibold">
-            Solicitud N° {Number.isInteger(idSolicitud) ? idSolicitud : "-"}
-          </h3>
-          <CloseModalButton onClick={() => !busy && onClose()} />
-        </div>
-
-        {loading && !detail && (
-          <p role="status" className="py-6 text-center text-sm text-gray-500">
-            Cargando solicitud…
-          </p>
-        )}
-
-        {!loading && error && (
-          <p role="alert" className="py-6 text-center text-sm text-red-600">
-            {error}
-          </p>
-        )}
-
-        {detail && (
-          <div className="flex flex-col gap-5">
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-              <Field label="Tipo" value={labelOf(TIPOS_SOLICITUD_APROBACION, detail.tipoSolicitud)} />
-              <Field label="Estado" value={labelOf(ESTADOS_SOLICITUD_APROBACION, detail.estado)} />
-              <Field label="Cliente" value={detail.cliente} />
-              <Field label="Talento" value={detail.nombreTalento} />
-              <Field label="Solicitado por" value={detail.usuarioSolicitante} />
-              <Field label="Fecha de solicitud" value={detail.fechaSolicitud} />
-              {detail.fechaModificacion && (
-                <Field
-                  label="Última modificación"
-                  value={`${detail.fechaModificacion} · ${detail.usuarioModificacion ?? ""}`}
-                />
-              )}
-            </dl>
-            {detail.resumen && <Field label="Resumen" value={detail.resumen} />}
-
-            <section aria-labelledby="titulo-formulario">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <h4 id="titulo-formulario" className="text-sm font-semibold text-gray-700">
-                  Datos del formulario
-                </h4>
-                {editable.length > 0 && (
-                  <span className="text-xs text-gray-500">Los campos con borde se pueden editar.</span>
-                )}
-              </div>
-              {form ? (
-                formKeys.length === 0 ? (
-                  <p className="text-sm text-gray-500">Sin datos.</p>
-                ) : (
-                  <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-2">
-                    {formKeys.map((key) => {
-                      const field = editableByCampo[key];
-                      const label = ETIQUETAS_CAMPO[key] ?? key;
-                      if (!field) return <Field key={key} label={label} value={display(key, form[key])} />;
-                      return (
-                        <EditableInput
-                          key={key}
-                          field={field}
-                          value={valueOf(key)}
-                          disabled={busy}
-                          onChange={(v) => setDraft((d) => ({ ...d, [key]: v }))}
-                        />
-                      );
-                    })}
-                  </dl>
-                )
-              ) : (
-                <pre className="overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs">{detail.datosFormulario}</pre>
-              )}
-            </section>
-
-            {detail.tipoSolicitud === "INGRESO" && (
-              <div className="rounded-lg bg-slate-50 p-3 text-sm">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={flow?.prontoInicioDisponible === true && valueOf("notificarProntoInicio") === "1"}
-                    disabled={busy || !flow?.puedeGestionar || !flow?.prontoInicioDisponible}
-                    onChange={(event) => setDraft((d) => ({ ...d, notificarProntoInicio: event.target.checked ? "1" : "0" }))}
-                  />
-                  Enviar aviso de pronto inicio
-                </label>
-                <p className="mt-1 text-xs text-gray-500">
-                  {flow?.prontoInicioDisponible
-                    ? "Desmarca y guarda los cambios antes de aprobar para omitir los avisos de este ingreso."
-                    : "No disponible: requiere un único contrato activo de Outsourcing con avisos pendientes. Los contratos históricos o ya notificados conservan su estado."}
-                </p>
-              </div>
-            )}
-
-            {actionError && (
-              <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                {actionError}
-              </p>
-            )}
-
-            {flow && (
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {!flow.puedeGestionar && (
-                  <span className="mr-auto text-xs text-gray-500">
-                    {flow.estado !== "PENDIENTE"
-                      ? "La solicitud ya no está pendiente."
-                      : "Solo un gestor asignado al cliente puede editar y aprobar esta solicitud."}
-                  </span>
-                )}
-                {flow.puedeGestionar && (
-                  <>
-                    {hasChanges && (
-                      <button
-                        type="button"
-                        className="btn btn-outline-gray"
-                        disabled={busy}
-                        onClick={() => setDraft({})}
-                      >
-                        Descartar cambios
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={`btn ${hasChanges && !busy ? "btn-blue" : "btn-disabled"}`}
-                      disabled={!hasChanges || busy}
-                      onClick={save}
-                    >
-                      {saving ? "Guardando…" : "Guardar cambios"}
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${!hasChanges && !busy ? "btn-primary" : "btn-disabled"}`}
-                      disabled={hasChanges || busy}
-                      title={hasChanges ? "Guarda o descarta los cambios antes de aprobar" : undefined}
-                      onClick={() => {
-                        setActionError(null);
-                        setConfirmOpen(true);
-                      }}
-                    >
-                      Aprobar flujo completo
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-
-            <section aria-labelledby="titulo-linea-tiempo">
-              <h4 id="titulo-linea-tiempo" className="mb-3 text-sm font-semibold text-gray-700">
-                Línea de tiempo
-              </h4>
-              {flowError && (
-                <p className="text-sm text-gray-500">No se pudo cargar la línea de tiempo.</p>
-              )}
-              {flow && flow.historial.length === 0 && (
-                <p className="text-sm text-gray-500">Sin eventos registrados.</p>
-              )}
-              {flow && flow.historial.length > 0 && (
-                <ol className="relative ml-2 border-l border-gray-200">
-                  {flow.historial.map((h) => {
-                    const esCorreo = ["CORREO_ENVIADO", "CORREO_OMITIDO", "CORREO_FALLIDO"].includes(h.accion);
-                    // Solo cambia la presentación; se conserva el detalle original de auditoría.
-                    const sinReporte = h.accion === "CORREO_OMITIDO" && /sin reporte/i.test(h.detalle ?? "");
-                    const accion = sinReporte
-                      ? { label: "Correo no enviado (sin reporte)", color: "bg-gray-400" }
-                      : ACCIONES[h.accion] ?? { label: h.accion, color: "bg-gray-400" };
-                    return (
-                      <li key={h.idHistorial} className="mb-4 ml-5">
-                        <span
-                          aria-hidden="true"
-                          className={`absolute -left-[7px] mt-1 h-3 w-3 rounded-full ring-4 ring-white ${accion.color}`}
-                        />
-                        <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                          <span className="font-medium text-gray-800">{accion.label}</span>
-                          {h.estadoNuevo && h.estadoAnterior !== h.estadoNuevo && (
-                            <span className="text-xs text-gray-500">
-                              → {labelOf(ESTADOS_SOLICITUD_APROBACION, h.estadoNuevo)}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {h.fecha} · {h.usuario}
-                        </div>
-                        {!esCorreo && h.detalle && <p className="mt-1 break-words text-sm text-gray-700">{h.detalle}</p>}
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </section>
+        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+          <div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-blue-600">
+              Bandeja de aprobaciones
+            </div>
+            <h3
+              id="approval-title"
+              className="text-xl font-semibold text-slate-900"
+            >
+              Solicitud N° {idSolicitud}
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Revisa y confirma cada área de forma independiente.
+            </p>
           </div>
+          <button
+            aria-label="Cerrar detalle"
+            disabled={busy}
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 disabled:opacity-40"
+          >
+            <X size={20} />
+          </button>
+        </header>
+        <div className="overflow-y-auto px-6 py-5">
+          {loading && (
+            <p
+              role="status"
+              className="py-8 text-center text-sm text-slate-500"
+            >
+              Cargando solicitud…
+            </p>
+          )}
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700"
+            >
+              <AlertCircle size={18} className="shrink-0" />
+              {error}
+              <button
+                className="ml-auto underline"
+                disabled={busy}
+                onClick={() => setReload((v) => v + 1)}
+              >
+                Recargar
+              </button>
+            </div>
+          )}
+          {detail && areas && !loading && (
+            <>
+              <div className="mb-5 rounded-xl bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-semibold text-slate-800">
+                    {detail.nombreTalento || "Talento"}
+                  </h4>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[detail.estado] || "bg-slate-100"}`}
+                  >
+                    {statusLabels[detail.estado]}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  {
+                    TIPOS_SOLICITUD_APROBACION.find(
+                      (t) => t.value === detail.tipoSolicitud,
+                    )?.label
+                  }{" "}
+                  · {detail.cliente}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+                  <span>
+                    Solicitado por{" "}
+                    <strong className="font-medium text-slate-700">
+                      {detail.usuarioSolicitante || "Sin información"}
+                    </strong>
+                  </span>
+                  <span>
+                    <ApprovalExpandableText
+                      label="fecha"
+                      value={formatApprovalDate(detail.fechaSolicitud)}
+                      preview={
+                        formatApprovalDate(detail.fechaSolicitud).split(" ")[0]
+                      }
+                    />
+                  </span>
+                </div>
+                {detail.resumen && (
+                  <div className="mt-3 text-sm text-slate-600">
+                    <ApprovalExpandableText
+                      label="resumen"
+                      value={detail.resumen}
+                      preview={
+                        detail.resumen.length > 80
+                          ? `${detail.resumen.slice(0, 80)}…`
+                          : detail.resumen
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+              <div
+                role="tablist"
+                aria-label="Áreas de la solicitud"
+                className={`mb-5 grid gap-2 rounded-xl bg-slate-100 p-1.5 ${visibleTabs.length === 1 ? "grid-cols-1" : visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+              >
+                {visibleTabs.map((tab, index) => {
+                  const Icon = tab.icon;
+                  const reviewed = areas.revisadas.includes(tab.area);
+                  return (
+                    <button
+                      key={tab.area}
+                      id={`tab-${tab.area}`}
+                      role="tab"
+                      aria-selected={active === tab.area}
+                      aria-controls={`panel-${tab.area}`}
+                      tabIndex={active === tab.area ? 0 : -1}
+                      disabled={busy || dirty}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                          e.preventDefault();
+                          const next =
+                            visibleTabs[
+                              (index +
+                                (e.key === "ArrowRight"
+                                  ? 1
+                                  : visibleTabs.length - 1)) %
+                                visibleTabs.length
+                            ];
+                          switchTab(next.area);
+                          document.getElementById(`tab-${next.area}`)?.focus();
+                        }
+                      }}
+                      onClick={() => switchTab(tab.area)}
+                      className={`flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-3 text-sm transition sm:flex-row sm:gap-2 ${active === tab.area ? "bg-white font-semibold text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                    >
+                      <Icon size={18} />
+                      {tab.label}
+                      {reviewed && (
+                        <Check
+                          size={14}
+                          className="text-emerald-600"
+                          aria-label="Revisada"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {current && (
+                <section
+                  role="tabpanel"
+                  id={`panel-${active}`}
+                  aria-labelledby={`tab-${active}`}
+                >
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-semibold text-slate-800">
+                        {TABS.find((t) => t.area === active)?.label}
+                      </h4>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {TABS.find((t) => t.area === active)?.description}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[current.estado] || "bg-slate-100"}`}
+                    >
+                      {statusLabels[current.estado]}
+                    </span>
+                  </div>
+                  {current.estado === "NO_APLICA" ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center">
+                      <CheckCircle2
+                        className="mx-auto mb-2 text-slate-300"
+                        size={28}
+                      />
+                      <p className="text-sm font-medium text-slate-600">
+                        No aplica
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Esta solicitud no requiere acciones en esta área.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
+                        {keys.length === 0 && (
+                          <p className="text-sm text-slate-500">
+                            Solicitud de{" "}
+                            {active === "CREDENCIALES"
+                              ? detail.tipoSolicitud === "CESE"
+                                ? "baja de credenciales"
+                                : "creación de credenciales"
+                              : "esta área"}{" "}
+                            para {detail.nombreTalento}.
+                          </p>
+                        )}
+                        {keys.map((key) => {
+                          const field = fieldMap[key];
+                          return field ? (
+                            <Input
+                              key={key}
+                              field={field}
+                              value={key in draft ? draft[key] : original(key)}
+                              disabled={busy}
+                              onChange={(v) =>
+                                setDraft((d) => ({ ...d, [key]: v }))
+                              }
+                            />
+                          ) : (
+                            <div key={key}>
+                              <div className="text-xs font-medium text-slate-500">
+                                {LABELS[key] || key}
+                              </div>
+                              <div className="mt-1 break-words text-sm text-slate-800">
+                                {text(current.datos[key]) || "Sin información"}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {current.fechaResolucion && (
+                        <p className="mt-3 text-xs text-slate-500">
+                          Resuelta por {current.usuario} ·{" "}
+                          {formatApprovalDate(current.fechaResolucion)}
+                        </p>
+                      )}
+                      {canManage && current.estado === "PENDIENTE" && (
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                          <label className="flex items-center gap-2 text-sm text-slate-600">
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(active)}
+                              disabled={
+                                busy ||
+                                reviewing ||
+                                dirty ||
+                                !areas.revisadas.includes(active)
+                              }
+                              onChange={() => choose(active)}
+                              className="h-4 w-4 accent-blue-600"
+                            />
+                            Seleccionar para aprobar
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {dirty ? (
+                              <>
+                                <button
+                                  onClick={() => setDraft({})}
+                                  disabled={busy}
+                                  className="btn btn-outline-gray"
+                                >
+                                  Descartar
+                                </button>
+                                <button
+                                  onClick={save}
+                                  disabled={busy}
+                                  className="btn btn-blue"
+                                >
+                                  {working
+                                    ? "Guardando…"
+                                    : "Guardar corrección"}
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    openConfirm([active], "RECHAZAR")
+                                  }
+                                  disabled={
+                                    busy ||
+                                    reviewing ||
+                                    !areas.revisadas.includes(active)
+                                  }
+                                  className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
+                                >
+                                  Desaprobar
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    openConfirm([active], "APROBAR")
+                                  }
+                                  disabled={
+                                    busy ||
+                                    reviewing ||
+                                    !areas.revisadas.includes(active)
+                                  }
+                                  className="btn btn-blue disabled:opacity-40"
+                                >
+                                  Aprobar esta área
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {dirty && (
+                        <p className="mt-3 text-xs text-amber-700">
+                          Guarda o descarta la corrección antes de cambiar de
+                          pestaña o aprobar.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </section>
+              )}
+              {flow && (
+                <details className="mt-6 border-t border-slate-100 pt-4">
+                  <summary className="cursor-pointer text-sm font-medium text-slate-500">
+                    Actividad de la solicitud ({flow.historial.length})
+                  </summary>
+                  <ol className="mt-4 space-y-3">
+                    {flow.historial.map((event) => (
+                      <li
+                        key={event.idHistorial}
+                        className="border-l-2 border-slate-200 pl-3"
+                      >
+                        <p className="text-sm text-slate-600">
+                          {event.accion.startsWith("CORREO_")
+                            ? event.accion === "CORREO_ENVIADO"
+                              ? "Notificación enviada"
+                              : event.accion === "CORREO_OMITIDO"
+                                ? "Notificación omitida"
+                                : "No se pudo enviar la notificación"
+                            : event.detalle ||
+                              event.accion.replaceAll("_", " ").toLowerCase()}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {formatApprovalDate(event.fecha)} · {event.usuario}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              )}
+            </>
+          )}
+        </div>
+        {areas && canManage && (
+          <footer className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
+            <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+              <Clock3 size={14} />
+              {allReviewed
+                ? "Todas las áreas están revisadas."
+                : `Áreas revisadas: ${reviewedCount}/${visibleTabs.length}.`}
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                disabled={busy || reviewing || dirty || selected.length === 0}
+                onClick={() => openConfirm(selected, "APROBAR")}
+                className="rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 disabled:opacity-40"
+              >
+                Confirmar selección
+                {selected.length > 0 ? ` (${selected.length})` : ""}
+              </button>
+              <button
+                disabled={
+                  busy ||
+                  reviewing ||
+                  dirty ||
+                  !allReviewed ||
+                  pending.length === 0
+                }
+                onClick={() => openConfirm(pending, "APROBAR", true)}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-40"
+              >
+                <CheckCheck size={17} />
+                Confirmar todo
+              </button>
+            </div>
+          </footer>
         )}
       </div>
-
-      {confirmOpen && detail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
           <div
             role="alertdialog"
             aria-modal="true"
-            aria-labelledby="titulo-confirmar-aprobacion"
-            aria-describedby="texto-confirmar-aprobacion"
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+            aria-labelledby="confirm-title"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
           >
-            <h4 id="titulo-confirmar-aprobacion" className="mb-2 text-lg font-semibold">
-              ¿Aprobar el flujo completo?
+            <h4
+              id="confirm-title"
+              className="text-lg font-semibold text-slate-900"
+            >
+              {confirm.action === "RECHAZAR"
+                ? "Desaprobar área"
+                : "Confirmar aprobación"}
             </h4>
-            <p id="texto-confirmar-aprobacion" className="mb-4 text-sm text-gray-700">
-              Se registrará el {labelOf(TIPOS_SOLICITUD_APROBACION, detail.tipoSolicitud).toLowerCase()} de{" "}
-              <strong>{detail.nombreTalento || "el talento"}</strong> en {detail.cliente} y se enviarán los
-              formularios a Talento, Soporte y los gestores. Esta acción no se puede deshacer desde la bandeja.
+            <p className="mt-2 text-sm text-slate-500">
+              {confirm.areas
+                .map((a) => TABS.find((t) => t.area === a)?.label)
+                .join(", ")}
+              .{" "}
+              {confirm.action === "RECHAZAR"
+                ? "Se notificará únicamente al solicitante."
+                : "Se registrarán las acciones seleccionadas y se notificará a las áreas involucradas."}
             </p>
-            <div className="flex justify-end gap-2">
+            {confirm.action === "RECHAZAR" && (
+              <label className="mt-4 block text-sm text-slate-600">
+                Motivo
+                <textarea
+                  autoFocus
+                  maxLength={500}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="input mt-2 min-h-[100px] w-full"
+                />
+              </label>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
               <button
-                type="button"
+                disabled={working}
+                onClick={() => setConfirm(null)}
                 className="btn btn-outline-gray"
-                disabled={approving}
-                onClick={() => setConfirmOpen(false)}
               >
                 Cancelar
               </button>
               <button
-                type="button"
-                className={`btn ${approving ? "btn-disabled" : "btn-primary"}`}
-                disabled={approving}
-                onClick={approve}
+                disabled={
+                  working || (confirm.action === "RECHAZAR" && !reason.trim())
+                }
+                onClick={decide}
+                className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40 ${confirm.action === "RECHAZAR" ? "bg-red-600" : "bg-blue-600"}`}
               >
-                {approving ? "Aprobando…" : "Sí, aprobar"}
+                {working
+                  ? "Confirmando…"
+                  : confirm.action === "RECHAZAR"
+                    ? "Desaprobar"
+                    : "Confirmar"}
               </button>
             </div>
           </div>
@@ -522,8 +900,7 @@ export const ModalSolicitudAprobacion = ({ idSolicitud, onClose, onSessionExpire
     </div>
   );
 };
-
-const EditableInput = ({
+const Input = ({
   field,
   value,
   disabled,
@@ -533,44 +910,42 @@ const EditableInput = ({
   value: string;
   disabled: boolean;
   onChange: (value: string) => void;
-}) => {
-  const id = `campo-${field.campo}`;
-  return (
-    <div>
-      <label htmlFor={id} className="text-xs font-medium text-gray-500">
-        {field.etiqueta}
-      </label>
-      {field.tipo === "SI_NO" ? (
-        <select
-          id={id}
-          className="input mt-1 w-full"
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          <option value="1">Sí</option>
-          <option value="0">No</option>
-        </select>
-      ) : (
-        <input
-          id={id}
-          className="input mt-1 w-full"
-          type={field.tipo === "NUMERO" ? "number" : field.tipo === "FECHA" ? "date" : "text"}
-          min={field.tipo === "NUMERO" ? 0 : undefined}
-          step={field.tipo === "NUMERO" ? "0.01" : undefined}
-          maxLength={field.tipo === "TEXTO" ? 500 : undefined}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </div>
-  );
-};
-
-const Field = ({ label, value }: { label: string; value: string | null | undefined }) => (
-  <div>
-    <dt className="text-xs font-medium text-gray-500">{label}</dt>
-    <dd className="break-words text-gray-800">{value || "-"}</dd>
-  </div>
+}) => (
+  <label
+    className="block text-xs font-medium text-slate-500"
+    htmlFor={`area-${field.campo}`}
+  >
+    {field.etiqueta}
+    {field.tipo === "SI_NO" ? (
+      <select
+        id={`area-${field.campo}`}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input mt-1.5 w-full !rounded-lg"
+      >
+        <option value="">Seleccione</option>
+        <option value="1">Sí</option>
+        <option value="0">No</option>
+      </select>
+    ) : (
+      <input
+        id={`area-${field.campo}`}
+        type={
+          field.tipo === "FECHA"
+            ? "date"
+            : field.tipo === "NUMERO"
+              ? "number"
+              : "text"
+        }
+        min={field.tipo === "NUMERO" ? 0 : undefined}
+        step={field.tipo === "NUMERO" ? "0.01" : undefined}
+        maxLength={500}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input mt-1.5 w-full !rounded-lg"
+      />
+    )}
+  </label>
 );

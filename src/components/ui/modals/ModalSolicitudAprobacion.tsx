@@ -3,7 +3,6 @@ import { isAxiosError } from "axios";
 import { enqueueSnackbar } from "notistack";
 import {
   Check,
-  CheckCheck,
   FileText,
   Laptop,
   KeyRound,
@@ -131,6 +130,80 @@ const LABELS: Record<string, string> = {
   notificarProntoInicio: "Enviar aviso de pronto inicio",
 };
 
+const FORM_GROUPS = [
+  {
+    label: "General",
+    fields: [
+      "nombres",
+      "apellidos",
+      "apellidoPaterno",
+      "apellidoMaterno",
+      "cliente",
+      "idCliente",
+      "area",
+      "movArea",
+      "idArea",
+      "tieneEquipo",
+      "ubicacion",
+    ],
+  },
+  {
+    label: "Ingreso",
+    fields: [
+      "modalidad",
+      "idModalidadContrato",
+      "motivo",
+      "idMotivo",
+      "cargo",
+      "puesto",
+      "horario",
+    ],
+  },
+  {
+    label: "Contrato",
+    fields: [
+      "fchInicioContrato",
+      "fchTerminoContrato",
+      "tiempoContrato",
+      "fchMovimiento",
+      "fchCese",
+      "fchDevolucionEquipo",
+      "proyectoServicio",
+      "objetoContrato",
+    ],
+  },
+  {
+    label: "Salario - SUNAT",
+    fields: [
+      "declararSunat",
+      "sedeDeclarar",
+      "idSedeDeclarar",
+      "tipoMoneda",
+      "idMoneda",
+      "montoBase",
+      "montoMovilidad",
+      "montoMensual",
+      "remuneracion",
+      "montoTrimestral",
+      "montoSemestral",
+    ],
+  },
+];
+export const formGroups = (area: ApprovalAreaName, keys: string[]) => {
+  if (area !== "FMI")
+    return [{ label: area === "EQUIPO" ? "Equipo" : "Credenciales", keys }];
+  const grouped = FORM_GROUPS.map((group) => ({
+    label: group.label,
+    keys: group.fields.filter((key) => keys.includes(key)),
+  })).filter((group) => group.keys.length > 0);
+  const extra = keys.filter(
+    (key) => !FORM_GROUPS.some((group) => group.fields.includes(key)),
+  );
+  return extra.length
+    ? [...grouped, { label: "Datos adicionales", keys: extra }]
+    : grouped;
+};
+
 type Confirm = {
   areas: ApprovalAreaName[];
   action: "APROBAR" | "RECHAZAR";
@@ -146,6 +219,8 @@ export const ModalSolicitudAprobacion = ({
   const [flow, setFlow] = useState<ApprovalFlow | null>(null);
   const [areas, setAreas] = useState<ApprovalAreas | null>(null);
   const [active, setActive] = useState<ApprovalAreaName>("FMI");
+  const [category, setCategory] = useState("General");
+  useEffect(() => setCategory("General"), [active, idSolicitud]);
   const [selected, setSelected] = useState<ApprovalAreaName[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -315,9 +390,6 @@ export const ModalSolicitudAprobacion = ({
     return () => document.removeEventListener("keydown", listener);
   }, [busy, confirm, onClose]);
   const current = areas?.areas.find((a) => a.area === active);
-  const pending =
-    areas?.areas.filter((a) => a.estado === "PENDIENTE").map((a) => a.area) ||
-    [];
   const visibleTabs = TABS.filter((tab) =>
     areas?.areas.some(
       (area) => area.area === tab.area && area.estado !== "NO_APLICA",
@@ -326,8 +398,6 @@ export const ModalSolicitudAprobacion = ({
   const reviewedCount = visibleTabs.filter((tab) =>
     areas?.revisadas.includes(tab.area),
   ).length;
-  const allReviewed =
-    visibleTabs.length > 0 && reviewedCount === visibleTabs.length;
   const fields = current?.camposEditables || [];
   const fieldMap = Object.fromEntries(
     fields.map((field) => [field.campo, field]),
@@ -433,7 +503,7 @@ export const ModalSolicitudAprobacion = ({
         );
       enqueueSnackbar(
         confirm.action === "APROBAR"
-          ? "Áreas aprobadas correctamente."
+          ? "Preaprobación confirmada correctamente."
           : "Área desaprobada. Se notificará solo al solicitante.",
         { variant: "success" },
       );
@@ -459,21 +529,22 @@ export const ModalSolicitudAprobacion = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="approval-title"
-        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
+        className="flex h-[94vh] max-h-[94vh] w-full max-w-[1440px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-3">
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-blue-600">
               Bandeja de aprobaciones
             </div>
             <h3
               id="approval-title"
-              className="text-xl font-semibold text-slate-900"
+              className="text-lg font-semibold text-slate-900"
             >
               Solicitud N° {idSolicitud}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Revisa y confirma cada área de forma independiente.
+              Marca las áreas como preaprobadas y confirma la preaprobación al
+              terminar.
             </p>
           </div>
           <button
@@ -485,7 +556,7 @@ export const ModalSolicitudAprobacion = ({
             <X size={20} />
           </button>
         </header>
-        <div className="overflow-y-auto px-6 py-5">
+        <div className="flex min-h-0 flex-1 flex-col px-5 py-3">
           {loading && (
             <p
               role="status"
@@ -512,7 +583,7 @@ export const ModalSolicitudAprobacion = ({
           )}
           {detail && areas && !loading && (
             <>
-              <div className="mb-5 rounded-xl bg-slate-50 p-4">
+              <div className="mb-3 shrink-0 rounded-xl bg-slate-50 px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-semibold text-slate-800">
                     {detail.nombreTalento || "Talento"}
@@ -531,7 +602,7 @@ export const ModalSolicitudAprobacion = ({
                   }{" "}
                   · {detail.cliente}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+                <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
                   <span>
                     Solicitado por{" "}
                     <strong className="font-medium text-slate-700">
@@ -549,7 +620,7 @@ export const ModalSolicitudAprobacion = ({
                   </span>
                 </div>
                 {detail.resumen && (
-                  <div className="mt-3 text-sm text-slate-600">
+                  <div className="mt-1 text-xs text-slate-600">
                     <ApprovalExpandableText
                       label="resumen"
                       value={detail.resumen}
@@ -565,7 +636,7 @@ export const ModalSolicitudAprobacion = ({
               <div
                 role="tablist"
                 aria-label="Áreas de la solicitud"
-                className={`mb-5 grid gap-2 rounded-xl bg-slate-100 p-1.5 ${visibleTabs.length === 1 ? "grid-cols-1" : visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+                className={`mb-3 grid gap-1 rounded-lg bg-slate-100 p-1 ${visibleTabs.length === 1 ? "grid-cols-1" : visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
               >
                 {visibleTabs.map((tab, index) => {
                   const Icon = tab.icon;
@@ -595,9 +666,9 @@ export const ModalSolicitudAprobacion = ({
                         }
                       }}
                       onClick={() => switchTab(tab.area)}
-                      className={`flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-3 text-sm transition sm:flex-row sm:gap-2 ${active === tab.area ? "bg-white font-semibold text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                      className={`flex items-center justify-center gap-2 rounded-md px-2 py-1.5 text-sm transition ${active === tab.area ? "bg-white font-semibold text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
                     >
-                      <Icon size={18} />
+                      <Icon size={16} />
                       {tab.label}
                       {reviewed && (
                         <Check
@@ -610,193 +681,268 @@ export const ModalSolicitudAprobacion = ({
                   );
                 })}
               </div>
-              {current && (
-                <section
-                  role="tabpanel"
-                  id={`panel-${active}`}
-                  aria-labelledby={`tab-${active}`}
-                >
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <h4 className="font-semibold text-slate-800">
-                        {TABS.find((t) => t.area === active)?.label}
-                      </h4>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {TABS.find((t) => t.area === active)?.description}
-                      </p>
+              <div className="min-h-0 flex-1 overflow-y-auto pr-2">
+                {current && (
+                  <section
+                    role="tabpanel"
+                    id={`panel-${active}`}
+                    aria-labelledby={`tab-${active}`}
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h4 className="font-semibold text-slate-800">
+                          {TABS.find((t) => t.area === active)?.label}
+                        </h4>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {TABS.find((t) => t.area === active)?.description}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[current.estado] || "bg-slate-100"}`}
+                      >
+                        {statusLabels[current.estado]}
+                      </span>
                     </div>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[current.estado] || "bg-slate-100"}`}
-                    >
-                      {statusLabels[current.estado]}
-                    </span>
-                  </div>
-                  {current.estado === "NO_APLICA" ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center">
-                      <CheckCircle2
-                        className="mx-auto mb-2 text-slate-300"
-                        size={28}
-                      />
-                      <p className="text-sm font-medium text-slate-600">
-                        No aplica
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Esta solicitud no requiere acciones en esta área.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
-                        {keys.length === 0 && (
-                          <p className="text-sm text-slate-500">
-                            Solicitud de{" "}
-                            {active === "CREDENCIALES"
-                              ? detail.tipoSolicitud === "CESE"
-                                ? "baja de credenciales"
-                                : "creación de credenciales"
-                              : "esta área"}{" "}
-                            para {detail.nombreTalento}.
+                    {current.estado === "NO_APLICA" ? (
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center">
+                        <CheckCircle2
+                          className="mx-auto mb-2 text-slate-300"
+                          size={28}
+                        />
+                        <p className="text-sm font-medium text-slate-600">
+                          No aplica
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Esta solicitud no requiere acciones en esta área.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4">
+                          {keys.length === 0 && (
+                            <p className="text-sm text-slate-500">
+                              Solicitud de{" "}
+                              {active === "CREDENCIALES"
+                                ? detail.tipoSolicitud === "CESE"
+                                  ? "baja de credenciales"
+                                  : "creación de credenciales"
+                                : "esta área"}{" "}
+                              para {detail.nombreTalento}.
+                            </p>
+                          )}
+                          {formGroups(active, keys).length > 1 && (
+                            <div
+                              role="tablist"
+                              aria-label="Categorías del formulario"
+                              className="flex flex-wrap gap-1 border-b border-slate-200"
+                            >
+                              {formGroups(active, keys).map(
+                                (group, index, groups) => {
+                                  const chosen = groups.some(
+                                    (g) => g.label === category,
+                                  )
+                                    ? category
+                                    : groups[0].label;
+                                  return (
+                                    <button
+                                      key={group.label}
+                                      type="button"
+                                      role="tab"
+                                      id={`category-${index}`}
+                                      aria-controls={`category-panel-${index}`}
+                                      aria-selected={chosen === group.label}
+                                      tabIndex={chosen === group.label ? 0 : -1}
+                                      onClick={() => setCategory(group.label)}
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === "ArrowRight" ||
+                                          e.key === "ArrowLeft"
+                                        ) {
+                                          e.preventDefault();
+                                          const next =
+                                            (index +
+                                              (e.key === "ArrowRight"
+                                                ? 1
+                                                : groups.length - 1)) %
+                                            groups.length;
+                                          setCategory(groups[next].label);
+                                          document
+                                            .getElementById(`category-${next}`)
+                                            ?.focus();
+                                        }
+                                      }}
+                                      className={`border-b-2 px-3 py-2 text-sm ${chosen === group.label ? "border-blue-600 font-semibold text-blue-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                                    >
+                                      {group.label}
+                                    </button>
+                                  );
+                                },
+                              )}
+                            </div>
+                          )}
+                          {formGroups(active, keys).map(
+                            (group, index, groups) => (
+                              <fieldset
+                                key={group.label}
+                                role="tabpanel"
+                                id={`category-panel-${index}`}
+                                aria-labelledby={
+                                  groups.length > 1
+                                    ? `category-${index}`
+                                    : undefined
+                                }
+                                hidden={
+                                  group.label !==
+                                  (groups.some((g) => g.label === category)
+                                    ? category
+                                    : groups[0].label)
+                                }
+                                className="rounded-xl border border-slate-200 p-4"
+                              >
+                                <legend className="px-2 text-sm font-semibold text-slate-700">
+                                  {group.label}
+                                </legend>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                  {group.keys.map((key) => {
+                                    const field = fieldMap[key];
+                                    return field ? (
+                                      <Input
+                                        key={key}
+                                        field={field}
+                                        value={
+                                          key in draft
+                                            ? draft[key]
+                                            : original(key)
+                                        }
+                                        disabled={busy}
+                                        onChange={(v) =>
+                                          setDraft((d) => ({ ...d, [key]: v }))
+                                        }
+                                      />
+                                    ) : (
+                                      <div key={key}>
+                                        <div className="text-xs font-medium text-slate-500">
+                                          {LABELS[key] || key}
+                                        </div>
+                                        <div className="mt-1 break-words text-sm text-slate-800">
+                                          {text(current.datos[key]) ||
+                                            "Sin información"}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </fieldset>
+                            ),
+                          )}
+                        </div>
+                        {current.fechaResolucion && (
+                          <p className="mt-3 text-xs text-slate-500">
+                            Resuelta por {current.usuario} ·{" "}
+                            {formatApprovalDate(current.fechaResolucion)}
                           </p>
                         )}
-                        {keys.map((key) => {
-                          const field = fieldMap[key];
-                          return field ? (
-                            <Input
-                              key={key}
-                              field={field}
-                              value={key in draft ? draft[key] : original(key)}
-                              disabled={busy}
-                              onChange={(v) =>
-                                setDraft((d) => ({ ...d, [key]: v }))
-                              }
-                            />
-                          ) : (
-                            <div key={key}>
-                              <div className="text-xs font-medium text-slate-500">
-                                {LABELS[key] || key}
-                              </div>
-                              <div className="mt-1 break-words text-sm text-slate-800">
-                                {text(current.datos[key]) || "Sin información"}
-                              </div>
+                        {canManage && current.estado === "PENDIENTE" && (
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <span className="text-xs text-slate-500">
+                              {selected.includes(active)
+                                ? "Marcada; pendiente de confirmar."
+                                : "Revisa los datos antes de preaprobar."}
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {dirty ? (
+                                <>
+                                  <button
+                                    onClick={() => setDraft({})}
+                                    disabled={busy}
+                                    className="btn btn-outline-gray"
+                                  >
+                                    Descartar
+                                  </button>
+                                  <button
+                                    onClick={save}
+                                    disabled={busy}
+                                    className="btn btn-blue"
+                                  >
+                                    {working
+                                      ? "Guardando…"
+                                      : "Guardar corrección"}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      openConfirm([active], "RECHAZAR")
+                                    }
+                                    disabled={
+                                      busy ||
+                                      reviewing ||
+                                      !areas.revisadas.includes(active)
+                                    }
+                                    className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
+                                  >
+                                    Desaprobar
+                                  </button>
+                                  <button
+                                    onClick={() => choose(active)}
+                                    disabled={
+                                      busy ||
+                                      reviewing ||
+                                      !areas.revisadas.includes(active)
+                                    }
+                                    aria-pressed={selected.includes(active)}
+                                    className="btn btn-blue disabled:opacity-40"
+                                  >
+                                    {selected.includes(active)
+                                      ? "Preaprobado ✓"
+                                      : "Preaprobado"}
+                                  </button>
+                                </>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                      {current.fechaResolucion && (
-                        <p className="mt-3 text-xs text-slate-500">
-                          Resuelta por {current.usuario} ·{" "}
-                          {formatApprovalDate(current.fechaResolucion)}
-                        </p>
-                      )}
-                      {canManage && current.estado === "PENDIENTE" && (
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                          <label className="flex items-center gap-2 text-sm text-slate-600">
-                            <input
-                              type="checkbox"
-                              checked={selected.includes(active)}
-                              disabled={
-                                busy ||
-                                reviewing ||
-                                dirty ||
-                                !areas.revisadas.includes(active)
-                              }
-                              onChange={() => choose(active)}
-                              className="h-4 w-4 accent-blue-600"
-                            />
-                            Seleccionar para aprobar
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {dirty ? (
-                              <>
-                                <button
-                                  onClick={() => setDraft({})}
-                                  disabled={busy}
-                                  className="btn btn-outline-gray"
-                                >
-                                  Descartar
-                                </button>
-                                <button
-                                  onClick={save}
-                                  disabled={busy}
-                                  className="btn btn-blue"
-                                >
-                                  {working
-                                    ? "Guardando…"
-                                    : "Guardar corrección"}
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    openConfirm([active], "RECHAZAR")
-                                  }
-                                  disabled={
-                                    busy ||
-                                    reviewing ||
-                                    !areas.revisadas.includes(active)
-                                  }
-                                  className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
-                                >
-                                  Desaprobar
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openConfirm([active], "APROBAR")
-                                  }
-                                  disabled={
-                                    busy ||
-                                    reviewing ||
-                                    !areas.revisadas.includes(active)
-                                  }
-                                  className="btn btn-blue disabled:opacity-40"
-                                >
-                                  Aprobar esta área
-                                </button>
-                              </>
-                            )}
                           </div>
-                        </div>
-                      )}
-                      {dirty && (
-                        <p className="mt-3 text-xs text-amber-700">
-                          Guarda o descarta la corrección antes de cambiar de
-                          pestaña o aprobar.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </section>
-              )}
-              {flow && (
-                <details className="mt-6 border-t border-slate-100 pt-4">
-                  <summary className="cursor-pointer text-sm font-medium text-slate-500">
-                    Actividad de la solicitud ({flow.historial.length})
-                  </summary>
-                  <ol className="mt-4 space-y-3">
-                    {flow.historial.map((event) => (
-                      <li
-                        key={event.idHistorial}
-                        className="border-l-2 border-slate-200 pl-3"
-                      >
-                        <p className="text-sm text-slate-600">
-                          {event.accion.startsWith("CORREO_")
-                            ? event.accion === "CORREO_ENVIADO"
-                              ? "Notificación enviada"
-                              : event.accion === "CORREO_OMITIDO"
-                                ? "Notificación omitida"
-                                : "No se pudo enviar la notificación"
-                            : event.detalle ||
-                              event.accion.replaceAll("_", " ").toLowerCase()}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {formatApprovalDate(event.fecha)} · {event.usuario}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              )}
+                        )}
+                        {dirty && (
+                          <p className="mt-3 text-xs text-amber-700">
+                            Guarda o descarta la corrección antes de cambiar de
+                            pestaña o aprobar.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </section>
+                )}
+                {flow && (
+                  <details className="mt-6 border-t border-slate-100 pt-4">
+                    <summary className="cursor-pointer text-sm font-medium text-slate-500">
+                      Actividad de la solicitud ({flow.historial.length})
+                    </summary>
+                    <ol className="mt-4 space-y-3">
+                      {flow.historial.map((event) => (
+                        <li
+                          key={event.idHistorial}
+                          className="border-l-2 border-slate-200 pl-3"
+                        >
+                          <p className="text-sm text-slate-600">
+                            {event.accion.startsWith("CORREO_")
+                              ? event.accion === "CORREO_ENVIADO"
+                                ? "Notificación enviada"
+                                : event.accion === "CORREO_OMITIDO"
+                                  ? "Notificación omitida"
+                                  : "No se pudo enviar la notificación"
+                              : event.detalle ||
+                                event.accion.replaceAll("_", " ").toLowerCase()}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {formatApprovalDate(event.fecha)} · {event.usuario}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -804,32 +950,20 @@ export const ModalSolicitudAprobacion = ({
           <footer className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
             <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
               <Clock3 size={14} />
-              {allReviewed
+              {reviewedCount === visibleTabs.length
                 ? "Todas las áreas están revisadas."
                 : `Áreas revisadas: ${reviewedCount}/${visibleTabs.length}.`}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="mr-auto text-sm text-slate-600">
+                {selected.length} área(s) preaprobada(s)
+              </span>
               <button
                 disabled={busy || reviewing || dirty || selected.length === 0}
                 onClick={() => openConfirm(selected, "APROBAR")}
-                className="rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 disabled:opacity-40"
+                className="btn btn-blue disabled:opacity-40"
               >
-                Confirmar selección
-                {selected.length > 0 ? ` (${selected.length})` : ""}
-              </button>
-              <button
-                disabled={
-                  busy ||
-                  reviewing ||
-                  dirty ||
-                  !allReviewed ||
-                  pending.length === 0
-                }
-                onClick={() => openConfirm(pending, "APROBAR", true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-40"
-              >
-                <CheckCheck size={17} />
-                Confirmar todo
+                Confirmar PreAprobacion
               </button>
             </div>
           </footer>
@@ -849,7 +983,7 @@ export const ModalSolicitudAprobacion = ({
             >
               {confirm.action === "RECHAZAR"
                 ? "Desaprobar área"
-                : "Confirmar aprobación"}
+                : "Confirmar PreAprobacion"}
             </h4>
             <p className="mt-2 text-sm text-slate-500">
               {confirm.areas
@@ -858,7 +992,7 @@ export const ModalSolicitudAprobacion = ({
               .{" "}
               {confirm.action === "RECHAZAR"
                 ? "Se notificará únicamente al solicitante."
-                : "Se registrarán las acciones seleccionadas y se notificará a las áreas involucradas."}
+                : "Se guardarán las áreas preaprobadas y se notificará a las áreas involucradas."}
             </p>
             {confirm.action === "RECHAZAR" && (
               <label className="mt-4 block text-sm text-slate-600">

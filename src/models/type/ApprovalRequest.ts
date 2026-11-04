@@ -1,7 +1,12 @@
-export type TipoSolicitudAprobacion = "INGRESO" | "MOVIMIENTO" | "CESE" | "ASIGNACION_EQUIPO" | "CREDENCIALES";
-export type EstadoSolicitudAprobacion = "PENDIENTE" | "APROBADA" | "RECHAZADA" | "ANULADA";
+export type TipoSolicitudAprobacion =
+  "INGRESO" | "MOVIMIENTO" | "CESE" | "ASIGNACION_EQUIPO" | "CREDENCIALES";
+export type EstadoSolicitudAprobacion =
+  "PENDIENTE" | "APROBADA" | "RECHAZADA" | "ANULADA";
 
-export const TIPOS_SOLICITUD_APROBACION: { value: TipoSolicitudAprobacion; label: string }[] = [
+export const TIPOS_SOLICITUD_APROBACION: {
+  value: TipoSolicitudAprobacion;
+  label: string;
+}[] = [
   { value: "INGRESO", label: "Ingreso" },
   { value: "MOVIMIENTO", label: "Movimiento" },
   { value: "CESE", label: "Cese" },
@@ -9,7 +14,10 @@ export const TIPOS_SOLICITUD_APROBACION: { value: TipoSolicitudAprobacion; label
   { value: "CREDENCIALES", label: "Creación / cambio de credenciales" },
 ];
 
-export const ESTADOS_SOLICITUD_APROBACION: { value: EstadoSolicitudAprobacion; label: string }[] = [
+export const ESTADOS_SOLICITUD_APROBACION: {
+  value: EstadoSolicitudAprobacion;
+  label: string;
+}[] = [
   { value: "PENDIENTE", label: "Pendiente" },
   { value: "APROBADA", label: "Aprobada" },
   { value: "RECHAZADA", label: "Rechazada" },
@@ -55,6 +63,8 @@ export interface ApprovalInbox {
 }
 
 export interface ApprovalFilters {
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
   idCliente: number | null;
   tipoSolicitud: TipoSolicitudAprobacion | null;
   estado: EstadoSolicitudAprobacion | null;

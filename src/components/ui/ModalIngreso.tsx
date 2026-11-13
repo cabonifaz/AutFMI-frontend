@@ -136,7 +136,7 @@ export const ModalIngreso = ({
       proyectoServicio: currentTalent?.proyectoServicio || proyectoServicio || "",
       objetoContrato: currentTalent?.objetoContrato || objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
-      tieneEquipo: requiereLaptop ? false : currentTalent?.tieneEquipo === 1,
+      tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
       tipoMoneda: currentTalent?.idMoneda || 0,
       idSedeDeclarar:
@@ -386,7 +386,6 @@ export const ModalIngreso = ({
                                 className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === true}
                                 onChange={() => field.onChange(true)}
-                                disabled={requiereLaptop}
                               />
                               <span className="ml-2 text-gray-700">Sí</span>
                             </label>
@@ -396,15 +395,17 @@ export const ModalIngreso = ({
                                 className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === false}
                                 onChange={() => field.onChange(false)}
-                                disabled={requiereLaptop}
                               />
                               <span className="ml-2 text-gray-700">No</span>
                             </label>
                           </div>
-                          {requiereLaptop && (
+                          <label className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={field.value === true} disabled />
+                            Bono de equipo
+                          </label>
+                          {requiereLaptop && field.value === false && (
                             <p className="text-sm text-amber-600 self-center">
-                              El RQ requiere asignación de laptop: al aceptar
-                              se pedirán las especificaciones del equipo.
+                              Se pedirán las especificaciones del equipo al continuar.
                             </p>
                           )}
                           {errors.tieneEquipo && (

@@ -1323,11 +1323,9 @@ const TalentTable: React.FC = () => {
   const handleOnConfirmModalIngreso = async (
     talento: AsignarTalentoType
   ) => {
-    // Conservar los datos del formulario de ingreso para reenviarlos en el Finalizar.
+    if (talento.tieneEquipo === 1) talento = { ...talento, solicitudEquipo: undefined };
     confirmedByTalento.current[talento.idTalento] = talento;
-    // Si el RQ requiere asignación de laptop, siempre se piden las
-    // especificaciones del equipo (como cuando el talento no cuenta con uno).
-    if (talento?.tieneEquipo === 0 || requerimiento?.asignacionLaptop === 1) {
+    if (talento.tieneEquipo === 0) {
       setCurrentTalento(talento);
       setShowModalSolicitudEquipo(true);
       return;

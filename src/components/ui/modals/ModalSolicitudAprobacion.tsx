@@ -29,6 +29,8 @@ import {
   TIPOS_SOLICITUD_APROBACION,
 } from "../../../models/type/ApprovalRequest";
 import { ApprovalExpandableText } from "../ApprovalExpandableText";
+import { useParams } from "../../../context/ParamsContext";
+import { TIPO_HARDWARE, TIPO_SOFTWARE, TIPO_MODALIDAD, MOTIVO_INGRESO, TIPO_MONEDA } from "../../../utils/config";
 import { formatApprovalDate } from "../../../utils/approvalTime";
 
 interface Props {
@@ -118,7 +120,19 @@ const LABELS: Record<string, string> = {
   marca: "Marca",
   accesorios: "Accesorios",
   tipoEquipo: "Tipo de equipo",
-  usuario: "Usuario / correo",
+  idModalidadContrato: "Modalidad",
+  idMotivo: "Motivo de ingreso",
+  idMoneda: "Moneda",
+  tipoIngreso: "Tipo de ingreso",
+  fechaIngresoAnterior: "Fecha del último ingreso",
+  clienteAnterior: "Cliente anterior",
+  cargoAnterior: "Cargo anterior",
+  correoPersonal: "Correo personal",
+  celularPersonal: "Número de celular",
+  bonoEquipo: "Bono de equipo",
+  usuario: "Usuario / correo solicitado",
+  usuarioCorporativo: "Usuario corporativo",
+  correoCorporativo: "Correo corporativo",
   detalle: "Detalle",
   fecha: "Fecha requerida",
   accion: "Acción",
@@ -131,9 +145,85 @@ const LABELS: Record<string, string> = {
   notificarProntoInicio: "Enviar aviso de pronto inicio",
 };
 
+const FORM_GROUPS = [
+  {
+    label: "General",
+    fields: [
+      "nombres",
+      "apellidos",
+      "apellidoPaterno",
+      "apellidoMaterno",
+      "cliente",
+      "idCliente",
+      "area",
+      "movArea",
+      "idArea",
+      "tipoIngreso",
+      "fechaIngresoAnterior",
+      "clienteAnterior",
+      "cargoAnterior",
+      "correoPersonal",
+      "celularPersonal",
+      "tieneEquipo",
+      "bonoEquipo",
+      "ubicacion",
+    ],
+  },
+  {
+    label: "Ingreso",
+    fields: [
+      "modalidad",
+      "idModalidadContrato",
+      "motivo",
+      "idMotivo",
+      "cargo",
+      "puesto",
+      "horario",
+    ],
+  },
+  {
+    label: "Contrato y salario - SUNAT",
+    fields: [
+      "fchInicioContrato",
+      "fchTerminoContrato",
+      "tiempoContrato",
+      "fchMovimiento",
+      "fchCese",
+      "fchDevolucionEquipo",
+      "proyectoServicio",
+      "objetoContrato",
+      "declararSunat",
+      "sedeDeclarar",
+      "idSedeDeclarar",
+      "tipoMoneda",
+      "idMoneda",
+      "montoBase",
+      "montoMovilidad",
+      "montoMensual",
+      "remuneracion",
+      "montoTrimestral",
+      "montoSemestral",
+    ],
+  },
+];
+export const formGroups = (area: ApprovalAreaName, keys: string[]) => {
+  if (area !== "FMI")
+    return [{ label: area === "EQUIPO" ? "Equipo" : "Credenciales", keys }];
+  const grouped = FORM_GROUPS.map((group) => ({
+    label: group.label,
+    keys: group.fields.filter((key) => keys.includes(key)),
+  })).filter((group) => group.keys.length > 0);
+  const extra = keys.filter(
+    (key) => !FORM_GROUPS.some((group) => group.fields.includes(key)),
+  );
+  return extra.length
+    ? [...grouped, { label: "Notificaciones", keys: extra }]
+    : grouped;
+};
+
 type Confirm = {
   areas: ApprovalAreaName[];
-  action: "APROBAR" | "RECHAZAR";
+  action: "APROBAR" | "RECHAZAR" | "RECHAZAR_TODO";
   all: boolean;
 };
 export const ModalSolicitudAprobacion = ({
@@ -146,6 +236,8 @@ export const ModalSolicitudAprobacion = ({
   const [flow, setFlow] = useState<ApprovalFlow | null>(null);
   const [areas, setAreas] = useState<ApprovalAreas | null>(null);
   const [active, setActive] = useState<ApprovalAreaName>("FMI");
+  const [category, setCategory] = useState("General");
+  useEffect(() => setCategory("General"), [active, idSolicitud]);
   const [selected, setSelected] = useState<ApprovalAreaName[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -315,19 +407,20 @@ export const ModalSolicitudAprobacion = ({
     return () => document.removeEventListener("keydown", listener);
   }, [busy, confirm, onClose]);
   const current = areas?.areas.find((a) => a.area === active);
-  const pending =
-    areas?.areas.filter((a) => a.estado === "PENDIENTE").map((a) => a.area) ||
-    [];
   const visibleTabs = TABS.filter((tab) =>
     areas?.areas.some(
       (area) => area.area === tab.area && area.estado !== "NO_APLICA",
     ),
   );
+  const canRejectAll = flow?.esGestor && ["PENDIENTE", "APROBADA"].includes(detail?.estado ?? "") &&
+    !areas?.areas.some((area) => area.area === "FMI" && area.estado === "APROBADA") &&
+    !flow.historial.some((event) => ["EJECUTADA", "EJECUCION_INCIERTA"].includes(event.accion));
+  const credentials = areas?.areas.find((area) => area.area === "CREDENCIALES");
+  const equipmentSelectedWithoutCredentials = selected.includes("EQUIPO") &&
+    credentials?.estado !== "APROBADA" && !selected.includes("CREDENCIALES");
   const reviewedCount = visibleTabs.filter((tab) =>
     areas?.revisadas.includes(tab.area),
   ).length;
-  const allReviewed =
-    visibleTabs.length > 0 && reviewedCount === visibleTabs.length;
   const fields = current?.camposEditables || [];
   const fieldMap = Object.fromEntries(
     fields.map((field) => [field.campo, field]),
@@ -339,8 +432,8 @@ export const ModalSolicitudAprobacion = ({
     ]),
   );
   const original = (key: string) =>
-    text(
-      current?.datos[key] ??
+    key === "declararSunat" && current?.datos[key] === 0 ? "" : text(
+      (key === "tipoEquipo" ? current?.datos.idTipoEquipo : current?.datos[key]) ??
         (key === "notificarProntoInicio"
           ? flow?.notificarProntoInicio
           : undefined),
@@ -362,7 +455,7 @@ export const ModalSolicitudAprobacion = ({
     );
   const openConfirm = (
     selection: ApprovalAreaName[],
-    action: "APROBAR" | "RECHAZAR",
+    action: "APROBAR" | "RECHAZAR" | "RECHAZAR_TODO",
     all = false,
   ) => {
     setError(null);
@@ -377,7 +470,7 @@ export const ModalSolicitudAprobacion = ({
     const payload = Object.fromEntries(
       changes.map((field) => [
         field.campo,
-        field.tipo === "NUMERO" || field.tipo === "SI_NO"
+        ["NUMERO", "SI_NO", "MONEDA", "SUNAT"].includes(field.tipo)
           ? draft[field.campo].trim() === ""
             ? null
             : Number(draft[field.campo])
@@ -433,8 +526,8 @@ export const ModalSolicitudAprobacion = ({
         );
       enqueueSnackbar(
         confirm.action === "APROBAR"
-          ? "Áreas aprobadas correctamente."
-          : "Área desaprobada. Se notificará solo al solicitante.",
+          ? "Preaprobación confirmada correctamente."
+            : confirm.action === "RECHAZAR_TODO" ? "Solicitud desaprobada." : "Área desaprobada. Se notificará solo al solicitante.",
         { variant: "success" },
       );
       setConfirm(null);
@@ -459,21 +552,22 @@ export const ModalSolicitudAprobacion = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="approval-title"
-        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
+        className="flex h-[94vh] max-h-[94vh] w-full max-w-[1440px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+        <header className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-3">
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-blue-600">
               Bandeja de aprobaciones
             </div>
             <h3
               id="approval-title"
-              className="text-xl font-semibold text-slate-900"
+              className="text-lg font-semibold text-slate-900"
             >
               Solicitud N° {idSolicitud}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Revisa y confirma cada área de forma independiente.
+              Marca las áreas como preaprobadas y confirma la preaprobación al
+              terminar.
             </p>
           </div>
           <button
@@ -485,7 +579,7 @@ export const ModalSolicitudAprobacion = ({
             <X size={20} />
           </button>
         </header>
-        <div className="overflow-y-auto px-6 py-5">
+        <div className="flex min-h-0 flex-1 flex-col px-5 py-3">
           {loading && (
             <p
               role="status"
@@ -512,7 +606,7 @@ export const ModalSolicitudAprobacion = ({
           )}
           {detail && areas && !loading && (
             <>
-              <div className="mb-5 rounded-xl bg-slate-50 p-4">
+              <div className="mb-3 shrink-0 rounded-xl bg-slate-50 px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-semibold text-slate-800">
                     {detail.nombreTalento || "Talento"}
@@ -531,7 +625,7 @@ export const ModalSolicitudAprobacion = ({
                   }{" "}
                   · {detail.cliente}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+                <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
                   <span>
                     Solicitado por{" "}
                     <strong className="font-medium text-slate-700">
@@ -549,7 +643,7 @@ export const ModalSolicitudAprobacion = ({
                   </span>
                 </div>
                 {detail.resumen && (
-                  <div className="mt-3 text-sm text-slate-600">
+                  <div className="mt-1 text-xs text-slate-600">
                     <ApprovalExpandableText
                       label="resumen"
                       value={detail.resumen}
@@ -565,11 +659,12 @@ export const ModalSolicitudAprobacion = ({
               <div
                 role="tablist"
                 aria-label="Áreas de la solicitud"
-                className={`mb-5 grid gap-2 rounded-xl bg-slate-100 p-1.5 ${visibleTabs.length === 1 ? "grid-cols-1" : visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+                className={`mb-3 grid gap-1 rounded-lg bg-slate-100 p-1 ${visibleTabs.length === 1 ? "grid-cols-1" : visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
               >
                 {visibleTabs.map((tab, index) => {
                   const Icon = tab.icon;
                   const reviewed = areas.revisadas.includes(tab.area);
+                  const preapproved = selected.includes(tab.area);
                   return (
                     <button
                       key={tab.area}
@@ -595,241 +690,326 @@ export const ModalSolicitudAprobacion = ({
                         }
                       }}
                       onClick={() => switchTab(tab.area)}
-                      className={`flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-3 text-sm transition sm:flex-row sm:gap-2 ${active === tab.area ? "bg-white font-semibold text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+                      className={`flex items-center justify-center gap-2 rounded-md px-2 py-1.5 text-sm transition ${active === tab.area ? "bg-white font-semibold text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
                     >
-                      <Icon size={18} />
+                      <Icon size={16} />
                       {tab.label}
-                      {reviewed && (
+                      {preapproved ? (
+                        <CheckCheck
+                          size={16}
+                          className="text-emerald-700"
+                          aria-label="Preaprobado"
+                        />
+                      ) : reviewed ? (
                         <Check
                           size={14}
                           className="text-emerald-600"
-                          aria-label="Revisada"
+                          aria-label="Revisado"
                         />
-                      )}
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
-              {current && (
-                <section
-                  role="tabpanel"
-                  id={`panel-${active}`}
-                  aria-labelledby={`tab-${active}`}
-                >
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <h4 className="font-semibold text-slate-800">
-                        {TABS.find((t) => t.area === active)?.label}
-                      </h4>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {TABS.find((t) => t.area === active)?.description}
-                      </p>
+              <div className="min-h-0 flex-1 overflow-y-scroll [scrollbar-gutter:stable] pr-2">
+                {current && (
+                  <section
+                    role="tabpanel"
+                    id={`panel-${active}`}
+                    aria-labelledby={`tab-${active}`}
+                  >
+                    <div className="sticky top-0 z-10 bg-white pb-3">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h4 className="font-semibold text-slate-800">
+                          {TABS.find((t) => t.area === active)?.label}
+                        </h4>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {TABS.find((t) => t.area === active)?.description}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[current.estado] || "bg-slate-100"}`}
+                      >
+                        {statusLabels[current.estado]}
+                      </span>
                     </div>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[current.estado] || "bg-slate-100"}`}
-                    >
-                      {statusLabels[current.estado]}
-                    </span>
-                  </div>
-                  {current.estado === "NO_APLICA" ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center">
-                      <CheckCircle2
-                        className="mx-auto mb-2 text-slate-300"
-                        size={28}
-                      />
-                      <p className="text-sm font-medium text-slate-600">
-                        No aplica
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Esta solicitud no requiere acciones en esta área.
-                      </p>
+                          {formGroups(active, keys).length > 1 && (
+                            <div
+                              role="tablist"
+                              aria-label="Categorías del formulario"
+                              className="flex flex-wrap gap-1 border-b border-slate-200"
+                            >
+                              {formGroups(active, keys).map(
+                                (group, index, groups) => {
+                                  const chosen = groups.some(
+                                    (g) => g.label === category,
+                                  )
+                                    ? category
+                                    : groups[0].label;
+                                  return (
+                                    <button
+                                      key={group.label}
+                                      type="button"
+                                      role="tab"
+                                      id={`category-${index}`}
+                                      aria-controls={`category-panel-${index}`}
+                                      aria-selected={chosen === group.label}
+                                      tabIndex={chosen === group.label ? 0 : -1}
+                                      onClick={() => setCategory(group.label)}
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === "ArrowRight" ||
+                                          e.key === "ArrowLeft"
+                                        ) {
+                                          e.preventDefault();
+                                          const next =
+                                            (index +
+                                              (e.key === "ArrowRight"
+                                                ? 1
+                                                : groups.length - 1)) %
+                                            groups.length;
+                                          setCategory(groups[next].label);
+                                          document
+                                            .getElementById(`category-${next}`)
+                                            ?.focus();
+                                        }
+                                      }}
+                                      className={`border-b-2 px-3 py-2 text-sm ${chosen === group.label ? "border-blue-600 font-semibold text-blue-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                                    >
+                                      {group.label}
+                                    </button>
+                                  );
+                                },
+                              )}
+                            </div>
+                          )}
                     </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
-                        {keys.length === 0 && (
-                          <p className="text-sm text-slate-500">
-                            Solicitud de{" "}
-                            {active === "CREDENCIALES"
-                              ? detail.tipoSolicitud === "CESE"
-                                ? "baja de credenciales"
-                                : "creación de credenciales"
-                              : "esta área"}{" "}
-                            para {detail.nombreTalento}.
+                    {current.estado === "NO_APLICA" ? (
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-9 text-center">
+                        <CheckCircle2
+                          className="mx-auto mb-2 text-slate-300"
+                          size={28}
+                        />
+                        <p className="text-sm font-medium text-slate-600">
+                          No aplica
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Esta solicitud no requiere acciones en esta área.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4">
+                          {keys.length === 0 && (
+                            <p className="text-sm text-slate-500">
+                              Solicitud de{" "}
+                              {active === "CREDENCIALES"
+                                ? detail.tipoSolicitud === "CESE"
+                                  ? "baja de credenciales"
+                                  : "creación de credenciales"
+                                : "esta área"}{" "}
+                              para {detail.nombreTalento}.
+                            </p>
+                          )}
+                          {formGroups(active, keys).map(
+                            (group, index, groups) => (
+                              <fieldset
+                                key={group.label}
+                                role="tabpanel"
+                                id={`category-panel-${index}`}
+                                aria-labelledby={
+                                  groups.length > 1
+                                    ? `category-${index}`
+                                    : undefined
+                                }
+                                hidden={
+                                  group.label !==
+                                  (groups.some((g) => g.label === category)
+                                    ? category
+                                    : groups[0].label)
+                                }
+                                className="rounded-xl border border-slate-200 p-4"
+                              >
+                                <legend className="px-2 text-sm font-semibold text-slate-700">
+                                  {group.label}
+                                </legend>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                  {group.keys.map((key) => {
+                                    const field = fieldMap[key];
+                                    if (key === "idTipoEquipo") return null;
+                                    if (key === "bonoEquipo") return (
+                                      <label key={key} className="flex items-center gap-2 text-sm">
+                                        <input type="checkbox" disabled checked={(draft.tieneEquipo ?? original("tieneEquipo")) === "1"} />
+                                        Bono de equipo
+                                      </label>
+                                    );
+                                    return field ? (
+                                      <Input
+                                        key={key}
+                                        field={field}
+                                        value={
+                                          key in draft
+                                            ? draft[key]
+                                            : original(key)
+                                        }
+                                        disabled={busy}
+                                        onChange={(v) =>
+                                          setDraft((d) => ({ ...d, [key]: v }))
+                                        }
+                                      />
+                                    ) : (
+                                      <div key={key}>
+                                        <div className="text-xs font-medium text-slate-500">
+                                          {LABELS[key] || key}
+                                        </div>
+                                        <div className="mt-1 break-words text-sm text-slate-800">
+                                          {key === "declararSunat" ? (String(current.datos[key]) === "1" ? "Sí" : "No") : (key === "idModalidadContrato" || key === "idMotivo" || key === "idMoneda") ? (
+                                            <ParameterLabel maestro={key === "idModalidadContrato" ? TIPO_MODALIDAD : key === "idMotivo" ? MOTIVO_INGRESO : TIPO_MONEDA} value={current.datos[key]} />
+                                          ) : text(current.datos[key]) ||
+                                            "Sin información"}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </fieldset>
+                            ),
+                          )}
+                        </div>
+                        {current.fechaResolucion && (
+                          <p className="mt-3 text-xs text-slate-500">
+                            Resuelta por {current.usuario} ·{" "}
+                            {formatApprovalDate(current.fechaResolucion)}
                           </p>
                         )}
-                        {keys.map((key) => {
-                          const field = fieldMap[key];
-                          return field ? (
-                            <Input
-                              key={key}
-                              field={field}
-                              value={key in draft ? draft[key] : original(key)}
-                              disabled={busy}
-                              onChange={(v) =>
-                                setDraft((d) => ({ ...d, [key]: v }))
-                              }
-                            />
-                          ) : (
-                            <div key={key}>
-                              <div className="text-xs font-medium text-slate-500">
-                                {LABELS[key] || key}
-                              </div>
-                              <div className="mt-1 break-words text-sm text-slate-800">
-                                {text(current.datos[key]) || "Sin información"}
-                              </div>
+                        {canManage && current.estado === "PENDIENTE" && (
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <span className="text-xs text-slate-500">
+                              {selected.includes(active)
+                                ? "Marcada; pendiente de confirmar."
+                                : "Revisa los datos antes de preaprobar."}
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {dirty ? (
+                                <>
+                                  <button
+                                    onClick={() => setDraft({})}
+                                    disabled={busy}
+                                    className="btn btn-outline-gray"
+                                  >
+                                    Descartar
+                                  </button>
+                                  <button
+                                    onClick={save}
+                                    disabled={busy}
+                                    className="btn btn-blue"
+                                  >
+                                    {working
+                                      ? "Guardando…"
+                                      : "Guardar corrección"}
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      openConfirm([active], "RECHAZAR")
+                                    }
+                                    disabled={
+                                      busy ||
+                                      reviewing ||
+                                      !areas.revisadas.includes(active)
+                                    }
+                                    className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
+                                  >
+                                    Desaprobar
+                                  </button>
+                                  <button
+                                    onClick={() => choose(active)}
+                                    disabled={
+                                      busy ||
+                                      reviewing ||
+                                      !areas.revisadas.includes(active)
+                                    }
+                                    aria-pressed={selected.includes(active)}
+                                    className="btn btn-blue disabled:opacity-40"
+                                  >
+                                    {selected.includes(active)
+                                      ? "Preaprobado ✓"
+                                      : "Preaprobado"}
+                                  </button>
+                                </>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                      {current.fechaResolucion && (
-                        <p className="mt-3 text-xs text-slate-500">
-                          Resuelta por {current.usuario} ·{" "}
-                          {formatApprovalDate(current.fechaResolucion)}
-                        </p>
-                      )}
-                      {canManage && current.estado === "PENDIENTE" && (
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                          <label className="flex items-center gap-2 text-sm text-slate-600">
-                            <input
-                              type="checkbox"
-                              checked={selected.includes(active)}
-                              disabled={
-                                busy ||
-                                reviewing ||
-                                dirty ||
-                                !areas.revisadas.includes(active)
-                              }
-                              onChange={() => choose(active)}
-                              className="h-4 w-4 accent-blue-600"
-                            />
-                            Seleccionar para aprobar
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {dirty ? (
-                              <>
-                                <button
-                                  onClick={() => setDraft({})}
-                                  disabled={busy}
-                                  className="btn btn-outline-gray"
-                                >
-                                  Descartar
-                                </button>
-                                <button
-                                  onClick={save}
-                                  disabled={busy}
-                                  className="btn btn-blue"
-                                >
-                                  {working
-                                    ? "Guardando…"
-                                    : "Guardar corrección"}
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    openConfirm([active], "RECHAZAR")
-                                  }
-                                  disabled={
-                                    busy ||
-                                    reviewing ||
-                                    !areas.revisadas.includes(active)
-                                  }
-                                  className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
-                                >
-                                  Desaprobar
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openConfirm([active], "APROBAR")
-                                  }
-                                  disabled={
-                                    busy ||
-                                    reviewing ||
-                                    !areas.revisadas.includes(active)
-                                  }
-                                  className="btn btn-blue disabled:opacity-40"
-                                >
-                                  Aprobar esta área
-                                </button>
-                              </>
-                            )}
                           </div>
-                        </div>
-                      )}
-                      {dirty && (
-                        <p className="mt-3 text-xs text-amber-700">
-                          Guarda o descarta la corrección antes de cambiar de
-                          pestaña o aprobar.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </section>
-              )}
-              {flow && (
-                <details className="mt-6 border-t border-slate-100 pt-4">
-                  <summary className="cursor-pointer text-sm font-medium text-slate-500">
-                    Actividad de la solicitud ({flow.historial.length})
-                  </summary>
-                  <ol className="mt-4 space-y-3">
-                    {flow.historial.map((event) => (
-                      <li
-                        key={event.idHistorial}
-                        className="border-l-2 border-slate-200 pl-3"
-                      >
-                        <p className="text-sm text-slate-600">
-                          {event.accion.startsWith("CORREO_")
-                            ? event.accion === "CORREO_ENVIADO"
-                              ? "Notificación enviada"
-                              : event.accion === "CORREO_OMITIDO"
-                                ? "Notificación omitida"
-                                : "No se pudo enviar la notificación"
-                            : event.detalle ||
-                              event.accion.replaceAll("_", " ").toLowerCase()}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {formatApprovalDate(event.fecha)} · {event.usuario}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              )}
+                        )}
+                        {dirty && (
+                          <p className="mt-3 text-xs text-amber-700">
+                            Guarda o descarta la corrección antes de cambiar de
+                            pestaña o aprobar.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </section>
+                )}
+                {flow && (
+                  <details className="mt-6 border-t border-slate-100 pt-4">
+                    <summary className="cursor-pointer text-sm font-medium text-slate-500">
+                      Actividad de la solicitud ({flow.historial.length})
+                    </summary>
+                    <ol className="mt-4 space-y-3">
+                      {flow.historial.map((event) => (
+                        <li
+                          key={event.idHistorial}
+                          className="border-l-2 border-slate-200 pl-3"
+                        >
+                          <p className="text-sm text-slate-600">
+                            {event.accion.startsWith("CORREO_")
+                              ? event.accion === "CORREO_ENVIADO"
+                                ? "Notificación enviada"
+                                : event.accion === "CORREO_OMITIDO"
+                                  ? "Notificación omitida"
+                                  : "No se pudo enviar la notificación"
+                              : event.detalle ||
+                                event.accion.replaceAll("_", " ").toLowerCase()}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {formatApprovalDate(event.fecha)} · {event.usuario}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                )}
+              </div>
             </>
           )}
         </div>
-        {areas && canManage && (
+        {areas && (canManage || canRejectAll) && (
           <footer className="border-t border-slate-100 bg-slate-50/80 px-6 py-4">
             <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
               <Clock3 size={14} />
-              {allReviewed
+              {reviewedCount === visibleTabs.length
                 ? "Todas las áreas están revisadas."
                 : `Áreas revisadas: ${reviewedCount}/${visibleTabs.length}.`}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="mr-auto text-sm text-slate-600">
+                {selected.length} área(s) preaprobada(s)
+              </span>
+              {canRejectAll && (
+                <button type="button" disabled={busy || dirty} onClick={() => openConfirm([], "RECHAZAR_TODO")}
+                  className="btn btn-outline-gray">Desaprobar todo</button>
+              )}
+              {equipmentSelectedWithoutCredentials && <span className="text-xs">Para enviar Equipo, preaprueba también Credenciales.</span>}
               <button
-                disabled={busy || reviewing || dirty || selected.length === 0}
+                disabled={busy || reviewing || dirty || selected.length === 0 || equipmentSelectedWithoutCredentials}
                 onClick={() => openConfirm(selected, "APROBAR")}
-                className="rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-medium text-blue-700 disabled:opacity-40"
+                className="btn btn-blue disabled:opacity-40"
               >
-                Confirmar selección
-                {selected.length > 0 ? ` (${selected.length})` : ""}
-              </button>
-              <button
-                disabled={
-                  busy ||
-                  reviewing ||
-                  dirty ||
-                  !allReviewed ||
-                  pending.length === 0
-                }
-                onClick={() => openConfirm(pending, "APROBAR", true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-40"
-              >
-                <CheckCheck size={17} />
-                Confirmar todo
+                Enviar formularios
               </button>
             </div>
           </footer>
@@ -849,18 +1029,17 @@ export const ModalSolicitudAprobacion = ({
             >
               {confirm.action === "RECHAZAR"
                 ? "Desaprobar área"
-                : "Confirmar aprobación"}
+                : confirm.action === "RECHAZAR_TODO" ? "Desaprobar todo" : "Enviar formularios"}
             </h4>
             <p className="mt-2 text-sm text-slate-500">
-              {confirm.areas
-                .map((a) => TABS.find((t) => t.area === a)?.label)
-                .join(", ")}
-              .{" "}
-              {confirm.action === "RECHAZAR"
-                ? "Se notificará únicamente al solicitante."
-                : "Se registrarán las acciones seleccionadas y se notificará a las áreas involucradas."}
+              {confirm.action === "RECHAZAR_TODO"
+                  ? "Se desaprobará la solicitud. Si se aprobó una asignación de equipo, se pedirá su devolución."
+                  : confirm.areas.map((a) => TABS.find((t) => t.area === a)?.label).join(", ") +
+                  (confirm.action === "RECHAZAR"
+                    ? ". Se notificará únicamente al solicitante."
+                    : ". Se guardarán las áreas preaprobadas y se notificará a las áreas involucradas.")}
             </p>
-            {confirm.action === "RECHAZAR" && (
+            {confirm.action !== "APROBAR" && (
               <label className="mt-4 block text-sm text-slate-600">
                 Motivo
                 <textarea
@@ -882,16 +1061,16 @@ export const ModalSolicitudAprobacion = ({
               </button>
               <button
                 disabled={
-                  working || (confirm.action === "RECHAZAR" && !reason.trim())
+                  working || (confirm.action !== "APROBAR" && !reason.trim())
                 }
                 onClick={decide}
-                className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40 ${confirm.action === "RECHAZAR" ? "bg-red-600" : "bg-blue-600"}`}
+                className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40 ${confirm.action === "APROBAR" ? "bg-blue-600" : "bg-red-600"}`}
               >
                 {working
                   ? "Confirmando…"
                   : confirm.action === "RECHAZAR"
                     ? "Desaprobar"
-                    : "Confirmar"}
+                    : confirm.action === "RECHAZAR_TODO" ? "Desaprobar todo" : "Enviar formularios"}
               </button>
             </div>
           </div>
@@ -916,7 +1095,13 @@ const Input = ({
     htmlFor={`area-${field.campo}`}
   >
     {field.etiqueta}
-    {field.tipo === "SI_NO" ? (
+    {field.tipo === "MONEDA" ? (
+      <CurrencyInput value={value} disabled={disabled} onChange={onChange} />
+    ) : field.campo === "tipoEquipo" ? (
+      <EquipmentType value={value} disabled={disabled} onChange={onChange} />
+    ) : field.campo === "software" ? (
+      <SoftwareInput value={value} disabled={disabled} onChange={onChange} />
+    ) : field.tipo === "SI_NO" || field.tipo === "SUNAT" ? (
       <select
         id={`area-${field.campo}`}
         disabled={disabled}
@@ -926,7 +1111,7 @@ const Input = ({
       >
         <option value="">Seleccione</option>
         <option value="1">Sí</option>
-        <option value="0">No</option>
+        <option value={field.tipo === "SUNAT" ? "2" : "0"}>No</option>
       </select>
     ) : (
       <input
@@ -949,3 +1134,79 @@ const Input = ({
     )}
   </label>
 );
+
+const EquipmentType = ({ value, disabled, onChange }: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) => {
+  const { paramsByMaestro, loading } = useParams(TIPO_HARDWARE);
+  const options = paramsByMaestro[TIPO_HARDWARE] ?? [];
+  return (
+    <select id="area-tipoEquipo" value={value} disabled={disabled || loading}
+      onChange={(event) => onChange(event.target.value)} className="input mt-1.5 w-full">
+      <option value="">Seleccione</option>
+      {value && !options.some((option) => String(option.num1) === value) && (
+        <option value={value}>Tipo actual ({value})</option>
+      )}
+      {options.map((option) => <option key={option.num1} value={option.num1}>{option.string1}</option>)}
+    </select>
+  );
+};
+
+const SoftwareInput = ({ value, disabled, onChange }: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) => {
+  const { paramsByMaestro } = useParams(TIPO_SOFTWARE);
+  const catalog = paramsByMaestro[TIPO_SOFTWARE] ?? [];
+  return (
+    <>
+      <textarea id="area-software" disabled={disabled} value={value} rows={4}
+        maxLength={500} placeholder="Un programa por línea: producto | versión"
+        onChange={(event) => onChange(event.target.value)} className="input mt-1.5 w-full" />
+      <select aria-label="Agregar software de Parámetros" value="" disabled={disabled || !catalog.length}
+        className="input mt-1.5 w-full"
+        onChange={(event) => {
+          const item = catalog.find((option) => String(option.num1) === event.target.value);
+          if (!item?.string1) return;
+          const line = item.string2 ? `${item.string1} | ${item.string2}` : item.string1;
+          const current = value.split("\n").filter(Boolean);
+          if (!current.some((entry) => entry.split("|")[0].trim() === item.string1)) {
+            const next = [...current, line].join("\n");
+            if (next.length <= 500) onChange(next);
+          }
+        }}>
+        <option value="">Agregar software de Parámetros</option>
+        {catalog.filter((item) => item.string1).map((item) =>
+          <option key={item.num1} value={item.num1}>{item.string1}</option>)}
+      </select>
+    </>
+  );
+};
+
+
+const ParameterLabel = ({ maestro, value }: { maestro: string; value: unknown }) => {
+  const { paramsByMaestro } = useParams(maestro);
+  return <>{paramsByMaestro[Number(maestro)]?.find((item) => String(item.num1) === String(value))?.string1 || text(value) || "Sin información"}</>;
+};
+
+const CurrencyInput = ({ value, disabled, onChange }: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) => {
+  const { paramsByMaestro, loading } = useParams(TIPO_MONEDA);
+  const options = paramsByMaestro[TIPO_MONEDA] ?? [];
+  return (
+    <select id="area-idMoneda" value={value} disabled={disabled || loading}
+      onChange={(event) => onChange(event.target.value)} className="input mt-1.5 w-full">
+      <option value="">Seleccione</option>
+      {value && !options.some((option) => String(option.num1) === value) && (
+        <option value={value}>Moneda actual ({value})</option>
+      )}
+      {options.map((option) => <option key={option.num1} value={option.num1}>{option.string1}</option>)}
+    </select>
+  );
+};
